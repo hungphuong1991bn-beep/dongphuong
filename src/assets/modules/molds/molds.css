@@ -1,0 +1,56 @@
+/* ▸ src/modules/molds/molds.css — đoạn LIÊN TIẾP dòng 861–915 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── QUẢN LÝ KHUÔN (ERP/MES style) ── */
+.khm-tabs{display:flex;gap:8px;background:var(--bg2);padding:4px;border-radius:12px;margin-bottom:12px}
+.khm-tab-btn{flex:1;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--text3);padding:9px 6px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s}
+.khm-tab-btn.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.khm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.khm-stat-card{background:linear-gradient(180deg,#fff,var(--bg2) 220%);border:1px solid var(--border);border-left:3px solid var(--brand2);border-radius:var(--r-sm);padding:12px 14px;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .12s,box-shadow .12s}
+.khm-stat-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,24,40,.08)}
+.khm-stat-num{font-size:21px;font-weight:800;color:var(--text);line-height:1.15}
+.khm-stat-lbl{font-size:10.5px;color:var(--text4);margin-top:3px;font-weight:600}
+.khm-stat-card.warn{border-left-color:#d97706}
+.khm-stat-card.warn .khm-stat-num{color:#b45309}
+.khm-stat-card.danger{border-left-color:#dc2626}
+.khm-stat-card.danger .khm-stat-num{color:#b91c1c}
+.khm-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.khm-search{flex:1;min-width:150px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:#fff;transition:border-color .12s,box-shadow .12s}
+.khm-search:focus{outline:none;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.khm-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.khm-chip{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:11.5px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;transition:background .12s,color .12s,border-color .12s}
+.khm-chip:hover{border-color:var(--brand2)}
+.khm-chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.khm-add-btn{padding:10px 16px;border-radius:var(--r-sm);border:none;background:var(--brand);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px rgba(16,24,40,.15)}
+.khm-add-btn:hover{filter:brightness(1.06)}
+.khm-cat-section{margin-bottom:16px}
+.khm-cat-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 8px;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.khm-cat-count{font-size:10.5px;font-weight:600;color:var(--text4);background:var(--bg2);padding:1px 8px;border-radius:20px}
+.khm-item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.khm-item-chip{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 6px;text-align:center;font-size:12.5px;font-weight:700;color:var(--text);position:relative;cursor:default;transition:border-color .12s}
+.khm-item-chip:hover{border-color:var(--brand2)}
+.khm-item-chip .khm-item-size{font-variant-numeric:tabular-nums}
+.khm-item-chip .khm-item-edit{position:absolute;top:2px;right:3px;font-size:10px;opacity:.55;cursor:pointer;padding:2px}
+/* Nút xóa kích thước trong danh mục "Tổng hợp Khuôn" — chỉ Admin (xem renderKhuonCatalog) */
+.khm-item-chip .khm-item-del{position:absolute;top:2px;left:3px;font-size:10px;opacity:.5;cursor:pointer;padding:2px;color:#b91c1c;-webkit-tap-highlight-color:transparent}
+.khm-item-chip .khm-item-del:hover,.khm-item-chip .khm-item-edit:hover{opacity:1}
+.khm-item-chip.khm-sel{border-color:#b91c1c;background:#FEF2F2}
+.khm-item-chip .khm-item-chk{position:absolute;bottom:2px;right:4px;width:14px;height:14px;margin:0;cursor:pointer;accent-color:#b91c1c}
+.khm-bulk-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #FCA5A5;background:#FEF2F2;border-radius:10px;font-size:12.5px;font-weight:700;color:#B91C1C}
+.khm-bulk-bar button{border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.khm-bulk-del{background:#DC2626;color:#fff}
+.khm-bulk-clear{background:#fff;color:#64748b;border:1px solid var(--border)!important}
+.khm-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);background:#fff}
+.khm-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:680px}
+.khm-table th{background:var(--bg2);color:var(--text3);font-weight:700;text-align:left;padding:10px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0}
+.khm-table td{padding:10px 10px;border-top:1px solid var(--border);white-space:nowrap}
+.khm-table tr:hover td{background:var(--bg)}
+.khm-table th.khm-col-stt,.khm-table td.khm-col-stt{width:36px;text-align:center;color:var(--text4)}
+.khm-col-size{font-size:13.5px}
+.khm-status-pill{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;display:inline-block}
+.khm-status-pill.ok{background:#dcfce7;color:#166534}
+.khm-status-pill.warn{background:#fef3c7;color:#92400e}
+.khm-status-pill.danger{background:#fee2e2;color:#b91c1c}
+.khm-row-actions{display:flex;gap:4px}
+.khm-icon-btn{border:none;background:var(--bg2);color:var(--text3);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px}
+.khm-icon-btn.danger{color:#b91c1c}
+.khm-locked-note{font-size:11.5px;color:var(--text4);background:var(--bg2);padding:8px 12px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+

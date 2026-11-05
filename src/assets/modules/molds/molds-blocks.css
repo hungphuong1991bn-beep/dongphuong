@@ -1,0 +1,35 @@
+/* ▸ src/modules/molds/molds-blocks.css — đoạn LIÊN TIẾP dòng 971–1004 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── Khối tách riêng Khuôn Đùn / Khuôn Rút (Kéo) — giao diện hiện đại ── */
+.khm-type-section{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(16,24,40,.06);margin-bottom:16px;overflow:hidden}
+.khm-type-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),#fff)}
+.khm-type-title{font-size:14.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.khm-type-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;font-size:15px;background:rgba(37,99,235,.1)}
+.khm-type-dun .khm-type-icon{background:rgba(37,99,235,.12);color:var(--brand)}
+.khm-type-keo .khm-type-icon{background:rgba(217,119,6,.14);color:#b45309}
+.khm-type-dun .khm-type-header{border-left:4px solid var(--brand)}
+.khm-type-keo .khm-type-header{border-left:4px solid #d97706}
+.khm-type-meta{display:flex;gap:6px;flex-wrap:wrap}
+.khm-type-count{font-size:10.5px;font-weight:700;color:var(--text3);background:var(--bg2);padding:4px 10px;border-radius:20px;white-space:nowrap}
+.khm-type-count-new{background:#dcfce7;color:#166534}
+.khm-type-section .khm-table-wrap{border:none;border-radius:0;border-top:1px solid var(--border)}
+.khm-date-cell{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.khm-new-badge{display:inline-block;font-size:9.5px;font-weight:800;color:#166534;background:#dcfce7;padding:2px 8px;border-radius:10px;white-space:nowrap;animation:khmNewPulse 2.2s ease-in-out infinite}
+@keyframes khmNewPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.khm-table tr.khm-row-new{background:rgba(22,163,74,.04)}
+.khm-table tr.khm-row-new:hover td{background:rgba(22,163,74,.08)}
+/* Tablet/Mobile: bảng khm-table chuyển thành dạng Card, không tràn ngang, không cắt chữ */
+@media (max-width:680px){
+  .khm-table-wrap{border:none;background:none;overflow-x:visible}
+  .khm-table{min-width:0;width:100%}
+  .khm-table thead{display:none}
+  .khm-table tbody{display:flex;flex-direction:column;gap:10px}
+  .khm-table tr{display:block;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+  .khm-table td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px dashed var(--border);white-space:normal;word-break:break-word;text-align:right}
+  .khm-table td:first-child{border-top:none}
+  .khm-table td.khm-col-stt{display:none}
+  .khm-table td::before{content:attr(data-label);font-size:10.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.3px;text-align:left;flex-shrink:0}
+  .khm-table td.khm-col-size{order:-1;font-size:16px}
+  .khm-table td.khm-col-size::before{content:'📐 Kích thước'}
+  .khm-table td .khm-row-actions{justify-content:flex-end;width:100%}
+}
+

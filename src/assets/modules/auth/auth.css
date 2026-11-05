@@ -1,0 +1,10 @@
+/* ▸ src/modules/auth/auth.css — đoạn LIÊN TIẾP dòng 117–125 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── LOGIN ── */
+#loginScreen{background:linear-gradient(160deg,var(--navy),var(--navy2));align-items:center;justify-content:center;padding:24px}
+.login-card{background:#fff;border-radius:var(--r-lg);padding:34px 24px 24px;width:100%;max-width:368px;box-shadow:0 24px 48px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06)}
+.lc-logo{text-align:center;margin-bottom:22px}
+.lc-logo img{width:72px;height:72px;border-radius:18px;object-fit:contain;box-shadow:0 8px 20px rgba(12,47,92,.35)}
+.lc-logo h1{font-size:20px;font-weight:800;color:var(--text);margin-top:14px;letter-spacing:-.4px}
+.lc-logo p{font-size:12px;color:var(--text3);margin-top:3px}
+.field-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.field-inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;transition:border .15s,box-shadow .15s;background:var(--bg2);color:var(--text)}
