@@ -1,7 +1,8 @@
 == 1. Kiểm chứng tĩnh ==
 ✓ sw.js: 165 tài nguyên khớp index.html, CSS network-first
 [1] JS — mọi khối mã top-level được bảo toàn nguyên văn
-  ✓ 1148 khối mã (hàm/biến/lệnh) trùng khớp từng ký tự giữa bản gốc và bản mới
+  ✓ ngoại lệ sửa lỗi có chủ đích: sửa doPoll, handleRealtimeChange · thêm _rtSeq (tools/refactor/patches.json)
+  ✓ 1146 khối mã (hàm/biến/lệnh) trùng khớp từng ký tự giữa bản gốc và bản mới
   ✓ phần đuôi script khớp
 [2] CSS — nối các file theo thứ tự = CSS gốc
   ✓ 39 file CSS nối lại = CSS gốc (335202 ký tự)
@@ -15,7 +16,7 @@
   ✓ không file nào nạp 2 lần
   ✓ mọi file JS đều được nạp
 [5] Thứ tự nạp — mã chạy ngay khi nạp chỉ dùng thứ đã được định nghĩa
-  ✓ 284 lệnh chạy-ngay, 283 phụ thuộc — không có phụ thuộc nào bị đảo thứ tự
+  ✓ 285 lệnh chạy-ngay, 284 phụ thuộc — không có phụ thuộc nào bị đảo thứ tự
   ✓ không có khai báo let/const trùng giữa các file
 [6] Thứ tự các lệnh đăng ký sự kiện/timer khi nạp
   ✓ 24 listener trên 13 cặp (target, sự kiện) giữ nguyên thứ tự đăng ký
@@ -26,7 +27,7 @@ errors: 0
 tabs captured: 51
 errors: 0
 tabs captured: 51
-ĐẠT 160 mục · KHÁC 0 mục · ảnh chụp lệch nhiều nhất: 0.0441% (overlay-desktop-notifPanel.png) · ngưỡng 0.1%
+ĐẠT 160 mục · KHÁC 0 mục · ảnh chụp lệch nhiều nhất: 0.0295% (overlay-tablet-notifPanel.png) · ngưỡng 0.1%
 == 3. Chức năng/đồng bộ ==
 [1] Đăng nhập, phân quyền, đăng xuất
   ✓ login.saiMatKhau.vanOLogin
@@ -131,4 +132,12 @@ tabs captured: 51
 
 (tất cả kiểm tra tuyệt đối đạt)
 ✓ chức năng trùng bản gốc
+== 4. Độ ổn định đồng bộ chéo thiết bị (A↔B, 40 vòng thêm đơn) ==
+ bản GỐC (chỉ để đối chứng, được phép có lỗi):
+  34/40 vòng nhận đủ đơn · 6 lỗi · trễ nhận 272–463ms
+   ✗ vòng 3 B→A server có đơn = true · máy nhận: {"pend":0,"sse":true,"poll":false,"n":10}
+   ✗ vòng 10 A→B server có đơn = true · máy nhận: {"pend":0,"sse":true,"poll":false,"n":17}
+   ✗ vòng 18 A→B server có đơn = true · máy nhận: {"pend":0,"sse":true,"poll":false,"n":25}
+ bản MỚI (bắt buộc 0 lỗi):
+  40/40 vòng nhận đủ đơn · 0 lỗi · trễ nhận 307–432ms
 EXIT 0

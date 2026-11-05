@@ -41,7 +41,20 @@ for(const f of jsFiles){
   fileNodes[f] = {src: body, chunks: c.chunks, real};
 }
 const key = a => a.slice().sort();
-const A = key(o.chunks.map(c => c.text)), B = key(newChunks);
+// Ngoại lệ có chủ đích (sửa lỗi) — xem tools/refactor/patches.json
+const PATCH = fs.existsSync(path.join(__dirname, 'patches.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'patches.json'), 'utf8')) : {patched: [], added: []};
+const declNames = n => n.type === 'FunctionDeclaration' ? [n.id.name] : n.type === 'VariableDeclaration' ? n.declarations.map(d => d.id.name) : [];
+const isPatched = (n, set) => declNames(n).some(x => set.includes(x));
+const patchedNew = []; const addedNew = [];
+for(const f of jsFiles){ const fn = fileNodes[f]; if(!fn) continue; for(const k of fn.real){ if(isPatched(k.node, PATCH.patched)) patchedNew.push(declNames(k.node)[0]); else if(isPatched(k.node, PATCH.added)) addedNew.push(declNames(k.node)[0]); } }
+const patchedOrig = o.chunks.filter(c => isPatched(c.node, PATCH.patched)).map(c => declNames(c.node)[0]);
+if(PATCH.patched.length || PATCH.added.length){
+  const okP = JSON.stringify(patchedNew.sort()) === JSON.stringify(patchedOrig.sort()) && patchedNew.length === PATCH.patched.length && addedNew.length === PATCH.added.length;
+  if(okP) ok(`ngoại lệ sửa lỗi có chủ đích: sửa ${PATCH.patched.join(', ')} · thêm ${PATCH.added.join(', ')} (tools/refactor/patches.json)`); else bad('ngoại lệ trong patches.json không khớp mã (thiếu/thừa khối)');
+}
+const keepOrig = o.chunks.filter(c => !isPatched(c.node, PATCH.patched)).map(c => c.text);
+const keepNew = []; for(const f of jsFiles){ const fn = fileNodes[f]; if(!fn) continue; for(const k of fn.real){ if(!isPatched(k.node, PATCH.patched) && !isPatched(k.node, PATCH.added)) keepNew.push(k.text); } }
+const A = key(keepOrig), B = key(keepNew);
 if(A.length !== B.length) bad(`số khối khác nhau: gốc ${A.length} · mới ${B.length}`);
 else if(A.some((x, i) => x !== B[i])) bad('có khối mã bị đổi nội dung');
 else ok(`${A.length} khối mã (hàm/biến/lệnh) trùng khớp từng ký tự giữa bản gốc và bản mới`);

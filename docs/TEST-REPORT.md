@@ -22,4 +22,11 @@ Môi trường: Playwright + Chromium, **Firebase giả lập cục bộ** (REST
 - Build Android (Capacitor) và Windows (Electron) **chưa chạy** ở đây (không có toolchain/mạng); chỉ xác nhận thư mục native không đổi và chúng nạp URL GitHub Pages.
 - **Chưa thử với Firebase thật** và dữ liệu thật; chỉ dùng mock.
 - Chỉ kiểm các luồng nêu trên; các tab/nghiệp vụ khác được bảo đảm bằng việc mã chuyển nguyên văn + so sánh DOM/CSS, không phải bằng thao tác thủ công từng tính năng.
-- Thăm dò đồng bộ 2 thiết bị đôi khi chập chờn ở **cả bản gốc lẫn bản mới** (xem KNOWN-ISSUES.md).
+- Đồng bộ chéo thiết bị: chỉ trên Firebase giả lập (xem §5).
+
+## 5. Độ ổn định đồng bộ A↔B (`tests/e2e/sync-stress.js`, 40 vòng, hai thiết bị luân phiên thêm đơn)
+| | Đạt | Lỗi |
+|---|---:|---:|
+| Bản gốc (đối chứng, lượt trong `run-all`) | 34/40 | 6 |
+| Bản đã sửa | 40/40 | 0 |
+Thêm hai lượt riêng trên bản đã sửa: 40/40 và 40/40. Phần kiểm chứng tĩnh chạy với ngoại lệ có chủ đích trong `tools/refactor/patches.json` (1146 khối trùng nguyên văn, 3 khối sửa/thêm).

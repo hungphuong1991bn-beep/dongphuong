@@ -1,0 +1,5 @@
+{
+  "_ghiChu": "Các thay đổi CÓ CHỦ ĐÍCH sau refactor (sửa lỗi). verify.js cho phép đúng các khối này khác bản gốc; mọi khối khác vẫn phải trùng từng ký tự. Mỗi mục phải được ghi trong docs/CHANGELOG.md.",
+  "patched": ["doPoll", "handleRealtimeChange"],
+  "added": ["_rtSeq"]
+}

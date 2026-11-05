@@ -7,3 +7,6 @@ export NODE_PATH="${NODE_PATH:-$ROOT/tests/node_modules}"; export ACORN_PATH="${
 echo "== 1. Kiểm chứng tĩnh =="; node tests/static/verify-sw.js; node tools/refactor/verify.js "$TMP/baseline/index.html" "$ROOT"
 echo "== 2. Giao diện (DOM/CSS/ảnh) =="; node tests/e2e/capture.js "$TMP/baseline" "$TMP/cap_base"; node tests/e2e/capture.js "$ROOT" "$TMP/cap_new"; python3 tests/e2e/compare.py "$TMP/cap_base" "$TMP/cap_new" --px-tol 0.1
 echo "== 3. Chức năng/đồng bộ =="; node tests/e2e/functional.js "$TMP/baseline" "$TMP/func_base"; node tests/e2e/functional.js "$ROOT" "$TMP/func_new"; diff "$TMP/func_base/func-results.json" "$TMP/func_new/func-results.json" && echo "✓ chức năng trùng bản gốc"
+echo "== 4. Độ ổn định đồng bộ chéo thiết bị (A↔B, 40 vòng thêm đơn) =="
+echo " bản GỐC (chỉ để đối chứng, được phép có lỗi):"; node tests/e2e/sync-stress.js "$TMP/baseline" 40 5 || true
+echo " bản MỚI (bắt buộc 0 lỗi):"; node tests/e2e/sync-stress.js "$ROOT" 40 5
