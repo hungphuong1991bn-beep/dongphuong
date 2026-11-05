@@ -1,0 +1,78 @@
+/* ▸ src/modules/reports/reports-charts.css — đoạn LIÊN TIẾP dòng 3093–3169 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── REPORT ── */
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;background:var(--brand);transition:width .5s}
+
+/* KPI tiến độ (kế hoạch vs thực tế) — thanh ngang nhiều màu kiểu dashboard tham chiếu */
+.kpi-track-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:16px 16px 14px;transition:box-shadow .2s,transform .2s}
+.kpi-track-card:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+.kpi-track-card-title{font-size:12.5px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:14px}
+.kpi-track-row{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.kpi-track-row:last-child{margin-bottom:0}
+.kpi-track-lbl{width:112px;flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--text2);line-height:1.25}
+.kpi-track-bar{flex:1;height:9px;background:var(--bg);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.kpi-track-fill{height:100%;border-radius:6px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.kpi-track-val{min-width:118px;text-align:right;flex-shrink:0}
+.kpi-track-val b{font-size:13px;font-weight:800;display:block;line-height:1.1}
+.kpi-track-val small{display:block;font-size:9.5px;font-weight:700;margin-top:1px;line-height:1.2}
+/* Progress inline trong card */
+.card-progress{padding:6px 14px;border-top:1px solid var(--border)}
+.card-progress-box{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:8px}
+.card-progress-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.card-progress-info{flex:1;min-width:0}
+.card-progress-lbl{font-size:8.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}
+.card-progress-val{font-size:13px;font-weight:800;line-height:1.1;display:flex;align-items:baseline;gap:3px}
+.card-progress-val small{font-size:10px;font-weight:600;color:var(--text3)}
+.card-progress-remain{flex-shrink:0;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:20px;text-align:center;white-space:nowrap}
+/* Khối RIÊNG: Mã nguyên liệu đầu vào (tách khỏi Tiến độ sản xuất) */
+.card-mat-sec{padding:8px 14px;border-top:1px solid var(--border);background:linear-gradient(135deg,#faf5ff,#f3e8ff);display:flex;flex-direction:column;gap:6px}
+.card-mat-sec-lbl{font-size:11.5px;font-weight:700;color:#7e22ce;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:4px}
+.card-mat-sec-list{display:flex;gap:5px;flex-wrap:wrap}
+.card-mat-sec .mat-chip{background:#fff;border-color:#e9d5ff;color:#6b21a8}
+/* Inline input trong card */
+.card-inline-inp{display:flex;gap:6px;padding:6px 14px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--border)}
+.card-inline-inp label{font-size:11.5px;font-weight:600;color:var(--text3);white-space:nowrap}
+.card-inline-inp input{flex:1;min-width:80px;padding:5px 9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:var(--text)}
+.card-inline-inp input:focus{border-color:var(--brand2)}
+.card-inline-inp button{padding:5px 10px;border-radius:7px;border:none;background:var(--brand);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.card-inline-inp button:active{opacity:.8}
+/* Mat list */
+.mat-list{padding:4px 14px 6px;display:flex;gap:5px;flex-wrap:wrap}
+.mat-chip{display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;color:var(--text2)}
+.mat-chip button{border:none;background:none;cursor:pointer;color:var(--red-m);font-size:14px;line-height:1;padding:0 0 0 2px}
+
+/* Stage tracker: Máy Đùn -> Máy Rút -> Đánh Bóng — bố cục dạng panel
+   gradient hiện đại, có hiệu ứng glow/pop khi chuyển công đoạn */
+.stage-tracker{padding:12px 14px 13px;margin:10px 12px 12px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--border);position:relative;overflow:hidden}
+.stage-tracker-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;position:relative;z-index:1}
+.stage-tracker-lbl{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.stage-tracker-pct{font-size:10.5px;font-weight:800;color:var(--brand2);background:#fff;border:1px solid #c7d7fb;padding:2px 9px;border-radius:20px;box-shadow:0 1px 4px rgba(11,95,203,.12);transition:all .3s}
+.stage-tracker-pct.is-done{color:#fff;background:var(--green-m);border-color:transparent;box-shadow:0 1px 3px rgba(16,24,40,.15)}
+.stage-steps{display:flex;align-items:flex-start;position:relative;z-index:1}
+.stage-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1 1 0;min-width:0}
+.stage-step[data-clickable="1"]{cursor:pointer}
+.stage-step[data-clickable="1"]:hover .stage-dot{transform:translateY(-2px) scale(1.08);box-shadow:0 8px 16px rgba(37,99,235,.3)}
+.stage-step[data-clickable="1"]:hover .stage-name{color:var(--brand2)}
+.stage-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2px solid var(--border);background:#fff;color:var(--text4);transition:all .25s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.stage-name{font-size:9.5px;font-weight:700;color:var(--text4);text-align:center;line-height:1.2;transition:color .25s;width:100%;overflow-wrap:break-word;word-break:break-word;padding:0 1px}
+.stage-line{flex:1 1 16px;height:3px;border-radius:3px;background:var(--border);margin:15px -2px 0;min-width:6px;transition:background .4s ease}
+.stage-step.st-done .stage-dot{background:var(--green-m);border-color:transparent;color:#fff;box-shadow:0 2px 6px rgba(16,24,40,.15);animation:stageDonePop .4s cubic-bezier(.34,1.56,.64,1)}
+.stage-step.st-done .stage-name{color:var(--green-m);font-weight:800}
+.stage-line.done{background:var(--green-m)}
+.stage-step.st-active .stage-dot{background:var(--brand2);border-color:transparent;color:#fff;animation:stagePulseGlow 1.7s ease-in-out infinite}
+.stage-step.st-active .stage-name{color:var(--brand2);font-weight:800}
+.stage-step.st-todo .stage-dot{background:#fff;border-style:dashed}
+.stage-step[data-clickable="1"]:active .stage-dot{transform:scale(.9)}
+@keyframes stagePulseGlow{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}
+  70%{box-shadow:0 0 0 10px rgba(37,99,235,0)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}
+}
+@keyframes stageDonePop{
+  0%{transform:scale(.5);opacity:.4}
+  60%{transform:scale(1.18)}
+  100%{transform:scale(1);opacity:1}
+}
+/* Compact badge dùng ở dashboard mini-card */
+.stage-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:#E8EDFC;color:var(--brand2);margin-top:4px;box-shadow:0 1px 4px rgba(11,95,203,.12)}
+

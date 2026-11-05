@@ -1,0 +1,43 @@
+/* ▸ src/modules/reports/reports.css — đoạn LIÊN TIẾP dòng 1113–1154 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── REPORT ── */
+.rpt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rpt-item{background:var(--card);border-radius:var(--r-sm);padding:14px;text-align:center;box-shadow:var(--sh)}
+.rpt-num{font-size:26px;font-weight:800;color:var(--brand)}
+.rpt-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+/* Tab Khách hàng: 4 ô KPI gộp về đúng 1 hàng duy nhất (thay vì 2x2) cho
+   gọn, đỡ chiếm diện tích màn hình — chỉ áp dụng riêng lớp bổ trợ này,
+   không ảnh hưởng .rpt-grid mặc định (2 cột) đang dùng ở tab Báo cáo. */
+.rpt-grid.rpt-grid-4col{grid-template-columns:repeat(4,1fr);gap:6px}
+.rpt-grid.rpt-grid-4col .rpt-item{padding:9px 3px;border-radius:10px}
+.rpt-grid.rpt-grid-4col .rpt-num{font-size:17px}
+.rpt-grid.rpt-grid-4col .rpt-lbl{font-size:9px;margin-top:1px;line-height:1.2}
+@media(max-width:380px){
+  .rpt-grid.rpt-grid-4col .rpt-num{font-size:15px}
+  .rpt-grid.rpt-grid-4col .rpt-lbl{font-size:8.2px}
+}
+.cust-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cust-row:last-child{border-bottom:none}
+
+/* ── Báo cáo: biểu đồ ───────────────────────────────────────── */
+.chart-card{padding:14px}
+.chart-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.chart-card-title{font-size:13px;font-weight:700;color:var(--text2)}
+.chart-card-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text2);font-weight:600}
+.chart-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.bar-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.bar-row-lbl{width:64px;flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;font-variant-numeric:tabular-nums}
+.bar-row-track{flex:1;height:14px;background:var(--bg);border-radius:5px;overflow:hidden;position:relative}
+.bar-row-fill{height:100%;border-radius:5px;transition:width .5s}
+.bar-row-val{width:56px;flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--text2)}
+.hbar-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+.hbar-row-lbl{width:88px;flex-shrink:0;font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar-row-track{flex:1;height:16px;background:var(--bg);border-radius:5px;overflow:hidden}
+.hbar-row-fill{height:100%;border-radius:5px;background:var(--brand);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .5s}
+.hbar-row-val{font-size:10.5px;font-weight:800;color:#fff;white-space:nowrap}
+.kpi-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpi-mini{background:var(--bg);border-radius:var(--r-sm);padding:9px 6px;text-align:center}
+.kpi-mini-num{font-size:16px;font-weight:800;color:var(--text)}
+.kpi-mini-lbl{font-size:9.5px;color:var(--text3);margin-top:1px;line-height:1.25}
+

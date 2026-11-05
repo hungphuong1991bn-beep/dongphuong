@@ -1,0 +1,294 @@
+/* ▸ src/modules/production/production-dh4.css — nguyên khối <style id="dh4-style"> gốc ◂ */
+.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(8,1fr)}
+.dh-tv .dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(8,1fr)!important}
+@media (max-width:1400px){.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:760px){.dh3-kpi-row.dh4-kpi8{grid-template-columns:repeat(2,1fr)}}
+.dh3-kpi-val small{font-size:.5em;font-weight:700;opacity:.75}
+.dh4-shift{display:block;font-size:.8em;font-weight:800;color:#fbbf24}
+.dh4-mid-row,.dh4-next-wrap{display:flex;gap:12px;min-height:0}
+.dh4-mid-row{flex:0 0 auto;height:360px}
+.dh4-next-wrap{flex:0 0 auto;height:420px}
+.dh4-mid-row>.dh4-orders{flex:2.6 1 0}
+.dh4-mid-row>.dh3-panel:not(.dh4-orders){flex:1 1 0}
+.dh4-next-wrap>.dh3-panel{flex:1 1 0}
+@media (max-width:1100px){.dh4-mid-row{flex-direction:column;height:auto}.dh4-mid-row>.dh3-panel{min-height:320px}}
+.dh-tv .dh4-mid-row{flex:1 1 0;height:auto;gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-next-wrap{flex:1.15 1 0;height:auto}
+.dh-tv .dh3-machine-row{flex:1.3 1 0;min-height:clamp(200px,32dvh,900px)}
+.dh4-hd-big{font-size:clamp(12px,1.5dvh,20px)}
+.dh4-hd-big b{color:#8fc0ff;font-weight:700}
+.dh4-tbl{display:flex;flex-direction:column;flex:1;min-height:0;font-size:12.5px;color:#eaf2ff}
+.dh-tv .dh4-tbl{font-size:clamp(10px,1.45dvh,24px)}
+.dh4-otbl{--g:2.4em minmax(0,1.35fr) repeat(7,minmax(0,1fr)) 86px}
+.dh-tv .dh4-otbl{--g:2.4em minmax(0,1.35fr) repeat(7,minmax(0,1fr))}
+.dh4-ntbl{--g:2.4em minmax(0,1.3fr) repeat(5,minmax(0,1fr))}
+.dh4-row{display:grid;grid-template-columns:var(--g);gap:6px;align-items:center;padding:5px 8px}
+.dh4-head{font-size:.78em;font-weight:800;color:#9db3e0;text-transform:uppercase;flex:0 0 auto}
+.dh4-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:4px}
+.dh4-body::-webkit-scrollbar{display:none}
+.dh4-orow,.dh4-nrow{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;cursor:pointer;flex:0 0 auto}
+.dh4-orow{border-left:4px solid var(--pc,#64748b)}
+.dh4-orow:hover,.dh4-nrow:hover{background:rgba(255,255,255,.1)}
+.dh4-row>span{min-width:0;overflow-wrap:anywhere;line-height:1.2}
+.dh4-c-stt{font-weight:800;color:#8fc0ff}
+.dh4-c-code{font-weight:800;color:#7cc4ff}
+.dh4-pri{display:block;font-style:normal;font-size:.72em;font-weight:800}
+.dh4-c-cust{font-weight:700}
+.dh4-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.dh4-late{color:#ff6b6b;font-weight:800}
+.dh4-prog{display:flex;align-items:center;gap:6px}
+.dh4-bar{flex:1;height:.8em;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden}
+.dh4-bar i{display:block;height:100%;border-radius:99px;transition:width .6s}
+.dh4-bar i.ok{background:#22c55e}.dh4-bar i.soon{background:#f59e0b}.dh4-bar i.late{background:#ef4444}
+.dh4-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.82em;font-weight:800;color:#fff;white-space:nowrap}
+.dh4-b-run{background:#16a34a}.dh4-b-late{background:#dc2626}.dh4-b-soon{background:#d97706}
+.dh4-b-done{background:#65a30d}.dh4-b-wait{background:#ca8a04}.dh4-b-ready{background:transparent;border:1.5px solid #22c55e;color:#4ade80}
+.dh4-b-maint{background:#7c3aed}
+.dh4-act{display:flex;gap:4px}
+.dh4-act button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;cursor:pointer;padding:2px 6px}
+.dh-tv .dh4-act{display:none}
+/* ═══ BẢNG MÀU THEO ẢNH MẪU (chỉ đổi màu, không đổi logic/bố cục) ═══ */
+.dh-wrap.dh2{--dh-bg1:#071a3f;--dh-bg2:#0a2656;--dh-bg3:#0d3278;
+  background:radial-gradient(120% 90% at 50% 0%,#0c2a63 0%,#081f4b 45%,#061633 100%)}
+/* Header */
+.dh-wrap.dh2 .dh2-topbar{background:linear-gradient(90deg,#08193d,#0b2455 55%,#08193d);border-bottom:1px solid #1d4390;border-radius:0}
+.dh-wrap.dh2 .dh2-tb-center{color:#fff;text-shadow:none;font-weight:900}
+.dh-wrap.dh2 .dh3-tb-datebox{background:transparent;border:0;color:#cfe0ff}
+.dh-wrap.dh2 #dhClockTime{color:#fff;font-weight:900}
+.dh-wrap.dh2 .dh4-shift{color:#fff}
+.dh-wrap.dh2 .dh3-tb-account,.dh-wrap.dh2 .dh3-tb-bell{background:transparent;border-color:#27498f}
+.dh-wrap.dh2 .dh-tv-btn{background:#0d2a63;border:1px solid #2f5fc4;color:#fff}
+/* KPI: thẻ màu đặc, chữ trắng */
+.dh-wrap.dh2 .dh3-kpi-card{border:0;border-radius:12px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.dh-wrap.dh2 .dh3-kpi-card:hover{filter:brightness(1.08)}
+.dh-wrap.dh2 .dh3-kpi-ic{background:rgba(255,255,255,.22);color:#fff!important}
+.dh-wrap.dh2 .dh3-kpi-lbl{color:#fff;opacity:.95}
+.dh-wrap.dh2 .dh3-kpi-val{color:#fff}
+.dh-wrap.dh2 .dh3-kpi-delta,.dh-wrap.dh2 .dh3-kpi-delta.up,.dh-wrap.dh2 .dh3-kpi-delta.warn,.dh-wrap.dh2 .dh3-kpi-delta.flat{color:rgba(255,255,255,.88)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(1){background:linear-gradient(135deg,#2478f0,#1559c8)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(2){background:linear-gradient(135deg,#25b45b,#168f40)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(3){background:linear-gradient(135deg,#f6a60f,#e48a00)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(4){background:linear-gradient(135deg,#17a0c2,#0e7f9f)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(5){background:linear-gradient(135deg,#2ba35f,#1b8049)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(6){background:linear-gradient(135deg,#e5344f,#c01f3a)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(7){background:linear-gradient(135deg,#7152e6,#5538c4)}
+.dh4-kpi8>.dh3-kpi-card:nth-child(8){background:linear-gradient(135deg,#f03c66,#d02551)}
+/* Tiêu đề khu máy */
+.dh-wrap.dh2 .dh-group-title{color:#fff;border-bottom:2px solid #2f7bff;padding-bottom:4px}
+.dh-wrap.dh2 .dh-group-title::before{display:none}
+.dh-wrap.dh2 .dh-group-count{color:#9db3e0}
+/* Thẻ máy: nền sáng, viền cyan, chữ xanh navy */
+.dh-wrap.dh2 .dh-card{--dh-accent:#5fd3ff;--dh-card:#f4faff;--dh-card2:#dcebfa;--dh-text2:#38557f;
+  background:linear-gradient(160deg,#f6fbff,#dcebfa);border:2px solid #5fd3ff;border-radius:14px;
+  box-shadow:0 0 0 1px rgba(95,211,255,.5),0 0 18px -2px rgba(80,200,255,.65),0 8px 18px rgba(0,0,10,.3);animation:none}
+.dh-wrap.dh2 .dh-card::before,.dh-wrap.dh2 .dh-card::after{display:none}
+.dh-wrap.dh2 .dh-card{padding-left:14px}
+.dh-wrap.dh2 .dh-card.st-run{--dh-accent:#22c55e;animation:none}
+.dh-wrap.dh2 .dh-card.st-fault{--dh-accent:#ef4444;border-color:#ff8da0;
+  box-shadow:0 0 0 1px rgba(255,100,130,.6),0 0 20px -2px rgba(255,70,100,.7),0 8px 18px rgba(0,0,10,.3);animation:none}
+.dh-wrap.dh2 .dh-card.st-wait{--dh-accent:#f5b533}
+.dh-wrap.dh2 .dh-card.st-ready{--dh-accent:#3b82f6}
+.dh-wrap.dh2 .dh-card.st-maint{--dh-accent:#7c3aed}
+.dh-wrap.dh2 .dh-card.dh-card-overdue{box-shadow:0 0 0 2px #f59e0b,0 0 18px -2px #f59e0b,0 8px 18px rgba(0,0,10,.3)}
+.dh-wrap.dh2 .dh-card-name{color:#0b2250;font-weight:900}
+.dh-wrap.dh2 .dh-card-ic{background:rgba(11,34,80,.08);border-color:rgba(11,34,80,.2)}
+.dh-wrap.dh2 .dh-card-cust{color:#0b2250}
+.dh-wrap.dh2 .dh-card-cust-mat{color:#38557f}
+.dh-wrap.dh2 .dh-card-spec{color:#0b2250;background:rgba(11,34,80,.07);border-color:rgba(11,34,80,.2)}
+.dh-wrap.dh2 .dh-card-kg{color:#1b3a6b;background:rgba(11,34,80,.05);border-color:rgba(11,34,80,.18)}
+.dh-wrap.dh2 .dh-card-time{color:#166534;background:rgba(34,197,94,.14);border-color:rgba(22,101,52,.35)}
+.dh-wrap.dh2 .dh-card-empty{color:#38557f}
+.dh-wrap.dh2 .dh-card-empty-queue-hint{color:#2563eb}
+.dh-wrap.dh2 .dh-card-qty span{color:#38557f}
+.dh-wrap.dh2 .dh-ring{color:#0b2250;background:conic-gradient(var(--dh-accent) calc(var(--p)*1%),rgba(11,34,80,.15) 0)}
+.dh-wrap.dh2 .dh-prog-wrap{background:#c7d6ea}
+.dh-wrap.dh2 .dh-card.st-run .dh-prog-bar{background:#22c55e;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-fault .dh-prog-bar{background:#ef4444;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-wait .dh-prog-bar,.dh-wrap.dh2 .dh-card.st-ready .dh-prog-bar{background:#94a3b8;box-shadow:none}
+/* Nhãn trạng thái máy: màu đặc, chữ trắng */
+.dh-wrap.dh2 .dh-card .dh-status-chip{color:#fff;border:0;border-radius:6px;padding:3px 10px;background:var(--dh-accent)}
+.dh-wrap.dh2 .dh-card .dh-status-chip::before{background:#fff;box-shadow:none}
+.dh-wrap.dh2 .dh-card.st-wait .dh-status-chip{color:#3b2a00}
+.dh-wrap.dh2 .dh-card.st-wait .dh-status-chip::before{background:#3b2a00}
+/* Panel + bảng */
+.dh-wrap.dh2 .dh3-panel{background:linear-gradient(180deg,#0e2659,#0a1e48);border:1px solid #1f4a9a;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(80,150,255,.07)}
+.dh-wrap.dh2 .dh3-panel-hd{color:#fff}
+.dh-wrap.dh2 .dh4-hd-big b{color:#8fc0ff}
+.dh-wrap.dh2 .dh4-head{background:rgba(255,255,255,.07);color:#cfe0ff;border-radius:6px}
+.dh-wrap.dh2 .dh4-orow,.dh-wrap.dh2 .dh4-nrow{background:transparent;border:0;border-bottom:1px solid rgba(120,160,255,.16);border-radius:0;color:#e8f0ff}
+.dh-wrap.dh2 .dh4-orow{border-left:0}
+.dh-wrap.dh2 .dh4-orow:hover,.dh-wrap.dh2 .dh4-nrow:hover{background:rgba(80,140,255,.12)}
+.dh-wrap.dh2 .dh4-body{gap:0}
+.dh-wrap.dh2 .dh4-c-code{color:#4da3ff}
+.dh-wrap.dh2 .dh4-c-stt{color:#e8f0ff}
+.dh-wrap.dh2 .dh4-c-cust{color:#fff}
+.dh-wrap.dh2 .dh4-bar{background:rgba(255,255,255,.16);height:.55em}
+.dh-wrap.dh2 .dh4-bar i.ok{background:linear-gradient(90deg,#2f7bff,#22d3ee)}
+.dh-wrap.dh2 .dh4-bar i.full{background:#22c55e}
+.dh-wrap.dh2 .dh4-bar i.soon{background:#f5b533}
+.dh-wrap.dh2 .dh4-bar i.late{background:#ef4444}
+.dh-wrap.dh2 .dh4-badge{border-radius:5px;min-width:5.5em;text-align:center;padding:3px 8px}
+.dh-wrap.dh2 .dh4-b-run{background:#1fa75a}
+.dh-wrap.dh2 .dh4-b-late{background:#e11d48}
+.dh-wrap.dh2 .dh4-b-soon,.dh-wrap.dh2 .dh4-b-wait{background:#f5b533;color:#3b2a00}
+.dh-wrap.dh2 .dh4-b-done{background:#2a6fe0}
+.dh-wrap.dh2 .dh4-b-ready{background:#3b82f6;border:0;color:#fff}
+.dh-wrap.dh2 .dh4-b-maint{background:#7c3aed}
+/* ═══ Bố cục dưới: [Đơn đang SX / Sắp chạy] cùng chiều rộng, Lịch làm việc cao suốt 2 hàng ═══ */
+.dh4-lower{display:flex;gap:12px;min-height:0;flex:0 0 auto;align-items:stretch}
+.dh4-lower-left{flex:2.6 1 0;min-width:0;display:flex;flex-direction:column;gap:12px;min-height:0}
+.dh4-lower-right{flex:1 1 0;min-width:0;display:flex;min-height:0}
+.dh4-lower-right>.dh3-panel{flex:1 1 auto;min-height:0}
+.dh4-lower-left>.dh4-orders{flex:0 0 360px}
+.dh4-lower-left>.dh4-next{flex:0 0 420px}
+@media (max-width:1100px){.dh4-lower{flex-direction:column}.dh4-lower-right>.dh3-panel{min-height:420px}}
+.dh-tv .dh4-lower{flex:1 1 0;gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-lower-left{gap:clamp(6px,.9dvh,14px)}
+.dh-tv .dh4-lower-left>.dh4-orders{flex:1 1 0;min-height:0}
+.dh-tv .dh4-lower-left>.dh4-next{flex:1.15 1 0;min-height:0}
+/* ═══ 2 khối [ĐƠN ĐANG SX | SẮP CHẠY] cạnh nhau, mỗi khối ~50% bề rộng cột trái → cao hơn, xem được nhiều dòng hơn ═══ */
+.dh4-sub{display:block;font-style:normal;font-size:.78em;font-weight:600;color:#9db3e0;margin-top:1px}
+.dh-wrap.dh2 .dh4-sub{color:#9db3e0}
+/* ═══ Căn cột cân đối 2 bảng: tiêu đề & dữ liệu cùng canh lề, cùng độ lệch viền ═══ */
+.dh4-head{border:1px solid transparent}
+.dh4-otbl .dh4-head{border-left:4px solid transparent}
+.dh-wrap.dh2 .dh4-head{border:0}
+/* Căn cột ĐỀU NHAU: các cột dữ liệu rộng bằng nhau (1fr) và căn giữa → khoảng cách giữa các cột đều; chỉ Khách hàng căn trái */
+.dh4-otbl .dh4-row>span:nth-child(1),.dh4-ntbl .dh4-row>span:nth-child(1),
+.dh4-otbl .dh4-row>span:nth-child(n+3):nth-child(-n+9),.dh4-ntbl .dh4-row>span:nth-child(n+3):nth-child(-n+7){text-align:center;padding-left:0;padding-right:0}
+.dh4-otbl .dh4-row>span:nth-child(n+3):nth-child(-n+9),.dh4-ntbl .dh4-row>span:nth-child(n+3):nth-child(-n+7){overflow-wrap:normal;white-space:normal}
+.dh4-otbl .dh4-row>span:nth-child(6),.dh4-otbl .dh4-row>span:nth-child(7),.dh4-ntbl .dh4-row>span:nth-child(6){white-space:nowrap}
+.dh4-head>span{white-space:normal;line-height:1.1}
+.dh4-otbl .dh4-badge{min-width:0;padding:2px 6px;font-size:.78em;text-align:center}
+.dh4-c-mat{font-weight:700;color:#bfe0ff;overflow-wrap:anywhere}
+.dh4-tag{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.82em;font-weight:800;white-space:nowrap}
+.dh4-tag-bo{background:#f97316;color:#fff}
+.dh4-head>span{white-space:normal;line-height:1.1;overflow-wrap:normal;hyphens:none}
+.dh4-lower-left{container-type:inline-size}
+.dh-wrap:not(.dh-tv) .dh4-tbl{font-size:clamp(10px,.85cqw,13px)}
+.dh4-row>.dh4-c-cust{overflow-wrap:break-word}
+.dh4-otbl .dh4-row>span.dh4-act{justify-content:center;gap:3px}
+.dh4-otbl .dh4-act button{padding:2px 4px;font-size:.9em;line-height:1.2}
+.dh4-otbl .dh4-row>span.dh4-act{min-width:0;flex-wrap:nowrap;overflow:visible}
+/* ═══ Khối đồng hồ + ca làm việc (hiện đại): giờ lớn · ngày · ca có thanh tiến độ ═══ */
+.dh3-tb-datebox.dhx-clock,.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock{--sc:#38bdf8;flex-direction:row;align-items:center;gap:14px;padding:7px 16px 7px 14px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(56,120,255,.20),rgba(255,255,255,.04) 60%),rgba(8,20,48,.55);
+  border:1px solid rgba(120,170,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 6px 18px rgba(0,10,40,.35);color:#eaf1ff;font-size:inherit;min-width:0}
+.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="1"]{--sc:#fbbf24}.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="2"]{--sc:#38bdf8}.dh-wrap.dh2 .dh3-tb-datebox.dhx-clock[data-shift="3"]{--sc:#a78bfa}
+.dhx-time,.dh-wrap.dh2 #dhClockTime.dhx-time{font-size:30px;line-height:1;font-weight:800;color:#fff;letter-spacing:.5px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  text-shadow:0 0 18px rgba(96,165,250,.45)}
+.dhx-time small{font-size:.5em;font-weight:700;color:#7fb2ff;letter-spacing:.3px;margin-left:1px;text-shadow:none}
+.dhx-colon{font-weight:700;color:#8fc0ff;margin:0 1px;animation:dhxBlink 1s steps(1,end) infinite}
+@keyframes dhxBlink{0%{opacity:1}50%{opacity:.25}}
+.dhx-vline{align-self:stretch;width:1px;background:linear-gradient(180deg,transparent,rgba(160,195,255,.38),transparent)}
+.dhx-info{display:flex;flex-direction:column;gap:4px;min-width:128px}
+.dhx-date{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:#cfe0ff;white-space:nowrap}
+.dhx-wd{font-weight:800;text-transform:uppercase;letter-spacing:.9px;font-size:.88em;color:#8fc0ff}
+.dhx-dsep{width:3px;height:3px;border-radius:50%;background:#5c76ad}
+.dhx-dmy{font-variant-numeric:tabular-nums;font-weight:700;color:#eaf1ff}
+.dhx-shiftrow{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dhx-dot{width:7px;height:7px;border-radius:50%;background:var(--sc);box-shadow:0 0 0 0 var(--sc);animation:dhxPulse 2s ease-out infinite;flex:0 0 auto}
+@keyframes dhxPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sc) 70%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+.dhx-shift{display:flex;align-items:baseline;gap:6px;font-size:11px}
+.dhx-shift b{color:var(--sc);font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.dhx-shift em{font-style:normal;font-weight:600;color:#9db3e0;font-variant-numeric:tabular-nums}
+.dhx-prog{height:3px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.dhx-prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 55%,#fff),var(--sc));box-shadow:0 0 8px var(--sc);transition:width 1s linear}
+.dh-tv .dhx-clock{gap:clamp(6px,1dvh,14px);padding:clamp(3px,.6dvh,7px) clamp(8px,1.2dvh,16px);border-radius:clamp(7px,1.1dvh,14px)}
+.dh-tv .dhx-time,.dh-wrap.dh2.dh-tv #dhClockTime.dhx-time{font-size:clamp(14px,3dvh,30px)}
+.dh-tv .dhx-info{min-width:0;gap:clamp(1px,.3dvh,4px)}
+.dh-tv .dhx-date{font-size:clamp(7px,1.15dvh,11.5px)}.dh-tv .dhx-shift{font-size:clamp(7px,1.1dvh,11px)}
+@media (prefers-reduced-motion:reduce){.dhx-colon,.dhx-dot{animation:none}}
+/* ═══ Thanh trên cùng: chống tràn viền/khung — 1 hàng, khối đồng hồ không bị bóp, thu gọn dần theo bề rộng ═══ */
+.dh2-topbar{container-type:inline-size;container-name:dhtb;flex-wrap:nowrap;gap:clamp(8px,1.2vw,18px)}
+.dh2-topbar .dh2-tb-left{flex:1 1 0;min-width:0}
+.dh2-topbar .dh2-tb-center{flex:0 1 auto;min-width:0}
+.dh2-topbar .dh2-tb-right{flex:0 0 auto;flex-wrap:nowrap;gap:clamp(6px,.8vw,12px);min-width:0}
+.dh2-topbar .dh2-tb-right>*{flex:0 0 auto}
+.dh3-tb-datebox.dhx-clock{flex:0 0 auto;min-width:max-content;box-sizing:border-box}
+.dhx-clock .dhx-time,.dhx-clock .dhx-info,.dhx-clock .dhx-date,.dhx-clock .dhx-shiftrow{flex:0 0 auto;min-width:max-content}
+.dhx-clock .dhx-prog{min-width:100%}
+.dhx-clock .dhx-info{min-width:max-content}
+.dh-tv .dh2-topbar .dh2-tb-right{flex-wrap:nowrap}
+.dh-tv .dhx-clock .dhx-info{min-width:max-content}
+@container dhtb (max-width:1500px){
+  .dh2-tb-center{font-size:16px}
+  .dh3-tb-account-role{display:none}
+  .dh-company-sub{display:none}
+}
+@container dhtb (max-width:1320px){
+  .dh3-tb-account>div:last-child{display:none}
+  .dh3-tb-account{padding:4px}
+  .dh2-tb-center{font-size:15px;letter-spacing:.4px}
+  .dh3-tb-datebox.dhx-clock{gap:10px;padding:6px 12px}
+  .dhx-time{font-size:26px}
+}
+@media (max-width:1180px){.dh2-topbar,.dh-tv .dh2-topbar{flex-wrap:wrap}}
+@container dhtb (max-width:1120px){
+  .dh2-topbar .dh2-tb-center{order:3;flex:1 0 100%;text-align:center;font-size:14px}
+  .dh2-topbar .dh2-tb-left{flex:1 1 220px}
+  .dh2-topbar .dh2-tb-right{margin-left:auto}
+}
+@container dhtb (max-width:760px){
+  .dh3-tb-sync-btn{padding:6px 8px}
+  .dhx-vline,.dhx-prog{display:none}
+}
+.dh4-lower{height:760px}
+.dh4-lower-left{flex:4.2 1 0;flex-direction:row}
+.dh4-lower-left>.dh4-orders{flex:1.2 1 0;min-width:0}
+.dh4-lower-left>.dh4-next{flex:1 1 0;min-width:0}
+.dh4-lower-right{flex:.8 1 0}
+.dh-tv .dh4-lower{height:auto}
+.dh-tv .dh4-lower-left{gap:clamp(6px,.9dvw,16px)}
+.dh-tv .dh4-lower-left>.dh4-orders{flex:1.2 1 0}
+.dh-tv .dh4-lower-left>.dh4-next{flex:1 1 0}
+@media (max-width:1100px){.dh4-lower{height:auto}.dh4-lower-left{flex-direction:column}.dh4-lower-left>.dh3-panel{flex:0 0 420px}}
+/* Đơn đang SX rộng hơn, Đơn sắp chạy thu nhỏ lại */
+.dh4-lower-left>.dh4-orders,.dh-tv .dh4-lower-left>.dh4-orders{flex:1.35 1 0}
+.dh4-lower-left>.dh4-next,.dh-tv .dh4-lower-left>.dh4-next{flex:.85 1 0}
+
+/* ═══ Typography v2 — "ĐƠN HÀNG ĐANG SẢN XUẤT" & "ĐƠN SẮP CHẠY" ═══
+   Phân cấp chữ rõ ràng: Khách hàng (to, đậm, trắng) > số liệu (đậm, số đều nét) >
+   thông tin phụ (nhỏ, xám xanh). Quy cách / Máy / Ưu tiên / Trạng thái dạng "chip"
+   bo tròn để quét mắt nhanh từ xa. Mọi cỡ chữ dùng em → tự co giãn theo chế độ TV. */
+.dh-wrap.dh2 .dh4-tbl{font-feature-settings:"tnum" 1,"cv11" 1;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.dh-wrap.dh2 .dh4-hd-big{display:flex;align-items:center;gap:.65em;font-weight:800;letter-spacing:.9px;text-transform:uppercase}
+.dh-wrap.dh2 .dh4-hd-big b{font-size:.74em;font-weight:800;letter-spacing:.3px;color:#bfe0ff;background:rgba(143,192,255,.14);border:1px solid rgba(143,192,255,.3);border-radius:99px;padding:.18em .8em;text-transform:none}
+.dh-wrap.dh2 .dh4-head{font-size:.7em;font-weight:800;letter-spacing:.8px;color:#9fbdf0;background:rgba(255,255,255,.06);padding-top:.6em;padding-bottom:.6em}
+.dh-wrap.dh2 .dh4-row{padding-top:.5em;padding-bottom:.5em}
+.dh-wrap.dh2 .dh4-body>.dh4-row:nth-child(even){background:rgba(255,255,255,.035)}
+.dh-wrap.dh2 .dh4-orow{box-shadow:inset .26em 0 0 var(--pc,#64748b)}
+.dh-wrap.dh2 .dh4-row>.dh4-c-stt{font-size:.9em;font-weight:800;color:#7fa8e8}
+.dh-wrap.dh2 .dh4-row>.dh4-c-cust{font-size:1.12em;font-weight:800;letter-spacing:.1px;line-height:1.2;color:#fff}
+.dh-wrap.dh2 .dh4-sub{margin-top:.3em;font-size:.72em}
+.dh-wrap.dh2 .dh4-pri{display:inline-block;font-size:1em;font-weight:800;letter-spacing:.4px;padding:.1em .65em;border-radius:99px;
+  background:color-mix(in srgb,currentColor 15%,transparent);border:1px solid color-mix(in srgb,currentColor 42%,transparent)}
+.dh-wrap.dh2 .dh4-c-mat{font-size:1em;font-weight:800;color:#a8d4ff;letter-spacing:.2px}
+.dh-wrap.dh2 .dh4-tag{font-size:.8em;letter-spacing:.5px;border-radius:99px;padding:.18em .75em}
+.dh-wrap.dh2 .dh4-spec{display:inline-block;font-weight:800;font-size:.98em;letter-spacing:.2px;color:#fff;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:.55em;padding:.2em .6em;line-height:1.25}
+.dh-wrap.dh2 .dh4-num{font-size:1.1em;font-weight:800;color:#fff}
+.dh-wrap.dh2 .dh4-left{color:#5eead4}
+.dh-wrap.dh2 .dh4-left.zero{color:#7f93bd;font-weight:700}
+.dh-wrap.dh2 .dh4-c-mc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2em}
+.dh-wrap.dh2 .dh4-chip{display:inline-block;max-width:100%;text-align:center;font-size:.92em;font-weight:800;letter-spacing:.2px;line-height:1.2;color:#bae6fd;
+  background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.42);border-radius:99px;padding:.2em .7em}
+.dh-wrap.dh2 .dh4-mc-stage{font-style:normal;font-size:.72em;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8ea6d6}
+.dh-wrap.dh2 .dh4-badge{display:inline-flex;align-items:center;justify-content:center;gap:.4em;border-radius:99px;font-size:.76em;font-weight:800;letter-spacing:.5px;padding:.28em .85em;min-width:0;white-space:nowrap}
+.dh-wrap.dh2 .dh4-badge::before{content:'';width:.55em;height:.55em;border-radius:50%;background:currentColor;opacity:.9}
+.dh-wrap.dh2 .dh4-b-run{background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.55)}
+.dh-wrap.dh2 .dh4-b-late{background:rgba(244,63,94,.2);color:#fda4af;border:1px solid rgba(244,63,94,.6)}
+.dh-wrap.dh2 .dh4-b-soon{background:rgba(245,181,51,.2);color:#fcd34d;border:1px solid rgba(245,181,51,.6)}
+.dh-wrap.dh2 .dh4-b-done{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.6)}
+/* Chia lại độ rộng cột: Quy cách rộng hơn (không bị ngắt 3 dòng), Máy đủ chỗ cho chip 1 dòng */
+.dh-wrap.dh2 .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.95fr) minmax(0,1.7fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.1fr) 86px}
+.dh-wrap.dh2.dh-tv .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,.95fr) minmax(0,1.7fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.1fr)}
+.dh-wrap.dh2 .dh4-ntbl{--g:2.2em minmax(0,1.25fr) minmax(0,.9fr) minmax(0,.95fr) minmax(0,1.75fr) minmax(0,.85fr) minmax(0,1.15fr)}
+.dh-wrap.dh2 .dh4-spec{font-size:.94em;padding:.2em .5em}
+.dh-wrap.dh2 .dh4-chip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.88em;padding:.2em .6em}
+.dh-wrap.dh2 .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,1.05fr) minmax(0,1.6fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.15fr) 86px}
+.dh-wrap.dh2.dh-tv .dh4-otbl{--g:2.2em minmax(0,1.3fr) minmax(0,.85fr) minmax(0,1.05fr) minmax(0,1.6fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1.15fr)}
+.dh-wrap.dh2 .dh4-ntbl{--g:2.2em minmax(0,1.2fr) minmax(0,.85fr) minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1.4fr)}
+.dh-wrap.dh2 .dh4-ntbl .dh4-chip{white-space:normal;overflow:visible}
+.dh-wrap.dh2 .dh4-tag{padding:.18em .6em;letter-spacing:.3px}
+.dh-wrap.dh2 .dh4-badge{letter-spacing:.3px;padding:.28em .75em}
