@@ -1,0 +1,134 @@
+== 1. Kiểm chứng tĩnh ==
+✓ sw.js: 165 tài nguyên khớp index.html, CSS network-first
+[1] JS — mọi khối mã top-level được bảo toàn nguyên văn
+  ✓ 1148 khối mã (hàm/biến/lệnh) trùng khớp từng ký tự giữa bản gốc và bản mới
+  ✓ phần đuôi script khớp
+[2] CSS — nối các file theo thứ tự = CSS gốc
+  ✓ 39 file CSS nối lại = CSS gốc (335202 ký tự)
+  ✓ CSS #dh4-style khớp
+[3] HTML — markup tạo ra bởi document.write = markup gốc
+  ✓ 26 khối markup được kiểm tra
+  ✓ script logo khớp
+  ✓ thư viện QR nhúng nguyên văn
+[4] index.html — tham chiếu file
+  ✓ 163 tham chiếu đều tồn tại
+  ✓ không file nào nạp 2 lần
+  ✓ mọi file JS đều được nạp
+[5] Thứ tự nạp — mã chạy ngay khi nạp chỉ dùng thứ đã được định nghĩa
+  ✓ 284 lệnh chạy-ngay, 283 phụ thuộc — không có phụ thuộc nào bị đảo thứ tự
+  ✓ không có khai báo let/const trùng giữa các file
+[6] Thứ tự các lệnh đăng ký sự kiện/timer khi nạp
+  ✓ 24 listener trên 13 cặp (target, sự kiện) giữ nguyên thứ tự đăng ký
+
+✓ TẤT CẢ kiểm tra tĩnh ĐẠT
+== 2. Giao diện (DOM/CSS/ảnh) ==
+errors: 0
+tabs captured: 51
+errors: 0
+tabs captured: 51
+ĐẠT 160 mục · KHÁC 0 mục · ảnh chụp lệch nhiều nhất: 0.0441% (overlay-desktop-notifPanel.png) · ngưỡng 0.1%
+== 3. Chức năng/đồng bộ ==
+[1] Đăng nhập, phân quyền, đăng xuất
+  ✓ login.saiMatKhau.vanOLogin
+  · login.saiMatKhau.thongBao = "Tên đăng nhập hoặc mật khẩu không đúng"
+  · login.admin = {"app":true,"tab":"dashboard","role":"admin","fab":true}
+  ✓ logout.veLogin
+  · login.nhanVien = {"app":true,"role":"staff","fab":false}
+  ✓ nhanVien.khongMoDuocFormTaoDon
+  · nhanVien.vaoKhachHang = "khachHang"
+  · login.soLieu = {"tab":"soLieu","role":"solieu","fullscreen":true,"menu":"sbi-soLieu"}
+  · soLieu.biEpVeSoLieu = "soLieu"
+  · loiJS.phanQuyen = 0
+  ✓ login.khoaSauNhieuLanSai
+[2] Thêm / sửa / xoá / tìm kiếm đơn hàng
+  · crud.themDon.trongBoNho = 1
+  ✓ crud.themDon.trenFirebase
+  · crud.themDon.truongDuLieu = {"customer":"KHÁCH TEST A","qty":7,"status":"pending","priority":"GẤP 1","thickness":5,"width":30,"length":4000,"version":1,"hasKg":true}
+  · crud.doiTrangThai = "running"
+  · crud.timKiem = 1
+  ✓ crud.xoaDon.trenFirebase
+  ✓ crud.xoaDon.nhatKy
+  · firebase.nhanhDuLieu = ["csTemplates","khuonCatalog","khuonQty","orders","users"]
+  · loiJS.crud = 0
+[3] Đồng bộ giữa 2 thiết bị
+  · sync.AtaoDon_BnhanDuoc = 1
+  ✓ sync.khongTrungId
+  · sync.BdoiTrangThai_trenServer = "running"
+  (thông tin, không so sánh) A thấy trạng thái = running
+  ✓ sync.matMang_BchuaCoKhiOffline
+  ✓ sync.matMang_BnhanLaiKhiOnline
+  ✓ sync.suaTrungBanGhi.khongMatBanGhi
+  · sync.suaTrungBanGhi.soBanSaoTrenServer = 1
+  ✓ sync.suaTrungBanGhi.haiThietBiHoiTu
+  · sync.tongDonCuoi = {"server":9,"A":9,"B":9}
+  · loiJS.sync = 0
+[4] Sao lưu / QR / thông báo / TV Mode / trang công khai
+  ✓ backup.chay
+  ✓ backup.coBanSaoLuuTrenFirebase
+  ✓ backup.khongGhiDeDuLieuGoc
+  · notif.themVaDem = {"n":1,"unread":1,"badge":""}
+  · qr.taoMa = {"hasCode":true,"url":"/index.html?qr=ABC&db=http%3A%2F%2F127.0.0.1%3APORT%2F__fb"}
+  · tv.bat = {"mode":true,"bodyCls":"dh-tv-fullscreen","locked":true}
+  · tv.tat = {"mode":false,"locked":false}
+  · loiJS.tinhNangKhac = 0
+  · congKhai.khuon = {"pub":true,"login":false,"len":true}
+  · congKhai.khuon.loiJS = 0
+  · congKhai.nhanSu = {"pub":true,"login":false,"len":true}
+  · congKhai.nhanSu.loiJS = 0
+  · congKhai.chamCong = {"pub":true,"login":false,"len":true}
+  · congKhai.chamCong.loiJS = 0
+
+(tất cả kiểm tra tuyệt đối đạt)
+[1] Đăng nhập, phân quyền, đăng xuất
+  ✓ login.saiMatKhau.vanOLogin
+  · login.saiMatKhau.thongBao = "Tên đăng nhập hoặc mật khẩu không đúng"
+  · login.admin = {"app":true,"tab":"dashboard","role":"admin","fab":true}
+  ✓ logout.veLogin
+  · login.nhanVien = {"app":true,"role":"staff","fab":false}
+  ✓ nhanVien.khongMoDuocFormTaoDon
+  · nhanVien.vaoKhachHang = "khachHang"
+  · login.soLieu = {"tab":"soLieu","role":"solieu","fullscreen":true,"menu":"sbi-soLieu"}
+  · soLieu.biEpVeSoLieu = "soLieu"
+  · loiJS.phanQuyen = 0
+  ✓ login.khoaSauNhieuLanSai
+[2] Thêm / sửa / xoá / tìm kiếm đơn hàng
+  · crud.themDon.trongBoNho = 1
+  ✓ crud.themDon.trenFirebase
+  · crud.themDon.truongDuLieu = {"customer":"KHÁCH TEST A","qty":7,"status":"pending","priority":"GẤP 1","thickness":5,"width":30,"length":4000,"version":1,"hasKg":true}
+  · crud.doiTrangThai = "running"
+  · crud.timKiem = 1
+  ✓ crud.xoaDon.trenFirebase
+  ✓ crud.xoaDon.nhatKy
+  · firebase.nhanhDuLieu = ["csTemplates","khuonCatalog","khuonQty","orders","users"]
+  · loiJS.crud = 0
+[3] Đồng bộ giữa 2 thiết bị
+  · sync.AtaoDon_BnhanDuoc = 1
+  ✓ sync.khongTrungId
+  · sync.BdoiTrangThai_trenServer = "running"
+  (thông tin, không so sánh) A thấy trạng thái = running
+  ✓ sync.matMang_BchuaCoKhiOffline
+  ✓ sync.matMang_BnhanLaiKhiOnline
+  ✓ sync.suaTrungBanGhi.khongMatBanGhi
+  · sync.suaTrungBanGhi.soBanSaoTrenServer = 1
+  ✓ sync.suaTrungBanGhi.haiThietBiHoiTu
+  · sync.tongDonCuoi = {"server":9,"A":9,"B":9}
+  · loiJS.sync = 0
+[4] Sao lưu / QR / thông báo / TV Mode / trang công khai
+  ✓ backup.chay
+  ✓ backup.coBanSaoLuuTrenFirebase
+  ✓ backup.khongGhiDeDuLieuGoc
+  · notif.themVaDem = {"n":1,"unread":1,"badge":""}
+  · qr.taoMa = {"hasCode":true,"url":"/index.html?qr=ABC&db=http%3A%2F%2F127.0.0.1%3APORT%2F__fb"}
+  · tv.bat = {"mode":true,"bodyCls":"dh-tv-fullscreen","locked":true}
+  · tv.tat = {"mode":false,"locked":false}
+  · loiJS.tinhNangKhac = 0
+  · congKhai.khuon = {"pub":true,"login":false,"len":true}
+  · congKhai.khuon.loiJS = 0
+  · congKhai.nhanSu = {"pub":true,"login":false,"len":true}
+  · congKhai.nhanSu.loiJS = 0
+  · congKhai.chamCong = {"pub":true,"login":false,"len":true}
+  · congKhai.chamCong.loiJS = 0
+
+(tất cả kiểm tra tuyệt đối đạt)
+✓ chức năng trùng bản gốc
+EXIT 0
