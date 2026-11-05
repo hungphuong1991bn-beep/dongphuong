@@ -1,0 +1,127 @@
+/* ▸ src/styles/layout.css — đoạn LIÊN TIẾP dòng 172–297 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── APP SHELL ── */
+#appScreen{background:var(--bg)}
+.topbar{height:calc(var(--top) + var(--safe-t));padding-top:var(--safe-t);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding-left:10px;padding-right:12px;flex-shrink:0;box-shadow:var(--sh)}
+.topbar-menu{background:none;border:none;cursor:pointer;padding:7px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background .12s}
+.topbar-menu:active{background:var(--bg)}
+.topbar-logo{width:32px;height:32px;border-radius:9px;object-fit:contain;box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.topbar-title{flex:1;font-size:15px;font-weight:700;letter-spacing:-.2px;color:var(--text)}
+.topbar-clock{display:flex;align-items:center;gap:7px;background:var(--navy);border-radius:10px;padding:5px 10px 5px 8px;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.tb-timebox .tc-live{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;flex-shrink:0;animation:tc-pulse 1.8s ease-in-out infinite;margin-right:6px;display:inline-block}
+.topbar-clock .tc-time{font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#60a5fa;font-variant-numeric:tabular-nums;line-height:1}
+.topbar-clock .tc-time .tc-colon{animation:tc-blink 2s steps(1) infinite}
+.topbar-clock .tc-date{font-size:10px;font-weight:700;color:#93c5fd;padding-left:8px;border-left:1px solid rgba(255,255,255,.18);text-transform:capitalize;line-height:1;white-space:nowrap}
+@keyframes tc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.78)}}
+@keyframes tc-blink{0%,49%{opacity:1}50%,100%{opacity:.25}}
+@media (max-width:420px){.topbar-clock .tc-date{display:none}.topbar-clock{padding:5px 8px}}
+.topbar-sync{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:10px;padding:5px 9px;flex-shrink:0;box-shadow:inset 0 0 0 1px var(--border);cursor:default}
+.topbar-sync .sync-dot{width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0;box-shadow:0 0 5px rgba(16,185,129,.55);animation:sync-blink 2.2s ease-in-out infinite}
+.topbar-sync .sync-text{display:flex;flex-direction:column;line-height:1.15}
+.topbar-sync .sync-label{font-size:10.5px;font-weight:700;color:var(--text2);white-space:nowrap}
+.topbar-sync .sync-time{font-size:9.5px;font-weight:600;color:var(--text4);font-variant-numeric:tabular-nums;white-space:nowrap}
+.topbar-sync.offline .sync-dot{background:var(--amber-m);box-shadow:0 0 5px rgba(245,158,11,.55);animation:sync-blink 1s ease-in-out infinite}
+.topbar-sync.offline .sync-label{color:var(--amber-m)}
+.topbar-sync.error .sync-dot{background:var(--red-m);box-shadow:0 0 5px rgba(220,38,38,.55);animation:sync-blink .6s ease-in-out infinite}
+.topbar-sync.error .sync-label{color:var(--red-m)}
+@keyframes sync-blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.72)}}
+@media (max-width:460px){.topbar-sync .sync-text{display:none}.topbar-sync{padding:5px;background:none;box-shadow:none}}
+.topbar-bell{position:relative;background:none;border:none;cursor:pointer;padding:7px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);flex-shrink:0;transition:background .12s}
+.topbar-bell:active{background:var(--bg)}
+.topbar-bell.ring{animation:tc-pulse .6s ease-in-out}
+.topbar-bell-badge{position:absolute;top:2px;right:2px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--red-m,#dc2626);color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;display:none;box-shadow:0 0 0 2px var(--card)}
+.topbar-bell-badge.show{display:block}
+.avatar-btn{width:34px;height:34px;border-radius:50%;border:2px solid var(--border);overflow:hidden;cursor:pointer;background:#fff;flex-shrink:0;padding:0;transition:border-color .15s,transform .12s}
+.avatar-btn:active{transform:scale(.94);border-color:var(--brand3)}
+.avatar-btn img{width:100%;height:100%;object-fit:contain}
+
+/* ── Topbar: nhóm Lịch/Đồng hồ + Tài khoản (giống ảnh mẫu) ── */
+.tb-toolgroup{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-datebox{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:default;white-space:nowrap;box-shadow:var(--sh)}
+.tb-datebox svg{color:var(--text3);flex-shrink:0}
+.tb-datebox .tc-date{font-size:12.5px;font-weight:700;color:var(--text2);text-transform:none}
+.tb-datebox .tb-chev{color:var(--text4);flex-shrink:0}
+.tb-timebox{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;white-space:nowrap;box-shadow:var(--sh)}
+.tb-timebox .tc-time{font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:800;letter-spacing:.4px;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.tb-timebox .tc-time .tc-colon{animation:tc-blink 2s steps(1) infinite}
+@media (max-width:760px){.tb-timebox{display:none}}
+@media (max-width:600px){.tb-datebox .tc-date{display:none}.tb-datebox{padding:8px}}
+/* Nút tài khoản ở Topbar: giờ hiển thị avatar + tên + vai trò + mũi tên,
+   giống ảnh mẫu, thay vì chỉ có avatar tròn như trước. */
+.avatar-btn{display:flex;align-items:center;gap:8px;width:auto;height:auto;border-radius:12px;border:1px solid transparent;padding:4px 8px 4px 4px;background:none;transition:background .12s,border-color .12s}
+.avatar-btn:hover{background:var(--bg2);border-color:var(--border)}
+.avatar-btn .ab-photo{width:34px;height:34px;border-radius:50%;border:2px solid var(--border);overflow:hidden;flex-shrink:0;position:relative;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+.avatar-btn .ab-photo img{width:100%;height:100%;object-fit:cover;display:none}
+.avatar-btn .ab-initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;letter-spacing:.2px}
+.avatar-btn .ab-text{display:flex;flex-direction:column;line-height:1.2;text-align:left}
+.avatar-btn .ab-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap}
+.avatar-btn .ab-role{font-size:10.5px;color:var(--text4);white-space:nowrap}
+.avatar-btn .ab-chev{color:var(--text4);flex-shrink:0;transition:transform .15s}
+.avatar-btn[aria-expanded="true"] .ab-chev{transform:rotate(180deg)}
+@media (max-width:680px){.avatar-btn .ab-text{display:none}.avatar-btn .ab-chev{display:none}}
+
+/* ── ACCOUNT DROPDOWN (User Menu) ── */
+.acc-dd{position:fixed;z-index:400;width:320px;max-width:94vw;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh2);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:opacity .16s ease,transform .16s ease;overflow-y:auto;overflow-x:hidden}
+.acc-dd.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.acc-dd-head{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:16px;display:flex;gap:12px;align-items:center;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.acc-dd-avatar{width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.65);flex-shrink:0;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.acc-dd-avatar img{width:100%;height:100%;object-fit:cover}
+.acc-dd-sec{padding:8px 14px}
+.acc-dd-sec-title{font-size:10px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin:6px 2px 4px}
+.acc-dd-row{display:flex;align-items:center;gap:9px;padding:5px 2px;font-size:12.5px;color:var(--text2);word-break:break-word}
+.acc-dd-row b{color:var(--text);font-weight:700}
+.acc-dd-div{height:1px;background:var(--border);margin:2px 0}
+.acc-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:3px 9px;border-radius:20px}
+.acc-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,.25)}
+.acc-dd-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text2);border-radius:8px;cursor:pointer;text-align:left}
+.acc-dd-btn:hover{background:var(--bg2)}
+.acc-dd-btn.danger{color:#b91c1c}
+.acc-dd-btn.danger:hover{background:#fef2f2}
+@media (max-width:420px){.acc-dd{width:calc(100vw - 16px)}}
+
+/* ── Avatar uploader (trong modal Sửa thông tin) ── */
+.avu-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:16px}
+.avu-circle{width:84px;height:84px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;position:relative}
+.avu-circle img{width:100%;height:100%;object-fit:cover;display:none}
+.avu-spin{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.55);font-size:20px}
+.avu-btn{font-size:11.5px;font-weight:700;color:var(--brand2);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 8px}
+.avu-hint{font-size:10px;color:var(--text4)}
+
+/* ── Đổi mật khẩu: hiện/ẩn mật khẩu + thước đo độ mạnh ── */
+.field-inp-wrap{position:relative}
+.field-inp-wrap .field-inp{padding-right:38px}
+.pw-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text4);background:none;border:none;padding:4px;font-size:14px;line-height:1}
+.pw-strength{height:5px;border-radius:4px;background:var(--border);margin:8px 0 4px;overflow:hidden}
+.pw-strength i{display:block;height:100%;width:0%;background:var(--border);transition:width .2s,background .2s}
+.pw-strength-label{font-size:10.5px;font-weight:700;color:var(--text4);margin-bottom:2px}
+
+/* ── SIDEBAR ── */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(8,14,28,.5);z-index:200;display:none;backdrop-filter:blur(3px)}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:266px;height:100%;background:var(--card);z-index:201;transition:left .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--sh2);display:flex;flex-direction:column}
+.sidebar.open{left:0}
+.sb-header{padding:22px 16px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;background:var(--bg2)}
+.sb-avatar{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);overflow:hidden;flex-shrink:0;background:#fff}
+.sb-avatar img{width:100%;height:100%;object-fit:contain}
+.sb-name{font-size:14px;font-weight:700;color:var(--text)}
+.sb-role{font-size:11.5px;color:var(--text3);margin-top:2px}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.sb-section{font-size:10.5px;font-weight:800;color:var(--brand3);text-transform:uppercase;letter-spacing:.7px;padding:14px 8px 5px;opacity:.85}
+.sb-item{display:flex;align-items:center;gap:12px;padding:10px 8px;border:none;background:none;cursor:pointer;width:100%;color:var(--text2);font-size:13.5px;font-weight:500;font-family:inherit;transition:background .15s,color .15s;position:relative;border-radius:11px}
+.sb-item:active{background:var(--bg)}
+.sb-item.active{font-weight:700;color:var(--brand);background:rgba(11,95,203,.08)}
+.sb-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0;border-radius:9px;padding:4px;box-sizing:content-box;transition:transform .12s}
+.sb-item:active svg{transform:scale(.92)}
+#sbi-dashboard svg{color:var(--brand2);background:#dbeafe}
+#sbi-dorDang svg{color:var(--orange-m);background:var(--orange-l)}
+#sbi-keHoach svg{color:var(--purple-m);background:var(--purple-l)}
+#sbi-dieuHanh svg{color:var(--red-m);background:var(--red-l)}
+#sbi-hoanThanh svg{color:var(--green-m);background:var(--green-l)}
+#sbi-baoCao svg{color:var(--cyan-m);background:var(--cyan-l)}
+#sbi-nhatKy svg{color:var(--slate-m);background:var(--slate-l)}
+#sbi-nhanSu svg{color:var(--brand-m,var(--brand));background:var(--brand-l,var(--green-l))}
+#sbi-chamCong svg{color:var(--pink-m);background:var(--pink-l)}
+#sbi-lichLamViec svg{color:var(--amber-m);background:var(--amber-l)}
+#sbi-baoTriMay svg{color:var(--red-m);background:var(--red-l)}
+#sbi-settings svg{color:var(--slate-m);background:var(--slate-l)}
+.sb-item.active::before{content:'';position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:0 4px 4px 0;background:var(--brand)}
+

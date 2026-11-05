@@ -1,0 +1,67 @@
+/* ▸ src/styles/responsive.css — đoạn LIÊN TIẾP dòng 3170–3235 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ══ DESKTOP RESPONSIVE ══════════════════════════════════════ */
+@media(min-width:700px){
+  .bottom-nav{display:none!important}
+  .sidebar{position:relative;left:0!important;width:260px;box-shadow:none;border-right:1px solid var(--border);height:100%;background:var(--card)}
+  .sidebar-overlay{display:none!important}
+  #appScreen{flex-direction:row}
+  .app-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  .main-wrap{padding-bottom:24px}
+  .main-content{max-width:900px;margin:0 auto;padding:20px 24px}
+  .main-content > * + *{margin-top:14px}
+  #fab{bottom:28px;right:28px;width:60px;height:60px;font-size:28px;box-shadow:0 6px 24px rgba(30,64,175,.45)}
+  .stats-grid{grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat-card{padding:16px;border-radius:16px}
+  .ann-write-btn .ann-btn-text{display:inline}
+  .stat-num{font-size:30px}
+  .stat-icon-wrap{width:48px;height:48px;border-radius:13px;font-size:22px}
+  /* Desktop: 3 cột đều nhau, không scroll */
+  .dash-3col{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;overflow-x:visible;margin:0;padding:0}
+  .dash-col{flex:none;min-width:0;max-height:480px;display:flex;flex-direction:column}
+  .dash-col-body{overflow-y:auto;flex:1}
+  .modal-box{border-radius:16px;max-width:560px;margin:auto;padding:24px 28px 36px}
+  .modal{align-items:center}
+  .kh-summary{grid-template-columns:repeat(3,1fr)}
+  .card{max-width:100%;border-radius:14px}
+  .card-customer{font-size:16px}
+  .spec-grid{grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px 6px}
+  .spec-box{padding:8px 6px;border-radius:10px}
+  .spec-box-val{font-size:17.5px;letter-spacing:.3px}
+  .spec-box-lbl{font-size:10px}
+  .spec-row{padding:4px 16px 8px;gap:8px}
+  .spec-tag{font-size:13px;padding:4px 12px}
+  .card-header{padding:14px 16px 0;gap:10px}
+  .card-id{font-size:11px;padding:2px 16px}
+  .card-due{font-size:12.5px;padding:3px 16px 8px}
+  .card-note{font-size:13px;padding:8px 16px}
+  .ca-btn{padding:8px 6px;font-size:12.5px}
+  .ca-btn .ca-ico{font-size:14px}
+  .kh-sec-hd span{font-size:14px}
+  .kh-sum-n{font-size:32px}
+  .kh-sum-l{font-size:12px}
+  .kh-sum{padding:18px 12px}
+  .act-row{padding:12px 0}
+  .act-main{font-size:14px}
+  .act-detail{font-size:13px}
+  /* Desktop card grid: 2 cột khi màn hình đủ rộng */
+  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card-grid .card{margin-top:0!important}
+}
+@media(min-width:1100px){
+  .sidebar{width:280px}
+  .main-content{max-width:1100px}
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+  .card-grid{grid-template-columns:1fr 1fr}
+}
+@media(min-width:1400px){
+  .main-content{max-width:1300px}
+  .card-grid{grid-template-columns:repeat(3,1fr)}
+}
+/* Màn hình rất rộng (desktop lớn/ultrawide): nới thêm main-content để
+   bảng #ddTable (13 cột) có nhiều chỗ thở hơn, đỡ phải rút gọn quá mức,
+   thay vì luôn bị giới hạn cứng ở 1300px dù màn hình còn thừa nhiều
+   khoảng trắng hai bên. */
+@media(min-width:1700px){
+  .main-content{max-width:1560px}
+}
+
