@@ -1,0 +1,209 @@
+/* ▸ src/styles/redesign-2026.css — đoạn LIÊN TIẾP dòng 3665–3872 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ══════════════════════════════════════════════════════════════════════
+   GIAO DIỆN MỚI (2026) — Tổng quan & Đơn hàng, đồng bộ theo mẫu thiết kế
+   mới: sidebar xanh navy đậm, topbar có ô tìm kiếm, thẻ KPI vuông-bo-góc
+   với icon màu, bảng đơn hàng có avatar khách hàng + viền trạng thái.
+   CHỈ chỉnh giao diện (CSS + vài đoạn HTML nhỏ) — không đổi logic/JS.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar: nền navy đậm luôn (giống ảnh mẫu), item sáng khi active ── */
+@media(min-width:900px){
+  .sidebar{background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%)!important;border-right:none!important}
+  .sb-header{background:rgba(255,255,255,.04)!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
+  .sb-name{color:#fff!important}
+  .sb-role{color:#93A5D1!important}
+  .sb-section{color:#6B84C4!important}
+  .sb-item{color:#C3CEEA!important}
+  .sb-item:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
+  .sb-item:active,.sb-item.active{background:linear-gradient(90deg,rgba(59,130,246,.22),rgba(59,130,246,.06))!important;color:#fff!important;font-weight:700}
+  .sb-item.active::before{background:#5B9CFF!important;box-shadow:0 0 8px rgba(91,156,255,.6)}
+  .sb-footer{border-top:1px solid rgba(255,255,255,.08)!important}
+
+  /* Khu vực "🟢 Đang truy cập" trên sidebar nền navy tối — trước đây các
+     dòng tên người dùng / tiêu đề / badge vẫn giữ màu chữ tối (gần đen,
+     xanh lá đậm...) vốn thiết kế cho nền sáng, nên bị chìm vào nền tối,
+     khó đọc. Ghi đè lại toàn bộ để tương phản rõ ràng, hiện đại hơn. */
+  .sb-online{color:#93A5D1!important}
+  .sb-online-hd{color:#DCE4F7!important}
+  .sb-online-breakdown{color:#7A8FC9!important}
+  .sb-online-offline{background:rgba(245,158,11,.14)!important;color:#FCD34D!important}
+  .sb-online-list{gap:2px!important}
+  .sb-online-row{border-radius:9px;padding:5px 6px!important;margin:0 -6px;transition:background .12s}
+  .sb-online-row:hover{background:rgba(255,255,255,.05)}
+  .sb-online-avatar::after{border-color:var(--navy2)!important}
+  .sb-online-name{color:#F3F6FF!important}
+  .sb-online-tab{color:#8DA0D4!important}
+  .sb-online-me{background:rgba(91,156,255,.22)!important;color:#BFD4FF!important}
+
+  /* Nút "Đăng xuất" — trước đây chỉ đổi màu chữ, nền vẫn là hồng nhạt vốn
+     dành cho sidebar nền trắng nên bị lệch tông, tương phản kém trên nền
+     navy. Thiết kế lại kiểu "outline đỏ" hiện đại, chữ/icon nổi bật rõ. */
+  .sb-logout{background:rgba(220,90,80,.14)!important;color:#FF9C90!important;border:1px solid rgba(220,90,80,.28)!important}
+  .sb-logout:hover{background:rgba(220,90,80,.24)!important;border-color:rgba(220,90,80,.45)!important}
+}
+
+/* ── Topbar: thêm ô tìm kiếm nhanh + nhóm icon bên phải giống ảnh mẫu ── */
+.tb-search-wrap{flex:1;max-width:560px;position:relative;display:flex;align-items:center;margin:0 4px}
+.tb-search-wrap svg{position:absolute;left:12px;width:16px;height:16px;color:var(--text4);pointer-events:none}
+.tb-search-input{width:100%;padding:9px 12px 9px 34px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg2);font-size:13px;font-family:inherit;color:var(--text);outline:none;transition:border-color .15s,background .15s}
+.tb-search-input::placeholder{color:var(--text4)}
+.tb-search-input:focus{border-color:var(--brand3);background:var(--card)}
+/* ── Nút "Bộ lọc chi tiết" hợp nhất cạnh ô tìm kiếm trung tâm ở Topbar —
+   thay cho việc mỗi tab (Đơn hàng/Kế hoạch SX/Đơn hoàn thành) có 1 nút lọc
+   riêng lặp lại. Bấm vào sẽ mở đúng bộ lọc của tab đang xem (hoặc tab Đơn
+   hàng nếu đang ở tab khác không có bộ lọc riêng) — xem tbFilterBtnClick(). */
+.tb-filter-btn{position:relative;flex-shrink:0;width:38px;height:38px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s,transform .12s;color:var(--text2)}
+.tb-filter-btn:hover{border-color:var(--brand3);background:var(--card)}
+.tb-filter-btn:active{transform:scale(.94)}
+.tb-filter-btn.has-active{border-color:var(--brand3);background:#eff6ff;color:var(--brand)}
+.tb-filter-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,23,42,.3)}
+/* Nút lọc phải LUÔN hiển thị kể cả khi ô tìm kiếm chữ (.tb-search-wrap) bị ẩn
+   trên mobile (<900px) — vì ở mobile đây là lối duy nhất để mở bộ lọc chi tiết. */
+.tb-icon-btn{background:none;border:none;cursor:pointer;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text3);position:relative;flex-shrink:0;transition:background .12s,color .12s}
+.tb-icon-btn:hover{background:var(--bg);color:var(--brand)}
+.tb-icon-btn svg{width:18px;height:18px}
+.tb-icon-badge{position:absolute;top:3px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--red-m);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 0 0 2px var(--card)}
+@media(min-width:900px){
+  .topbar{gap:10px;padding-left:16px;padding-right:16px}
+  .topbar-title{flex:0 0 auto;margin-right:4px}
+}
+@media(max-width:899px){
+  /* TRƯỚC ĐÂY: ẩn hẳn ô tìm kiếm trên mobile (display:none) khiến điện
+     thoại/tablet không có cách nào gõ tìm kiếm/tra cứu đơn hàng — chỉ còn
+     nút Bộ lọc chi tiết. NAY: đưa ô tìm kiếm xuống thành 1 hàng riêng, đầy
+     đủ chiều rộng, ngay dưới hàng tiêu đề + icon — topbar tự cao thêm để
+     chứa hàng này. Tăng biến --top tương ứng để các khối neo theo topbar
+     (toast, panel thông báo, banner cập nhật...) không bị hàng tìm kiếm
+     mới che mất.  */
+  :root{--top:104px}
+  .topbar{flex-wrap:wrap;height:auto;padding-bottom:8px}
+  .tb-search-wrap{display:flex;order:10;flex:0 0 100%;max-width:100%;margin:8px 0 0}
+}
+
+/* ── GLOBAL Header mobile (≤640px, mọi tab): thay toàn bộ topbar cũ (tiêu
+   đề trang + nút Lọc/tìm kiếm/đồng hồ/thông báo rời rạc) bằng 1 khối gọn:
+   tên công ty 2 dòng ở giữa + hàng ngày/giờ/realtime + 2 icon Làm mới &
+   Tìm kiếm — theo đúng bố cục trong ảnh thiết kế. ── */
+.topbar-mh{display:none}
+@media(max-width:640px){
+  :root{--top:84px}
+  .topbar{background:var(--navy,#0b1b3a);border-bottom:none;flex-wrap:wrap;height:auto;padding:8px 10px 10px;gap:4px}
+  .topbar-menu{color:#fff;order:1}
+  .topbar-menu:active{background:rgba(255,255,255,.12)}
+  /* Ẩn toàn bộ khối header cũ trên mobile — thay bằng .topbar-mh */
+  .topbar-title,
+  .ov-live-badge,
+  .ov-refresh-btn,
+  .tb-search-wrap,
+  .tb-filter-btn,
+  .tb-toolgroup,
+  .ann-write-btn,
+  .topbar-sync,
+  .topbar-bell,
+  .avatar-btn{display:none!important}
+  .topbar-mh{display:flex;flex-direction:column;gap:6px;order:2;flex:1 1 100%;width:100%}
+  .topbar-mh-company{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:14px;font-weight:800;color:#fff;line-height:1.3;letter-spacing:.1px}
+  .topbar-mh-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#cfe0ff;font-weight:600}
+  .topbar-mh-item{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .topbar-mh-dot{opacity:.5}
+  .topbar-mh-live{display:flex;align-items:center;gap:5px;color:#7fe3ad}
+  .topbar-mh-live .ov-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.7);flex-shrink:0}
+  .topbar-mh-spacer{flex:1}
+  .topbar-mh-icon{background:rgba(255,255,255,.1);border:none;border-radius:9px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;flex-shrink:0}
+  .topbar-mh-icon:active{background:rgba(255,255,255,.22)}
+  .topbar-mh-icon.active{background:rgba(255,255,255,.28)}
+
+  /* ── Ô tìm kiếm chữ NGAY TRÊN Global Header mobile — bấm icon 🔍 ở hàng
+     ngày/giờ để bật/tắt, gõ trực tiếp được (dùng chung tbGlobalSearchLive/
+     tbGlobalSearchGo với ô tìm kiếm trung tâm ở Topbar Desktop, chỉ khác
+     input#tbGlobalSearchMobile để tránh trùng id). Ẩn theo mặc định, chỉ
+     hiện khi .topbar-mh có class "mob-search-open". */
+  .topbar-mh-searchrow{display:none;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:0 10px;width:100%}
+  .topbar-mh.mob-search-open .topbar-mh-searchrow{display:flex}
+  .topbar-mh-searchrow svg{flex-shrink:0;color:#cfe0ff}
+  .topbar-mh-searchrow input{flex:1;min-width:0;background:none;border:none;outline:none;color:#fff;font-size:13px;font-weight:600;padding:9px 0}
+  .topbar-mh-searchrow input::placeholder{color:#9fb3dd;font-weight:500}
+  .topbar-mh-search-close{flex-shrink:0;background:none;border:none;color:#cfe0ff;font-size:15px;line-height:1;cursor:pointer;padding:6px 2px}
+
+  /* Bỏ tiêu đề + nút "Lọc" riêng ở đầu mỗi tab trên mobile (VD "✅ Đơn hoàn
+     thành" + nút Lọc), vì đã có tên công ty + nút tìm kiếm chung ở Global
+     Header rồi — chỉ giữ lại nút "Xuất Excel". */
+  .htm-title{display:none!important}
+  .htm-head-btn:not(.xls){display:none!important}
+}
+
+/* ── Dashboard: banner chào mừng ── */
+.dash-greet{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.dash-greet-title{font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.dash-greet-sub{font-size:12.5px;color:var(--text3);margin-top:3px;font-weight:600}
+.dash-greet-date{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 14px;text-align:right;box-shadow:var(--sh);flex-shrink:0}
+.dash-greet-date .g-day{font-size:12px;font-weight:700;color:var(--text2)}
+.dash-greet-date .g-time{font-size:15px;font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums;margin-top:1px}
+
+/* ── Dashboard: lưới thẻ KPI đồng bộ 1 hàng, icon vuông bo góc màu ── */
+.stat-card{border-radius:14px;flex-direction:column;align-items:flex-start;gap:0;padding:14px 14px 12px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.stat-card .stat-icon-wrap{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+.stat-card .stat-right{width:100%}
+.stat-card .stat-num{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.stat-card .stat-lbl{font-size:11.5px;color:var(--text3);font-weight:700;margin-top:3px;line-height:1.3}
+.stat-card:hover{border-color:#c9d3e3}
+
+/* ── Dashboard: bố cục lưới 2 cột (chính/phụ) — gọn gàng, chuyên nghiệp ── */
+.dash-main-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+@media(min-width:1080px){.dash-main-grid{grid-template-columns:minmax(0,2fr) minmax(280px,1fr)}}
+.dash-col-main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dash-col-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dash-side-card{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:14px}
+.dash-side-card-title{font-size:12.5px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+
+/* ── Hàng ngang gồm 2 khung thu gọn được (KPI tổng quan + Nhân lực hôm nay,
+   và các cặp khung tương tự) — tiết kiệm diện tích, đặt song song nhau ── */
+.dash-row-2col{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+@media(min-width:860px){.dash-row-2col{grid-template-columns:1fr 1fr}}
+
+/* Khung (panel) có thể bấm để thu gọn/mở rộng, dùng chung cho nhiều mục */
+.dash-panel{background:var(--card);border-radius:16px;box-shadow:var(--sh);border:1px solid var(--border);padding:12px 13px;overflow:hidden;transition:box-shadow .2s,transform .2s}
+.dash-panel:hover{box-shadow:var(--sh2)}
+.dash-panel-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;user-select:none}
+.dash-panel-title{font-size:12px;font-weight:800;color:var(--text2);display:flex;align-items:center;gap:5px}
+.dash-panel-chevron{color:var(--text4);flex-shrink:0;transition:transform .2s}
+.dash-panel-body{margin-top:9px;overflow:hidden}
+.dp-collapsed .dash-panel-body{display:none}
+.dp-collapsed .dash-panel-chevron{transform:rotate(-90deg)}
+
+/* Lưới thẻ KPI thu nhỏ dùng bên trong khung "KPI tổng quan" */
+.stats-grid-kpi-compact{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+@media(max-width:480px){.stats-grid-kpi-compact{grid-template-columns:repeat(2,1fr)}}
+.stat-card-sm{border-radius:11px;border:1px solid var(--border);background:var(--bg2);padding:8px 7px;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:transform .12s,box-shadow .15s,border-color .15s}
+.stat-card-sm:hover{transform:translateY(-1px);box-shadow:var(--sh);border-color:#c9d3e3}
+.stat-card-sm:active{transform:translateY(0) scale(.97)}
+.stat-card-sm .sc-num{font-size:15.5px;font-weight:800;line-height:1.15;letter-spacing:-.2px}
+.stat-card-sm .sc-lbl{font-size:9.5px;color:var(--text3);font-weight:700;line-height:1.25}
+
+/* Thao tác nhanh */
+.dash-qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dash-qa-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px;border-radius:13px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;font-family:inherit;transition:transform .12s,box-shadow .15s,border-color .15s}
+.dash-qa-btn:hover{transform:translateY(-2px);box-shadow:var(--sh);border-color:#c9d3e3}
+.dash-qa-btn:active{transform:translateY(0) scale(.97)}
+.dash-qa-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.dash-qa-lbl{font-size:10.5px;font-weight:700;color:var(--text2);text-align:center;line-height:1.2}
+
+/* ── Tab Đơn hàng: thanh công cụ trên cùng (Bộ lọc / Xuất Excel / Thêm đơn) ── */
+.dd-page-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.dd-page-title{font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.dd-page-sub{font-size:12px;color:var(--text3);font-weight:600;margin-top:2px}
+.dd-page-actions{display:flex;gap:8px;flex-wrap:wrap}
+.dd-page-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:11px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.dd-page-btn:hover{background:var(--bg)}
+.dd-page-btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.dd-page-btn.primary:hover{background:var(--brand2)}
+
+/* ── Bảng đơn hàng: avatar khách hàng + viền trái theo trạng thái ── */
+.dd-table tbody tr td:first-child{position:relative}
+.dd-table tbody tr td:first-child::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.dd-table tbody tr.st-unplanned td:first-child::before{background:#94A3B8}
+.dd-table tbody tr.st-planned td:first-child::before{background:#3B82F6}
+.dd-table tbody tr.st-producing td:first-child::before{background:#F59E0B}
+.dd-table tbody tr.st-completed td:first-child::before,.dd-table tbody tr.st-delivered td:first-child::before{background:#15966C}
+.dd-table tbody tr.is-overdue td:first-child::before{background:#DC2626}
+

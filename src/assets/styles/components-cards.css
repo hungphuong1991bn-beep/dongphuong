@@ -1,0 +1,142 @@
+/* ▸ src/styles/components-cards.css — đoạn LIÊN TIẾP dòng 397–537 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
+/* ── KẾ HOẠCH SX: khối header dạng "dashboard tối" hiện đại — nền xanh
+   navy đậm đồng nhất, khung kính mờ (glass) cho STT / Trạng thái / Ưu
+   tiên / Thời gian chạy, nhận diện nhanh chỉ bằng liếc mắt ── */
+.kh-hd{padding:10px 12px 9px;border-radius:var(--r) var(--r) 0 0;border-bottom:1px solid rgba(255,255,255,.15);transition:background .2s;position:relative;overflow:hidden;background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#6fa3de 100%);box-shadow:inset 0 -1px 0 rgba(255,255,255,.12)}
+.kh-hd::before{content:'';position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.18),rgba(255,255,255,0) 42%);pointer-events:none}
+.kh-hd.status-pending{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#d6a344 130%)}
+.kh-hd.status-running{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#79b0e6 130%)}
+.kh-hd.status-done{background:linear-gradient(135deg,#4a7fc0 0%,#5b90d0 48%,#4bc192 130%)}
+.kh-seq{width:23px;height:23px;border-radius:8px;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,23,42,.22),inset 0 1px 0 rgba(255,255,255,.3)}
+.kh-badge{box-shadow:0 1px 3px rgba(15,23,42,.1);font-size:10.5px;padding:2px 8px}
+.kh-pri{border-width:1.5px;border-style:solid;font-size:10.5px;padding:2px 8px}
+.kh-clock{box-shadow:0 1px 4px rgba(15,23,42,.25);font-size:10.5px}
+.kh-overdue{font-size:10px;color:#fff;font-weight:800;margin-left:auto;background:linear-gradient(135deg,#f87171,#dc2626);padding:2px 8px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.35);animation:pulse-run 1.6s infinite;position:relative;z-index:1}
+
+/* ── Kế hoạch SX: hàng 3 khung kính mờ — Trạng thái / Ưu tiên / Thời gian
+   sản xuất — đồng bộ 1 hàng ngang, phong cách "glassmorphism" hiện đại
+   trên nền navy đậm (khung bo góc, icon + nhãn nhỏ + giá trị nổi bật). ── */
+.kh-info-row{display:flex;align-items:stretch;gap:5px;margin-top:7px;flex-basis:100%;width:100%;min-width:0;position:relative;z-index:1}
+.kh-info-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;flex:1;min-width:0}
+.kh-seq-badge{flex:0 0 auto;align-self:center;width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.08));border:1.5px solid rgba(255,255,255,.4);box-shadow:0 2px 6px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.35);text-shadow:0 1px 2px rgba(0,0,0,.3);position:relative;overflow:hidden}
+.kh-seq-badge::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(125deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 55%);pointer-events:none}
+.kh-info-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 2px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 4px rgba(0,0,0,.1);min-width:0;max-width:100%;overflow:hidden;backdrop-filter:blur(3px);position:relative}
+.kh-info-box::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(125deg,rgba(255,255,255,.32) 0%,rgba(255,255,255,0) 50%);pointer-events:none}
+.kh-info-lbl{font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.35px;opacity:.65;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center}
+.kh-info-val{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:100%;text-align:center;letter-spacing:-.3px;color:#fff}
+.kh-info-box.kh-info-status .kh-info-val{font-size:9.3px;letter-spacing:-.35px}
+.kh-info-box.kh-info-status{color:#fff}
+.kh-info-box.kh-info-status.st-pending{color:#FDE68A;background:rgba(251,191,36,.18);border-color:rgba(253,230,138,.55)}
+.kh-info-box.kh-info-status.st-running{color:#BFDBFE;background:rgba(96,165,250,.2);border-color:rgba(191,219,254,.6)}
+.kh-info-box.kh-info-status.st-done{color:#BBF7D0;background:rgba(74,222,128,.18);border-color:rgba(187,247,208,.55)}
+.kh-info-box.kh-info-pri,.kh-info-box.kh-info-seq{border-width:1.5px;border-style:solid}
+.kh-info-box.kh-info-time{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.kh-info-box.kh-info-time.tm-running{color:#BFDBFE;background:rgba(96,165,250,.2);border-color:rgba(96,165,250,.45);animation:pulse-run 2s infinite}
+.kh-info-box.kh-info-time.tm-wait{color:rgba(255,255,255,.75);background:rgba(255,255,255,.08)}
+.kh-info-box.kh-info-time.tm-warn{color:#FDE68A;background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4)}
+.kh-info-box.kh-info-time.tm-overdue{color:#FCA5A5;background:rgba(248,113,113,.22);border-color:rgba(248,113,113,.5)}
+.kh-info-box.kh-info-time.tm-done{color:#BBF7D0;background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.4)}
+@media(max-width:420px){.kh-info-lbl{font-size:6.5px}.kh-info-val{font-size:9.3px}.kh-info-box.kh-info-status .kh-info-val{font-size:8.6px}.kh-info-box{padding:5px 1px}.kh-seq-badge{width:23px;height:23px;font-size:10.5px}}
+
+/* ── Khách hàng: avatar tròn + tên nổi bật, hiện đại hơn ── */
+.card-customer-row{display:flex;align-items:center;gap:8px;padding:8px 12px 3px}
+.cust-avatar{width:32px;height:32px;border-radius:10px;color:#fff;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(15,23,42,.2),inset 0 1px 0 rgba(255,255,255,.35);letter-spacing:.3px}
+.cust-info{min-width:0;flex:1}
+.cust-name{font-size:14px;font-weight:800;color:var(--text);line-height:1.25;letter-spacing:-.1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-po{font-size:10px;color:var(--brand3);font-weight:700;margin-top:2px;display:inline-flex;align-items:center;gap:3px;background:var(--bg);padding:1px 7px 1px 5px;border-radius:20px;border:1px solid var(--border)}
+.card-id{font-size:10.5px;color:var(--brand3);font-family:monospace;padding:1px 14px;letter-spacing:.3px}
+.card-added{display:flex;align-items:center;gap:5px;margin:2px 14px 5px;padding:3px 10px 3px 8px;background:var(--bg);border:1px solid var(--border);border-radius:20px;width:fit-content;max-width:calc(100% - 28px)}
+.card-added-ico{font-size:11px;flex-shrink:0}
+.card-added-txt{font-size:10.5px;color:var(--text3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-added-txt b{color:var(--text2);font-weight:800}
+.spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:7px 12px 4px}
+/* Trường hợp chỉ còn 3 ô (VD: hàng Φ/fi đã bỏ ô KG trùng lặp vì bên dưới
+   spec-row đã hiển thị KG rồi) — dùng lưới 3 cột thay vì 4 cột mặc định. */
+.spec-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+/* Trước đây mỗi ô thông số (Dày/Rộng/Dài/Số thanh/Φ/KG) có 1 màu riêng
+   (xanh dương/tím/cyan/cam/vàng/lục) — nhìn sặc sỡ, rối mắt. Nay đồng bộ
+   CÙNG 1 tông màu trung tính duy nhất cho mọi ô, chỉ phân biệt bằng nhãn
+   chữ bên dưới, để giao diện gọn gàng, hiện đại và chuyên nghiệp hơn. */
+.spec-box{position:relative;border-radius:10px;padding:5px 4px 5px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(15,23,42,.05),inset 0 1px 0 rgba(255,255,255,.6);background:var(--bg2)}
+/* Chữ số thông số (Dày/Rộng/Dài/Số thanh/Φ) in đậm nét rộng hơn, cỡ lớn
+   hơn 1 chút để trông hiện đại, chắc chắn, dễ đọc hơn ở khoảng cách xa. */
+.spec-box-val{font-size:13.5px;font-weight:900;color:var(--navy);line-height:1.15;letter-spacing:.2px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-text-stroke:.25px currentColor}
+.spec-box-lbl{font-size:8px;color:var(--text4);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;opacity:.8}
+.spec-row{display:flex;gap:6px;padding:2px 14px 6px;flex-wrap:wrap;align-items:center}
+.spec-tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text2);white-space:nowrap}
+.spec-tag.mat{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.spec-tag.kg{background:#f0fdf4;border-color:#86efac;color:#166534;font-size:13px;font-weight:800}
+.spec-tag.pri{font-weight:800}
+.card-spec{font-size:12.5px;color:var(--text2);padding:2px 14px}
+.card-spec b{color:var(--text);font-weight:700}
+.card-due{font-size:12px;color:var(--text3);padding:2px 14px 6px}
+.card-due.overdue{color:var(--red-m);font-weight:600}
+.card-note{font-size:12.5px;font-weight:600;color:#92400e;background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:8px 14px;border-top:2px solid #fbbf24;display:flex;align-items:flex-start;gap:6px;line-height:1.5}
+.card-note::before{content:'';flex-shrink:0}
+
+/* ── NHÂN SỰ SUB-TABS ── */
+.ns-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:var(--bg);overflow-x:auto;flex-shrink:0}
+.ns-tab{flex-shrink:0;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--text3);background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;font-family:inherit}
+.ns-tab:hover{color:var(--brand);background:var(--green-l)}
+.ns-tab.active{color:var(--brand);border-bottom-color:var(--brand);background:#eff6ff}
+.ns-panel{display:none;padding:10px 0}
+.ns-panel.active{display:block}
+.ns-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.ns-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.ns-stat[onclick]{cursor:pointer}
+.ns-stat[onclick]:hover{border-color:var(--brand);background:var(--brand-l,var(--bg))}
+.ns-stat[onclick]:active{transform:scale(.96)}
+.ns-stat-val{font-size:22px;font-weight:800;color:var(--brand)}
+.ns-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.ns-table{border-collapse:collapse;width:100%;font-size:12px}
+.ns-table th{background:var(--bg);border:1px solid var(--border);padding:7px 8px;text-align:left;font-weight:700;color:var(--text3);font-size:11.5px}
+.ns-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
+.ns-table tbody tr:hover td{background:var(--bg)}
+.ns-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.card-actions{border-top:1px solid var(--border);background:var(--bg2);padding:8px 9px}
+/* Thanh trạng thái kiểu segmented-control: gọn trong 1 khối bo tròn, tab
+   đang chọn nổi lên bằng nền trắng + bóng nhẹ thay vì viền màu dày như trước */
+.ca-status-row{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:2px}
+.ca-btn{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px;padding:8px 4px;border:1.5px solid transparent;border-radius:9px;background:transparent;font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text3);transition:background .18s,color .18s,box-shadow .18s,border-color .18s,transform .12s;line-height:1}
+.ca-btn .ca-ico{font-size:13px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.05))}
+.ca-btn:active{transform:scale(.96)}
+/* Trạng thái CHỜ SX — cam rực, cảnh báo cần bắt tay vào việc */
+.ca-btn.active-wait{background:var(--amber-m);color:#fff;border-color:var(--amber-m);box-shadow:0 1px 3px rgba(16,24,40,.15)}
+/* Trạng thái ĐANG CHẠY — xanh dương, có nhịp đập thể hiện đang xử lý */
+.ca-btn.active-run{background:var(--brand);color:#fff;border-color:var(--brand2);box-shadow:0 1px 3px rgba(16,24,40,.15);animation:ca-run-pulse 1.8s ease-in-out infinite}
+/* Trạng thái XONG — xanh lá tươi, cảm giác hoàn tất */
+.ca-btn.active-done{background:var(--green-m);color:#fff;border-color:var(--green-m);box-shadow:0 1px 3px rgba(16,24,40,.15)}
+@keyframes ca-run-pulse{0%,100%{box-shadow:0 3px 10px rgba(29,78,216,.4),inset 0 1px 0 rgba(255,255,255,.25)}50%{box-shadow:0 3px 16px rgba(29,78,216,.65),inset 0 1px 0 rgba(255,255,255,.3)}}
+.ca-util-row{display:flex;gap:5px;margin-top:5px}
+.ca-util-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 6px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text2);transition:background .15s,border-color .15s,color .15s}
+.ca-util-btn:hover{border-color:var(--text4)}
+.ca-util-btn:active{transform:scale(.96)}
+.ca-util-btn.progress{color:var(--brand);border-color:#bfdbfe;background:#eff6ff;flex:2}
+.ca-util-btn.progress:hover{background:#dbeafe;border-color:#93c5fd}
+.ca-icon-btn{flex:0 0 36px;padding:6px 0}
+.ca-util-btn.edit:hover{border-color:var(--brand3);color:var(--brand);background:#eff6ff}
+.ca-util-btn.danger{color:var(--red-m);background:var(--red-l);border-color:#fecaca}
+.ca-util-btn.danger:hover{background:#fecaca;border-color:var(--red-m)}
+
+/* ── STATUS BADGES ── */
+.badge{font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;letter-spacing:.1px}
+.b-wait{background:var(--amber-l);color:var(--amber);border:1px solid var(--amber-m);box-shadow:0 1px 2px rgba(146,64,14,.08)}
+.b-run{background:#E8F0FD;color:var(--brand);border:1px solid #B9D0F7;animation:pulse-run 2s infinite;box-shadow:0 1px 2px rgba(11,95,203,.08)}
+.b-done{background:var(--green-l);color:var(--green);border:1px solid #B9E4D2;box-shadow:0 1px 2px rgba(14,122,87,.08)}
+@keyframes pulse-run{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.25)}50%{box-shadow:0 0 0 4px rgba(37,99,235,.08)}}
+/* Đồng hồ số chạy */
+.run-clock{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;font-family:monospace;background:var(--navy);color:#7EA6FF;padding:2px 8px;border-radius:6px;letter-spacing:1px;white-space:nowrap}
+.pri-chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+
+/* ── STATS GRID ── */
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat-card{background:var(--card);border-radius:15px;padding:13px 12px;box-shadow:var(--sh);cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .15s;border:1px solid var(--border);position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;inset:0;opacity:0;background:rgba(255,255,255,.6);transition:opacity .1s}
+.stat-card:active{transform:scale(.97);box-shadow:var(--sh2)}
+.stat-card:active::before{opacity:1}
+.stat-icon-wrap{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(15,23,42,.04)}
+.stat-right{flex:1;min-width:0}
+.stat-num{font-size:26px;font-weight:800;color:var(--text);line-height:1}
+.stat-lbl{font-size:11px;color:var(--text3);font-weight:500;margin-top:2px}
+.stat-icon{font-size:18px}
