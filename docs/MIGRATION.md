@@ -3,6 +3,9 @@
 ## Triển khai (Web / GitHub Pages)
 Đẩy toàn bộ repo (gồm `index.html`, `src/`, `sw.js`) lên gốc Pages như cũ. Cần đồng thời triển khai `src/` — chỉ chép `index.html` sẽ lỗi. Service worker v3 tự thay cache cũ.
 
+## Chuyển kho (bắt buộc làm một lần)
+App được build ĐỀU phải trỏ đúng kho đang đưa file lên (`hungphuong1991bn-beep/dongphuong`). Bản đã cài trước đây trỏ `hungphuong1990bn-create/test` nên phải **cài lại một lần** (Android: tag `android-v*`; Windows: tag `desktop-v*`). Cần bật Pages cho kho `dongphuong`. Từ bản mới trở đi, đưa file lên là app tự cập nhật (qua `version.json`), không build lại.
+
 ## Android
 Không đổi quy trình: tag `android-v*` → workflow build, Capacitor sync. App nạp URL Pages nên nhận bản mới khi Pages cập nhật.
 

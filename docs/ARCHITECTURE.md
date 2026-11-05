@@ -51,7 +51,7 @@ Chuyển sang ES modules đòi hỏi viết lại hàng nghìn chỗ tham chiế
 JS/HTML/JSON/**CSS** dùng network-first (CSS trước đây nằm trong HTML nên phải thêm). `CACHE = sx-thanh-cai-v3`, danh sách `ASSETS` đủ 165 tài nguyên (kiểm bằng `tests/static/verify-sw.js`).
 
 ## 7. Android / Windows
-Cả hai nạp URL GitHub Pages (`https://hungphuong1990bn-create.github.io/test/`) nên đường dẫn tương đối `src/...` hoạt động; thư mục native **không bị sửa**.
+Cả hai nạp URL GitHub Pages (`https://hungphuong1991bn-beep.github.io/dongphuong/`) nên đường dẫn tương đối `src/...` hoạt động; thư mục native **không bị sửa**.
 
 ## 8. Chưa làm / sai khác so với đặc tả
 - Không dùng ES modules (§3).

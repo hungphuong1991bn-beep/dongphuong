@@ -1,7 +1,7 @@
 # Quản Lý SX Đông Phương — bản Desktop (Setup.exe)
 
 Đây là một "vỏ" Electron mở app web của bạn (đang chạy ở
-`https://hungphuong1990bn-create.github.io/test/`) trong một cửa sổ desktop
+`https://hungphuong1991bn-beep.github.io/dongphuong/`) trong một cửa sổ desktop
 riêng, giống như một trình duyệt chuyên dụng cho app này — có icon riêng,
 mở từ Start Menu / Desktop, không có thanh địa chỉ.
 

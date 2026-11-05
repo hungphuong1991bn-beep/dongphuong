@@ -53,7 +53,7 @@ if(PATCH.patched.length || PATCH.added.length){
   if(okP) ok(`ngoại lệ sửa lỗi có chủ đích: sửa ${PATCH.patched.join(', ')} · thêm ${PATCH.added.join(', ')} (tools/refactor/patches.json)`); else bad('ngoại lệ trong patches.json không khớp mã (thiếu/thừa khối)');
 }
 const keepOrig = o.chunks.filter(c => !isPatched(c.node, PATCH.patched)).map(c => c.text);
-const keepNew = []; for(const f of jsFiles){ const fn = fileNodes[f]; if(!fn) continue; for(const k of fn.real){ if(!isPatched(k.node, PATCH.patched) && !isPatched(k.node, PATCH.added)) keepNew.push(k.text); } }
+const keepNew = []; for(const f of jsFiles){ const fn = fileNodes[f]; if(!fn) continue; for(const k of fn.real){ if(!isPatched(k.node, PATCH.patched) && !isPatched(k.node, PATCH.added)) keepNew.push((PATCH.textSwaps||[]).reduce((t, [a, b]) => t.split(b).join(a), k.text)); } }
 const A = key(keepOrig), B = key(keepNew);
 if(A.length !== B.length) bad(`số khối khác nhau: gốc ${A.length} · mới ${B.length}`);
 else if(A.some((x, i) => x !== B[i])) bad('có khối mã bị đổi nội dung');
@@ -159,7 +159,7 @@ if(dups.length) bad('khai báo let/const trùng: ' + dups.join(',')); else ok('k
 // ── 6. Thứ tự đăng ký listener/timer (lệnh chạy-ngay dạng ExpressionStatement) phải GIỮ NGUYÊN so với bản gốc ──
 console.log('[6] Thứ tự các lệnh đăng ký sự kiện/timer khi nạp');
 const exprOrig = o.chunks.filter(c => c.node.type === 'ExpressionStatement' || c.node.type === 'IfStatement').map(c => jsSrc.slice(c.node.start, c.node.end));
-const exprNew = eager.filter(e => e.node.type === 'ExpressionStatement' || e.node.type === 'IfStatement').map(e => e.src.slice(e.node.start, e.node.end));
+const exprNew = eager.filter(e => e.node.type === 'ExpressionStatement' || e.node.type === 'IfStatement').map(e => e.src.slice(e.node.start, e.node.end)).map(t => (PATCH.textSwaps||[]).reduce((x, [from, to]) => x.split(to).join(from), t));
 const sameSet = exprOrig.length === exprNew.length && [...exprOrig].sort().join('\u0000') === [...exprNew].sort().join('\u0000');
 if(!sameSet) bad('tập lệnh chạy-ngay khác bản gốc');
 else {

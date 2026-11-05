@@ -36,7 +36,7 @@ const path = require('path');
 const fs = require('fs');
 
 // ĐỔI URL NÀY thành đúng địa chỉ GitHub Pages của bạn nếu khác.
-const APP_URL = 'https://hungphuong1990bn-create.github.io/test/';
+const APP_URL = 'https://hungphuong1991bn-beep.github.io/dongphuong/';
 
 // ── TỰ KHỞI ĐỘNG CÙNG WINDOWS + TỰ VÀO TV MODE ─────────────────────────
 // Cờ truyền vào khi đăng ký app với Windows (Settings ▸ Startup Apps) để

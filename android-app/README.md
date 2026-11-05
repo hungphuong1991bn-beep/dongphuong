@@ -2,7 +2,7 @@
 
 Giống cách làm với bản desktop: đây là một "vỏ" (dùng Capacitor thay vì
 Electron) mở app web của bạn
-(`https://hungphuong1990bn-create.github.io/test/`) trong một WebView toàn
+(`https://hungphuong1991bn-beep.github.io/dongphuong/`) trong một WebView toàn
 màn hình trên điện thoại, có icon riêng, mở từ màn hình chính như app
 thật.
 
