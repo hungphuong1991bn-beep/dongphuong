@@ -44,6 +44,33 @@ function csCycleCell(itemKey, day){
   if(el) csApplyCellStyle(el, next);
   else renderCheckSheet();
 }
+// ── Đánh dấu ✓ Đạt cho CẢ THÁNG (chỉ Admin) ──
+// Điền ✓ vào mọi ô còn TRỐNG của nhóm thiết bị đang xem, trong tháng đang chọn.
+// Ô đã có trạng thái (✓ hoặc ✗ cần bảo trì) được GIỮ NGUYÊN, không bị ghi đè.
+function csMarkAllMonth(){
+  if(!isAdmin()){ showToast('🔒 Chỉ Quản trị viên (Admin) mới được đánh dấu cả tháng', true); return; }
+  const group = (DB.csTemplates||[]).find(g=>g.id===_csActiveGroup); if(!group) return;
+  const ym = csYM();
+  const [y,m] = ym.split('-').map(Number);
+  const nDays = daysInMonth(ym);
+  const items = [];
+  (group.sections||[]).forEach(sec=>(sec.items||[]).forEach(it=>items.push(group.id+'|'+sec.id+'|'+it.id)));
+  if(!items.length){ showToast('Nhóm này chưa có hạng mục nào để đánh dấu', true); return; }
+  let empty = 0;
+  items.forEach(k=>{ for(let d=1; d<=nDays; d++){ if(!csCellStatus(k,d)) empty++; } });
+  if(!empty){ showToast('Tháng '+m+'/'+y+' đã được đánh dấu đủ, không còn ô trống'); return; }
+  if(!confirm(`Đánh dấu ✓ Đạt cho ${empty} ô còn trống của nhóm "${group.name}" trong tháng ${m}/${y}?\n\nCác ô đã có ✓ hoặc ✗ sẽ được giữ nguyên.`)) return;
+  if(!DB.csData[ym]) DB.csData[ym] = {};
+  items.forEach(k=>{
+    if(!DB.csData[ym][k]) DB.csData[ym][k] = {};
+    for(let d=1; d<=nDays; d++){ if(!DB.csData[ym][k][d]) DB.csData[ym][k][d] = 'ok'; }
+  });
+  saveCsData();
+  try{ log('Check Sheet: đánh dấu cả tháng', `${group.name} · tháng ${m}/${y} · ${empty} ô ✓`); }catch(e){}
+  renderCheckSheet();
+  showToast(`✅ Đã đánh dấu ✓ ${empty} ô cho cả tháng ${m}/${y}`);
+}
+
 function csApplyCellStyle(el, status){
   const st = CS_STATUS[status];
   el.textContent = st ? st.short : '';
@@ -213,6 +240,7 @@ function renderCheckSheet(){
       ${!viewer?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${group?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportCheckSheetExcel('${group.id}')">⬇️ Xuất Excel</button>`:''}
         ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;${_csManageMode?'background:var(--brand);color:#fff;font-weight:700':''}" onclick="csToggleManage()">${_csManageMode?'✅ Xong quản lý':'⚙️ Quản lý hạng mục'}</button>`:''}
+        ${admin&&group?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;color:#15803d;font-weight:700" onclick="csMarkAllMonth()" title="Điền ✓ Đạt vào mọi ô còn trống của nhóm đang xem trong tháng này">✅ Đánh dấu cả tháng</button>`:''}
         ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="csAddGroup()">➕ Thêm nhóm thiết bị</button>`:''}
       </div>`:''}
     </div>
