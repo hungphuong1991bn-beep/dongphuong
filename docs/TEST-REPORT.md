@@ -30,3 +30,16 @@ Môi trường: Playwright + Chromium, **Firebase giả lập cục bộ** (REST
 | Bản gốc (đối chứng, lượt trong `run-all`) | 34/40 | 6 |
 | Bản đã sửa | 40/40 | 0 |
 Thêm hai lượt riêng trên bản đã sửa: 40/40 và 40/40. Phần kiểm chứng tĩnh chạy với ngoại lệ có chủ đích trong `tools/refactor/patches.json` (1146 khối trùng nguyên văn, 3 khối sửa/thêm).
+
+## 6. Giai đoạn 3–5 — những gì đã và CHƯA kiểm (cập nhật)
+**Đã chạy** (`node tests/static/*.js`; kết quả đạt):
+- `verify-sw.js`: 178 tài nguyên khớp `index.html`. `trace-engine.test.js`: 17 ca. Cú pháp mọi file `src/**/*.js`: 0 lỗi (`node --check`).
+- `phase3-insight.test.js` (14 nhóm) và `phase4-notif-tv.test.js` (8 nhóm), chạy bằng **jsdom, không phải trình duyệt thật**. Mã THẬT của utils, dashboard-factory, các file `*-insight`, `trace-export`, `tv-wakelock`, và hàm `renderNotifList` đọc nguyên từ file. Hàm render gốc của các tab (renderDorDang, renderKeHoach, renderSoLieu, trRun) được **thay bằng hàm giả** chỉ ghi `#mc`. Nên các bài này kiểm logic đếm/ghép, escape, CSV, wake lock và tính chỉ-đọc, **không** kiểm bố cục thật.
+- Đối chứng: bản `renderNotifList` cũ không qua bài kiểm thử; bản vá qua.
+
+**CHƯA chạy / chưa kiểm** (môi trường này không tải được Chromium nên không chạy Playwright):
+- `tests/e2e/*` (so sánh giao diện trước/sau, chức năng, đồng bộ) **chưa chạy lại** sau các thay đổi Giai đoạn 3–5. Kết quả "160 mục, KHÁC 0" ở §2 là của Giai đoạn 1 và **không còn áp dụng** cho các tab Đơn hàng, Kế hoạch, Sổ liệu, Truy xuất (có thêm dải mới) và panel thông báo (đổi HTML).
+- Hiển thị thật của các dải mới trên desktop/tablet/mobile; TV Mode thật; wake lock trên TV/Android/Electron thật.
+- `tools/refactor/verify.js` (so khối mã với bản gốc) cần thư mục baseline không có trong gói; chưa chạy.
+- Build Android/Windows; Firebase thật (như §4).
+

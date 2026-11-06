@@ -10,5 +10,11 @@
 ## Sai khác so với đặc tả
 - Không dùng ES modules; không có `event-bus.js`, `DataTable.js`; CSS chưa gom theo tokens/layout/components/responsive (xem ARCHITECTURE.md §3, §8).
 
+## Mở sau Giai đoạn 5
+- **Chưa rà soát chèn HTML không escape ở các nơi khác.** Chỉ `renderNotifList` được rà và sửa. Phần còn lại của mã dùng `innerHTML` với nội dung nối chuỗi ở nhiều file (ít nhất 12 file khớp mẫu một dòng; mẫu nhiều dòng chưa đếm) và `esc()` trong `helpers.js` chỉ thay `<` và `"` (không thay `&`, `'`, `>`). Dữ liệu như tên khách hàng, ghi chú đến từ người dùng và đồng bộ Firebase. Khuyến nghị rà từng tab trước khi cho nhiều người dùng bên ngoài nhập liệu.
+- **Hiệu năng chưa đo.** Trang nạp 133 thẻ `<script src>` và 45 `<link rel=stylesheet>` đồng bộ (trước Giai đoạn 3–5: 127 và 44); chưa có số đo thời gian khởi động hay bộ nhớ trên thiết bị thật nên chưa thay đổi gì. `defer`/gộp file có thể làm đổi thứ tự thực thi (mã dựa vào `document.write` và phạm vi toàn cục), cần đo + chạy e2e trước.
+- **e2e chưa chạy lại** sau Giai đoạn 3–5 (xem TEST-REPORT §6).
+- Chỉ số "CHƯA CÓ DỮ LIỆU" ở Tổng quan (OEE, NG theo công đoạn, tồn nguyên liệu, thời gian chạy/dừng) vẫn thiếu nguồn dữ liệu — không phải lỗi mã.
+
 ## Chưa kiểm
 - Build Android/Windows; Firebase thật (xem TEST-REPORT.md §4).

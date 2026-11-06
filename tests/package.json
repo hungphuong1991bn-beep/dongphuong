@@ -1,3 +1,1 @@
-{ "name": "sx-dong-phuong-tests", "private": true, "description": "Kiểm thử refactor module hoá (không đóng gói vào app)",
-  "scripts": { "static": "node static/verify-sw.js && ACORN_PATH=acorn node ../tools/refactor/verify.js ../.baseline/index.html ..", "all": "bash run-all.sh" },
-  "devDependencies": { "acorn": "^8.12.0", "playwright": "^1.50.0" } }
+{"name":"sx-dong-phuong-tests","private":true,"description":"Kiểm thử refactor module hoá (không đóng gói vào app)","scripts":{"static":"node static/verify-sw.js && ACORN_PATH=acorn node ../tools/refactor/verify.js ../.baseline/index.html ..","all":"bash run-all.sh"},"devDependencies":{"acorn":"^8.12.0","jsdom":"^31.0.0","playwright":"^1.50.0"}}

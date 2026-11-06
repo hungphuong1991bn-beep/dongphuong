@@ -20,7 +20,7 @@ src/modules/<tab>/    mã nghiệp vụ theo tab (xem MODULES.md)
 src/utils/            helpers, date, format, validation, lib-loader
 src/styles/           CSS (39 đoạn liên tiếp + production-dh4.css)
 src/vendor/qrcode.js  thư viện QR (nhúng nguyên văn)
-src/assets/           brand-logo.js
+src/assets/           brand-logo.js (các bản sao cũ đã xoá ở Giai đoạn 5)
 tools/refactor/       manifest.js, build.js, verify.js, inventory.js
 tests/                e2e (mock Firebase, capture, functional), static, run-all.sh
 docs/                 tài liệu
@@ -57,3 +57,7 @@ Cả hai nạp URL GitHub Pages (`https://hungphuong1991bn-beep.github.io/dongph
 - Không dùng ES modules (§3).
 - Không có `core/event-bus.js` và `components/shared/DataTable.js`: bản gốc không có thành phần tương ứng; theo quy tắc "không tạo module rỗng" nên không tạo.
 - CSS chia theo đoạn liên tiếp, chưa gom lại thành tokens/layout/components/responsive (gom lại sẽ đổi thứ tự cascade).
+
+## 9. Lớp "gắn thêm" (Giai đoạn 3–4)
+`components/shared/ModuleEnhance.js` cung cấp `dpEnhanceRender(tên, hàm)`: bọc hàm render toàn cục, chạy hàm gốc rồi chạy `hàm` trong try/catch; `dpMountStrip` gắn/thay một khối có id cố định vào `#mc`. Các file `modules/*/…-insight.js`, `trace-export.js`, `tv-mode/tv-wakelock.js` dùng cơ chế này, nạp SAU `trace-view.js` trong `index.html` (cần hàm gốc đã tồn tại). Chỉ đọc `DB`, không ghi. Gỡ một tính năng = bỏ dòng `<script>` tương ứng (và dòng trong `sw.js`).
+

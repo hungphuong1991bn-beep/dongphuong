@@ -10,3 +10,7 @@ echo "== 3. Chức năng/đồng bộ =="; node tests/e2e/functional.js "$TMP/ba
 echo "== 4. Độ ổn định đồng bộ chéo thiết bị (A↔B, 40 vòng thêm đơn) =="
 echo " bản GỐC (chỉ để đối chứng, được phép có lỗi):"; node tests/e2e/sync-stress.js "$TMP/baseline" 40 5 || true
 echo " bản MỚI (bắt buộc 0 lỗi):"; node tests/e2e/sync-stress.js "$ROOT" 40 5
+echo "== 5. Giai đoạn 3-4: logic dải thông tin, CSV, thông báo, wake lock (jsdom, không phải trình duyệt thật) =="
+node tests/static/trace-engine.test.js
+node tests/static/phase3-insight.test.js
+timeout 120 node tests/static/phase4-notif-tv.test.js
