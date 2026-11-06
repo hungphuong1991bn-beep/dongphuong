@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DONG PHUONG SMART FACTORY — DESIGN SYSTEM (nạp CUỐI CÙNG)
+   • Chỉ THÊM class tiền tố .ds-* (không đổi class cũ) + vài ghi đè có chủ đích
+     cho Sidebar/Header. Dùng lại biến màu sẵn có (--brand, --navy, --green...).
+   • Module mới / module nâng cấp dùng các class này để đồng bộ giao diện.
+   ═══════════════════════════════════════════════════════════════════ */
+:root{
+  /* Typography */
+  --ds-font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ds-fs-xs:11px;--ds-fs-sm:12.5px;--ds-fs-md:14px;--ds-fs-lg:16px;--ds-fs-xl:20px;--ds-fs-2xl:26px;
+  /* Spacing (bậc 4px) */
+  --ds-s1:4px;--ds-s2:8px;--ds-s3:12px;--ds-s4:16px;--ds-s5:24px;--ds-s6:32px;
+  /* Hình khối */
+  --ds-radius:12px;--ds-radius-sm:8px;--ds-radius-pill:999px;
+  --ds-shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.04);
+  --ds-shadow-lg:0 12px 32px rgba(16,24,40,.14);
+  --ds-focus:0 0 0 3px rgba(40,86,214,.22);
+  --ds-ease:cubic-bezier(.4,0,.2,1);--ds-dur:.16s;
+  /* Trạng thái (nền / chữ / viền) */
+  --ds-ok-bg:#E3F5EE;--ds-ok:#0C7A54;--ds-ok-bd:#A7E3CB;
+  --ds-warn-bg:#FCF1DE;--ds-warn:#8A5A0E;--ds-warn-bd:#F1D29B;
+  --ds-danger-bg:#FBEAE8;--ds-danger:#9C2E27;--ds-danger-bd:#F2B8B3;
+  --ds-info-bg:#E6EEFD;--ds-info:#1D3FAE;--ds-info-bd:#B7CBF7;
+  --ds-muted-bg:#EEF0F3;--ds-muted:#556072;--ds-muted-bd:#D8DCE3;
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ── Button ── */
+.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 14px;border-radius:var(--ds-radius-sm);border:1px solid var(--border);background:#fff;color:var(--text);font:600 var(--ds-fs-sm)/1 var(--ds-font);cursor:pointer;transition:background var(--ds-dur) var(--ds-ease),border-color var(--ds-dur),box-shadow var(--ds-dur);white-space:nowrap}
+.ds-btn:hover{background:var(--bg);border-color:#cfd5e1}
+.ds-btn:focus-visible{outline:none;box-shadow:var(--ds-focus)}
+.ds-btn:disabled{opacity:.5;cursor:not-allowed}
+.ds-btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}.ds-btn.primary:hover{background:var(--brand2);border-color:var(--brand2)}
+.ds-btn.danger{background:var(--red-m);border-color:var(--red-m);color:#fff}
+.ds-btn.ghost{background:transparent;border-color:transparent;color:var(--brand)}.ds-btn.ghost:hover{background:var(--ds-info-bg)}
+.ds-btn.sm{min-height:30px;padding:0 10px;font-size:var(--ds-fs-xs)}
+
+/* ── Badge trạng thái ── */
+.ds-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:var(--ds-radius-pill);border:1px solid var(--ds-muted-bd);background:var(--ds-muted-bg);color:var(--ds-muted);font:700 var(--ds-fs-xs)/1.5 var(--ds-font);white-space:nowrap}
+.ds-badge.ok{background:var(--ds-ok-bg);color:var(--ds-ok);border-color:var(--ds-ok-bd)}
+.ds-badge.warn{background:var(--ds-warn-bg);color:var(--ds-warn);border-color:var(--ds-warn-bd)}
+.ds-badge.danger{background:var(--ds-danger-bg);color:var(--ds-danger);border-color:var(--ds-danger-bd)}
+.ds-badge.info{background:var(--ds-info-bg);color:var(--ds-info);border-color:var(--ds-info-bd)}
+.ds-badge.dot::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+/* Giá trị thiếu dữ liệu — dùng thống nhất toàn hệ thống */
+.ds-na{display:inline-block;padding:1px 6px;border-radius:4px;background:var(--ds-warn-bg);color:var(--ds-warn);font:700 10.5px/1.5 var(--ds-font);white-space:nowrap}
+
+/* ── Card / KPI ── */
+.ds-card{background:var(--card);border:1px solid var(--border);border-radius:var(--ds-radius);box-shadow:var(--ds-shadow);padding:var(--ds-s4)}
+.ds-card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:var(--ds-s3);font:800 var(--ds-fs-md)/1.3 var(--ds-font);color:var(--text)}
+.ds-kpi{display:flex;flex-direction:column;gap:2px}
+.ds-kpi .v{font:800 var(--ds-fs-2xl)/1.1 var(--ds-font);color:var(--text);font-variant-numeric:tabular-nums}
+.ds-kpi .l{font:600 var(--ds-fs-xs)/1.3 var(--ds-font);color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.ds-grid{display:grid;gap:var(--ds-s3);grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+
+/* ── Input / Select ── */
+.ds-input,.ds-select{width:100%;min-height:40px;padding:0 12px;border:1.5px solid var(--border);border-radius:var(--ds-radius-sm);background:#fff;color:var(--text);font:500 var(--ds-fs-md)/1.2 var(--ds-font);transition:border-color var(--ds-dur),box-shadow var(--ds-dur)}
+.ds-input:focus,.ds-select:focus{outline:none;border-color:var(--brand);box-shadow:var(--ds-focus)}
+.ds-input.invalid,.ds-select.invalid{border-color:var(--red-m)}
+.ds-req::after{content:' *';color:var(--red-m);font-weight:800}
+
+/* ── Table (+ chế độ THẺ trên mobile: thêm class .ds-stack và data-label ở mỗi <td>) ── */
+.ds-table-wrap{overflow:auto;max-width:100%;border:1px solid var(--border);border-radius:var(--ds-radius-sm);background:#fff}
+.ds-table{width:100%;border-collapse:collapse;font-size:var(--ds-fs-sm)}
+.ds-table th{position:sticky;top:0;z-index:1;background:#F1F4F9;color:var(--text2);text-align:left;font-weight:700;padding:9px 10px;white-space:nowrap;border-bottom:1px solid var(--border)}
+.ds-table td{padding:9px 10px;border-bottom:1px solid #EEF1F6;vertical-align:top}
+.ds-table tbody tr:hover{background:#F5F8FF}
+.ds-table td.num,.ds-table th.num{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .ds-table.ds-stack thead{display:none}
+  .ds-table.ds-stack,.ds-table.ds-stack tbody,.ds-table.ds-stack tr,.ds-table.ds-stack td{display:block;width:100%}
+  .ds-table.ds-stack tr{padding:8px 10px;border-bottom:8px solid var(--bg)}
+  .ds-table.ds-stack td{border:none;padding:3px 0;display:flex;justify-content:space-between;gap:12px;text-align:right}
+  .ds-table.ds-stack td::before{content:attr(data-label);flex:0 0 42%;text-align:left;color:var(--text3);font-weight:600;font-size:var(--ds-fs-xs);text-transform:uppercase}
+}
+
+/* ── Tabs ── */
+.ds-tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none}
+.ds-tab{padding:9px 14px;border:none;background:none;color:var(--text3);font:600 var(--ds-fs-sm)/1 var(--ds-font);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.ds-tab:hover{color:var(--text)}.ds-tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+
+/* ── Empty / Error / Loading ── */
+.ds-empty,.ds-error{padding:36px 16px;text-align:center;border-radius:var(--ds-radius);border:1px dashed var(--border);background:#fff;color:var(--text3);font-size:var(--ds-fs-sm);line-height:1.5}
+.ds-error{border-color:var(--ds-danger-bd);background:var(--ds-danger-bg);color:var(--ds-danger)}
+.ds-skeleton{display:block;border-radius:6px;background:linear-gradient(90deg,#eef1f6 25%,#f7f9fc 37%,#eef1f6 63%);background-size:400% 100%;animation:ds-shimmer 1.3s ease infinite;min-height:14px}
+@keyframes ds-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* ── Drawer (xem chi tiết) — dùng: <div class="ds-drawer-ov" onclick=…><aside class="ds-drawer">…</aside></div> ── */
+.ds-drawer-ov{position:fixed;inset:0;background:rgba(8,14,28,.45);z-index:600;display:none;justify-content:flex-end}
+.ds-drawer-ov.open{display:flex}
+.ds-drawer{width:min(520px,100vw);height:100%;background:#fff;box-shadow:var(--ds-shadow-lg);display:flex;flex-direction:column;animation:ds-slide .2s var(--ds-ease)}
+.ds-drawer-h{padding:14px 16px;border-bottom:1px solid var(--border);font:800 var(--ds-fs-lg)/1.3 var(--ds-font);display:flex;justify-content:space-between;gap:8px}
+.ds-drawer-b{padding:16px;overflow:auto;flex:1}
+@keyframes ds-slide{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── Tooltip nhẹ: <span data-tip="Nội dung"> ── */
+[data-tip]{position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:var(--navy2);color:#fff;font:600 11px/1.4 var(--ds-font);padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:700;pointer-events:none;box-shadow:var(--ds-shadow-lg)}
+
+/* ═══ SIDEBAR: icon thống nhất theo NHÓM (thay cầu vồng màu từng mục) ═══ */
+.sidebar .sb-item[data-g] svg{color:var(--g-fg,#1D4ED8)!important;background:var(--g-bg,#DBEAFE)!important}
+[data-g="dieuHanh"]{--g-fg:#1D4ED8;--g-bg:#DBEAFE}
+[data-g="kinhDoanh"]{--g-fg:#B45309;--g-bg:#FDEBD0}
+[data-g="sanXuat"]{--g-fg:#4338CA;--g-bg:#E0E7FF}
+[data-g="kho"]{--g-fg:#047857;--g-bg:#D1FAE5}
+[data-g="chatLuong"]{--g-fg:#0E7490;--g-bg:#CFFAFE}
+[data-g="nhaMay"]{--g-fg:#475569;--g-bg:#E2E8F0}
+[data-g="heThong"]{--g-fg:#64748B;--g-bg:#EEF0F3}
+.sidebar .sb-section[data-g]{display:flex;align-items:center;gap:8px}
+.sidebar .sb-section[data-g]::before{content:'';width:6px;height:6px;border-radius:2px;background:var(--g-fg);opacity:.9}
+.sb-collapse-btn{display:none}
+
+@media(min-width:700px){
+  .sidebar{transition:width .2s var(--ds-ease)}
+  .sb-header{position:relative}
+  .sb-collapse-btn{display:flex;position:absolute;top:10px;right:8px;width:26px;height:26px;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#cfe0ff;cursor:pointer;padding:0}
+  .sb-collapse-btn:hover{background:rgba(255,255,255,.18)}
+  .sb-collapse-btn svg{transition:transform .2s}
+  body.sb-collapsed .sidebar{width:76px!important}
+  body.sb-collapsed .sb-collapse-btn{right:auto;left:50%;transform:translateX(-50%);top:auto;bottom:-13px}
+  body.sb-collapsed .sb-collapse-btn svg{transform:rotate(180deg)}
+  body.sb-collapsed .sb-header{padding:16px 0 22px;justify-content:center}
+  body.sb-collapsed .sb-brand-name,body.sb-collapsed .sb-scanstats,body.sb-collapsed .sb-online{display:none!important}
+  body.sb-collapsed .sb-section{font-size:0!important;height:1px;margin:10px 16px 6px;padding:0!important;background:rgba(255,255,255,.1)}
+  body.sb-collapsed .sb-section::before{display:none}
+  body.sb-collapsed .sb-item{font-size:0!important;justify-content:center;padding:9px 0;gap:0}
+  body.sb-collapsed .sb-item .sb-badge{position:absolute;top:4px;right:14px;font-size:9px;min-width:15px;height:15px;line-height:15px;padding:0 3px}
+  body.sb-collapsed .sb-logout{font-size:0;justify-content:center;padding:10px 0}
+  body.sb-collapsed .sb-logout svg{margin:0}
+}
+
+/* ═══ HEADER ═══ */
+.topbar-company{display:none;flex-direction:column;line-height:1.15;margin:0 6px 0 2px;white-space:nowrap}
+.topbar-company .tcm-1{font:600 9.5px/1.2 var(--ds-font);color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.topbar-company .tcm-2{font:800 12.5px/1.2 var(--ds-font);color:var(--navy)}
+@media(min-width:1560px){.topbar-company{display:flex}}
+@media(min-width:1100px){body.sb-collapsed .topbar-company{display:flex}}
+/* Header gọn dần theo bề rộng: ưu tiên giữ ô tìm kiếm, đồng bộ, thông báo, tài khoản */
+.topbar .ov-refresh-btn{white-space:nowrap;flex-shrink:0}
+.topbar .tb-search-wrap{min-width:180px}
+@media(min-width:700px) and (max-width:1500px){
+  .topbar .ov-refresh-btn span{display:none}
+  .topbar .ann-write-btn .ann-btn-text{display:none}
+}
+@media(min-width:700px) and (max-width:1360px){
+  .topbar .avatar-btn .ab-text,.topbar .avatar-btn .ab-chev{display:none}
+}
+@media(min-width:700px) and (max-width:1200px){
+  .topbar .topbar-sync .sync-text{display:none}
+  .topbar #clock .tb-datebox .tb-chev{display:none}
+}
+.topbar-bell{color:var(--text2)}
+.topbar-bell:hover{background:var(--bg)}
+.topbar-mh-sync{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.7);flex-shrink:0;align-self:center;margin:0 4px}
+.topbar-mh-sync.offline{background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.7)}
+.topbar-mh-sync.error{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.7)}
+.topbar-mh-icon .topbar-bell-badge{top:-3px;right:-3px}
+
+/* ═══ Trung tâm thông báo: CSS gốc dùng calc(var(--top)+var(--safe-t)) sai cú pháp
+   (thiếu khoảng trắng quanh dấu +) nên top bị bỏ qua → panel lệch khỏi màn hình.
+   Dựng lại vị trí hợp lệ: ngăn kéo phủ toàn chiều cao bên phải, nằm trên header. ═══ */
+.notif-panel{top:0!important;height:100dvh!important;z-index:700!important;padding-top:var(--safe-t)}
+.notif-overlay{z-index:699!important}

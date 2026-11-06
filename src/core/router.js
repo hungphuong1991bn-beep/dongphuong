@@ -57,15 +57,16 @@ function goTab(tab){
     dhTvMode=false;
     dhSyncFullscreenClass();
   }
+  if(tab!=='truyXuat' && typeof trStopScan==='function') trStopScan(); // tắt camera quét QR khi rời tab
   currentTab=tab;
   // Sidebar
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
-  const si=$('sbi-'+tab); if(si) si.classList.add('active');
+  const si=$('sbi-'+tab); if(si){ si.classList.add('active'); try{ si.scrollIntoView({block:'nearest'}); }catch(e){} } // menu dài: tự cuộn tới mục đang chọn
   // Bottom nav
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu'};
+  const titles={dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu',truyXuat:'🔎 Truy xuất & Khiếu nại'};
   $('pageTitle').textContent=titles[tab]||tab;
   // Badge "Realtime" + nút "Làm mới" trên Global Header: chỉ hiện ở tab
   // Tổng quan (nơi dữ liệu cập nhật theo thời gian thực), các tab khác ẩn.
@@ -75,7 +76,7 @@ function goTab(tab){
   // FAB: admin mới thấy nút thêm đơn
   // FAB: admin thấy nút + ở tất cả các tab
   const fabEl=$('fab');
-  if(fabEl){ fabEl.classList.toggle('show', isAdmin()); }
+  if(fabEl){ fabEl.classList.toggle('show', isAdmin() && tab!=='truyXuat'); }
   // Nút bánh răng nổi (chỉ tài khoản Số liệu): đổi icon tuỳ tab đang mở —
   // ⚙️ để mở Cài đặt, ✕ để đóng Cài đặt quay lại Số liệu.
   slSyncFullscreenClass();
@@ -104,6 +105,6 @@ function goTab(tab){
 // RENDER
 // ════════════════════════════════════════════════════════════
 function renderTab(tab){
-  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,khachHang:renderKhachHang,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,checkSheet:renderCheckSheet,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR,soLieu:renderSoLieu};
+  const fns={dashboard:renderDashboard,dorDang:renderDorDang,keHoach:renderKeHoach,dieuHanh:renderDieuHanh,hoanThanh:renderHoanThanh,baoCao:renderBaoCao,khachHang:renderKhachHang,nhanSu:renderNhanSu,chamCong:renderChamCong,baoTriMay:renderBaoTriMay,khuon:renderKhuon,checkSheet:renderCheckSheet,lichLamViec:renderLichLamViec,nhatKy:renderNhatKy,settings:renderSettings,qrCode:renderQR,soLieu:renderSoLieu,truyXuat:renderTraceTab};
   if(fns[tab]) fns[tab]();
 }

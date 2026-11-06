@@ -241,6 +241,7 @@ function updateBellBadge(){
     b.textContent = _notifUnread>9?'9+':_notifUnread;
     b.classList.toggle('show', _notifUnread>0);
   }
+  document.querySelectorAll('.js-bell-badge').forEach(x=>{ x.textContent = _notifUnread>9?'9+':_notifUnread; x.classList.toggle('show', _notifUnread>0); });
 }
 
 function animateBell(){
@@ -269,6 +270,12 @@ function flashScreen(type){
 
 // Mở/đóng panel
 
+function openNotifPanel(){
+  const p=$('notifPanel'), o=$('notifOverlay'); if(!p||!o) return;
+  if(p.classList.contains('open')){ closeNotifPanel(); return; }
+  renderNotifList();
+  p.classList.add('open'); o.classList.add('show');
+}
 function closeNotifPanel(){
   $('notifPanel').classList.remove('open');
   $('notifOverlay').classList.remove('show');
@@ -289,12 +296,12 @@ function renderNotifList(){
     const dt = new Date(n.ts);
     const t = vnDateTimeShort(dt);
     const ico = NOTIF_ICO[n.type]||'📌';
-    return `<div class="notif-item${n.read?'':' unread'}${i===0?' new-anim':''}" onclick="clickNotif('${n.id}')">
+    return `<div class="notif-item${n.read?'':' unread'}${i===0?' new-anim':''}" data-nid="${escapeHtml(n.id)}" onclick="clickNotif(this.dataset.nid)">
       <div class="notif-avatar">${ico}</div>
       <div class="notif-body">
-        <div class="notif-title">${n.title}</div>
-        ${n.body?`<div class="notif-desc">${n.body}</div>`:''}
-        <div class="notif-time">${n.from?`👤 ${n.from} · `:''}🕐 ${t}</div>
+        <div class="notif-title">${escapeHtml(n.title)}</div>
+        ${n.body?`<div class="notif-desc">${escapeHtml(n.body)}</div>`:''}
+        <div class="notif-time">${n.from?`👤 ${escapeHtml(n.from)} · `:''}🕐 ${t}</div>
       </div>
       ${!n.read?'<span style="width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;margin-top:4px"></span>':''}
     </div>`;

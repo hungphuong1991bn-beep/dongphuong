@@ -9,6 +9,9 @@ document.write(`    <div class="topbar">
       <!-- ── Mobile Global Header (chỉ hiện ở mobile, mọi tab) — tên công ty
            2 dòng ở giữa + hàng ngày/giờ/realtime + nút làm mới & tìm kiếm.
            Xem CSS .topbar-mh (media max-width:640px). ── -->
+      <div class="topbar-company" aria-label="Công ty Cổ phần Công Thương Đông Phương">
+        <span class="tcm-1">Công ty cổ phần</span><span class="tcm-2">Công Thương Đông Phương</span>
+      </div>
       <div class="topbar-mh">
         <div class="topbar-mh-company">
           <span>Công ty cổ phần</span>
@@ -27,6 +30,14 @@ document.write(`    <div class="topbar">
           <span class="topbar-mh-spacer"></span>
           <button type="button" class="topbar-mh-icon" onclick="topbarRefreshClick()" title="Làm mới dữ liệu">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </button>
+          <span class="topbar-mh-sync" id="mhSyncDot" title="Trạng thái đồng bộ"></span>
+          <button type="button" class="topbar-mh-icon" onclick="openNotifPanel()" title="Thông báo" aria-label="Thông báo" style="position:relative">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+            <span class="topbar-bell-badge js-bell-badge">0</span>
+          </button>
+          <button type="button" class="topbar-mh-icon" id="mhAvatarBtn" onclick="toggleAccountDropdown(event)" title="Tài khoản" aria-label="Tài khoản">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
           </button>
           <button type="button" class="topbar-mh-icon" id="topbarMhSearchBtn" onclick="tbMobileSearchToggle()" title="Tìm kiếm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -69,6 +80,10 @@ document.write(`    <div class="topbar">
           <span class="sync-time" id="syncTimeAgo">--</span>
         </span>
       </div>
+      <button type="button" class="topbar-bell" id="bellBtn" onclick="openNotifPanel()" title="Trung tâm thông báo" aria-label="Thông báo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+        <span class="topbar-bell-badge" id="bellBadge">0</span>
+      </button>
       <button class="avatar-btn" id="avatarBtn" onclick="toggleAccountDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Tài khoản của tôi">
         <span class="ab-photo"><img id="avatarBtnImg" src="" alt="avatar"><span class="ab-initials" id="abInitials">?</span></span><span class="ab-text"><span class="ab-name" id="abName">—</span><span class="ab-role" id="abRole">—</span></span><svg class="ab-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="acc-dd" id="accDropdown"></div>
@@ -84,6 +99,7 @@ function setSyncDot(state){
   const d=$('syncDot'); if(!d) return;
   d.className='topbar-sync'+(state==='error'?' error':state==='saving'?' offline':'');
   d.title = state==='ok'?'Đã đồng bộ':state==='saving'?'Đang lưu...':'Lỗi kết nối';
+  const mh=$('mhSyncDot'); if(mh){ mh.className='topbar-mh-sync'+(state==='error'?' error':state==='saving'?' offline':''); mh.title=d.title; }
   const lbl = $('syncLabel');
   if(lbl) lbl.textContent = state==='ok'?'Đồng bộ':state==='saving'?'Đang lưu...':'Mất kết nối';
   if(state==='ok'){
