@@ -171,3 +171,8 @@
 .moc-del:active{background:var(--red-m);color:#fff;transform:scale(.94)}
 .mob-ord-empty{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:40px 18px;text-align:center;color:var(--text4);font-size:13px}
 
+
+/* ── Cột "Ghi chú" trong bảng Đơn hàng — tối đa 2 dòng, đưa chuột vào để xem đủ (title). ── */
+.dd-table td.ord-note-cell{min-width:160px;max-width:240px}
+.ord-note-txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.4;color:var(--text2);white-space:normal;word-break:break-word}
+.ord-note-none{color:var(--text4)}

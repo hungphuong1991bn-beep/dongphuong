@@ -325,8 +325,6 @@ function ddRow(o, stt){
   const isNew = ddIsNew(o);
   const overdue = ddOverdue(o);
   const pc = PRI_COLOR[o.priority]||'#64748b';
-  const pct = ddProgressPct(o);
-  const pctColor = pct>=100?'#15966C':pct>=50?'#2856D6':pct>0?'#F59E0B':'#CBD5E1';
   const doneUnit = o.isCoil?'cuộn':(o.isRound?'cây':'thanh');
   const tAttr = s => s?` title="${String(s).replace(/"/g,'&quot;')}"`:'';
   return `<tr class="${isNew?'is-new':''}${overdue?' is-overdue':''} st-${meta.key}" data-order-id="${o.id}" onclick="ddViewDetail('${o.id}')">
@@ -337,7 +335,7 @@ function ddRow(o, stt){
     <td><span class="spec-chip"${tAttr(specStr(o))}>${specStr(o)}</span></td>
     <td>${qtyLabel(o)}${o.kg?`<div style="font-size:10.5px;color:var(--text4);font-weight:600">⚖️ ${o.kg}kg</div>`:''}</td>
     <td>${o.doneQty||0} ${doneUnit}</td>
-    <td><div class="ord-progress"><div class="ord-progress-pct" style="color:${pctColor}">${pct}%</div><div class="ord-progress-track"><div class="ord-progress-fill" style="width:${pct}%;background:${pctColor}"></div></div></div></td>
+    <td class="ord-note-cell">${o.note?`<span class="ord-note-txt"${tAttr(o.note)}>${o.note}</span>`:'<span class="ord-note-none">—</span>'}</td>
     <td><span class="ord-dt-main">${fmtDate(o.createdAt)}</span>${o.createdAt?`<div class="ord-dt-sub">🕐 ${vnTimeHM(new Date(o.createdAt))}</div>`:''}</td>
     <td>${ddDueCellHTML(o)}</td>
     <td><span class="ord-pri"${tAttr(o.priority)} style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span></td>
@@ -499,7 +497,7 @@ function renderDorDang(){
           <th>Quy cách</th>
           <th>Số lượng</th>
           <th>Đã sản xuất</th>
-          <th>Tiến độ</th>
+          <th>Ghi chú</th>
           <th>Ngày nhận</th>
           <th>Ngày giao</th>
           <th>Ưu tiên</th>
