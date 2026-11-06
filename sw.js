@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v3'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v7'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -88,6 +88,7 @@ const ASSETS = [
   './src/modules/orders/orders-shared.js',
   './src/modules/dashboard/insights.js',
   './src/components/shared/charts.js',
+  './src/modules/dashboard/dashboard-factory.js',
   './src/modules/dashboard/dashboard-widgets.js',
   './src/modules/dashboard/dashboard-view.js',
   './src/modules/orders/orders-filter.js',
@@ -120,6 +121,14 @@ const ASSETS = [
   './src/utils/lib-loader.js',
   './src/modules/inventory/inventory-view.js',
   './src/modules/inventory/inventory-export.js',
+  './src/modules/trace/trace-engine.js',
+  './src/modules/trace/trace-view.js',
+  './src/components/shared/ModuleEnhance.js',
+  './src/modules/orders/orders-insight.js',
+  './src/modules/planning/planning-insight.js',
+  './src/modules/inventory/inventory-insight.js',
+  './src/modules/trace/trace-export.js',
+  './src/modules/tv-mode/tv-wakelock.js',
   './src/modules/checklist/checklist-view.js',
   './src/modules/checklist/checklist-export.js',
   './src/modules/molds/molds-qty.js',
@@ -154,6 +163,7 @@ const ASSETS = [
   './src/modules/maintenance/maintenance.css',
   './src/modules/molds/molds.css',
   './src/modules/inventory/inventory.css',
+  './src/modules/trace/trace.css',
   './src/modules/molds/molds-blocks.css',
   './src/styles/components-modal.css',
   './src/modules/settings/settings.css',
@@ -181,6 +191,9 @@ const ASSETS = [
   './src/styles/redesign-2026.css',
   './src/modules/planning/planning-erp.css',
   './src/styles/responsive-mobile.css',
+  './src/styles/design-system.css',
+  './src/modules/dashboard/dashboard-factory.css',
+  './src/styles/modules-insight.css',
   './src/modules/production/production-dh4.css'
 ];
 
