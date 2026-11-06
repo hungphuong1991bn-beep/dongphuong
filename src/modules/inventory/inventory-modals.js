@@ -48,6 +48,10 @@ document.write(`<!-- 📊 Số liệu — Thêm/Sửa Sổ nguyên liệu -->
       <div class="field"><div class="field-lbl">PO</div><input id="nlPO" class="field-inp"></div>
       <div class="field"><div class="field-lbl">WO</div><input id="nlWO" class="field-inp"></div>
     </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Đơn hàng (liên kết truy xuất)</div><select id="nlDonHangId" class="field-inp"></select></div>
+      <div class="field"><div class="field-lbl">Mã lô sản xuất</div><input id="nlMaLoSX" class="field-inp" placeholder="Tuỳ chọn"></div>
+    </div>
     <div class="field"><div class="field-lbl">Ghi chú</div><input id="nlGhiChu" class="field-inp"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('nlModal')">Huỷ</button>
@@ -101,6 +105,11 @@ document.write(`<!-- 📊 Số liệu — Thêm/Sửa Sổ nguyên liệu -->
       <input id="mcKhachHang" class="field-inp" list="mcKhachHangList" placeholder="Chọn hoặc gõ tên khách hàng...">
       <datalist id="mcKhachHangList"></datalist>
     </div>
+    <div class="modal-row">
+      <div class="field"><div class="field-lbl">Đơn hàng (liên kết truy xuất)</div><select id="mcDonHangId" class="field-inp"></select></div>
+      <div class="field"><div class="field-lbl">Mã lô sản xuất</div><input id="mcMaLoSX" class="field-inp" placeholder="Tuỳ chọn"></div>
+    </div>
+    <div class="field"><div class="field-lbl">Mã lô nguyên liệu / Heat-Lot nguồn</div><input id="mcHeatLot" class="field-inp" placeholder="Tuỳ chọn — để liên kết ngược về Sổ nguyên liệu"></div>
     <div class="field"><div class="field-lbl">Ghi chú</div><input id="mcGhiChu" class="field-inp"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('mcModal')">Huỷ</button>

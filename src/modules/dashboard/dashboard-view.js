@@ -295,8 +295,10 @@ function renderDashboard(){
       ${notifBanner}
       <div id="onlineEl"></div>
       ${workerPanel}
+      ${dpSafe(buildDpQuickTrace)}
 
       ${buildOvKpis(orders)}
+      ${buildDpFactoryBlock(orders)}
 
       <div class="ov-row3">
         <div class="ov-panel">

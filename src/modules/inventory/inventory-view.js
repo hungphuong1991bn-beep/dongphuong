@@ -101,6 +101,28 @@ function mcOnMayChange(){
   if(may) slLastMaySet(CONGDOAN_MACHINE_GROUP[congDoan], may);
 }
 
+
+// ── TRUY XUẤT: liên kết tuỳ chọn tới Đơn hàng (theo ID đơn) — KHÔNG ghép theo
+// tên khách hàng/quy cách. Dòng cũ không có donHangId vẫn hợp lệ (hiển thị
+// "CHƯA XÁC ĐỊNH" ở tab Truy xuất & Khiếu nại).
+function slOrderOptionsHTML(selected){
+  const list = (DB.orders||[]).slice().sort((a,b)=>String(a.customer||'').localeCompare(String(b.customer||'')));
+  let html = '<option value="">— Chưa xác định —</option>';
+  let found = !selected;
+  list.forEach(o=>{
+    if(o.id===selected) found = true;
+    html += `<option value="${esc(o.id)}" ${o.id===selected?'selected':''}>${esc(o.customer||'?')} · PO ${esc(o.po||'—')} · ${esc(o.type||'')}</option>`;
+  });
+  // Đơn đã bị xoá/chuyển đi: giữ nguyên giá trị đã lưu, không mất liên kết
+  if(!found) html += `<option value="${esc(selected)}" selected>(Đơn không còn trong danh sách) ${esc(selected)}</option>`;
+  return html;
+}
+
+function slOrderLabel(id){
+  if(!id) return 'CHƯA XÁC ĐỊNH';
+  const o=(DB.orders||[]).find(x=>x.id===id);
+  return o ? esc((o.customer||'?')+' · PO '+(o.po||'—')+' · '+(o.type||'')) : 'Đơn không còn trong danh sách ('+esc(id)+')';
+}
 function goSlTab(tab){ _slTab = tab; _slSearch=''; _slFrom=''; _slTo=''; renderSoLieu(); }
 function slSetSearch(v){ _slSearch = v; renderSlBody(); }
 function slSetFrom(v){ _slFrom = v; renderSlBody(); }
@@ -394,6 +416,7 @@ function nlOpenAdd(){
   $('nlKhuMay').innerHTML = machineGroupOptionsHTML(dfKhu);
   $('nlMay').innerHTML = machineOptionsHTMLByGroup(dfKhu, slLastMayGet(dfKhu));
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
+  $('nlDonHangId').innerHTML = slOrderOptionsHTML(''); $('nlMaLoSX').value='';
   openModal('nlModal');
 }
 function nlOpenEdit(id){
@@ -413,6 +436,7 @@ function nlOpenEdit(id){
   $('nlMay').innerHTML = machineOptionsHTMLByGroup(rKhu, r.may||'');
   $('nlDonHang').value=r.khachHang||''; $('nlPO').value=r.po||''; $('nlWO').value=r.wo||''; $('nlGhiChu').value=r.ghiChu||'';
   $('nlKhachHangList').innerHTML = nlKhachHangOptionsHTML();
+  $('nlDonHangId').innerHTML = slOrderOptionsHTML(r.donHangId||''); $('nlMaLoSX').value=r.maLoSX||'';
   openModal('nlModal');
 }
 function nlSave(){
@@ -439,6 +463,7 @@ function nlSave(){
     khuMay, may,
     phe, phoi, pheItems, phoiItems,
     khachHang: $('nlDonHang').value.trim(), po: $('nlPO').value.trim(), wo: $('nlWO').value.trim(),
+    donHangId: $('nlDonHangId').value, maLoSX: $('nlMaLoSX').value.trim(),
     ghiChu: $('nlGhiChu').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
   };
@@ -502,6 +527,8 @@ function slViewDetail(tab, id){
       ${slDetailField('Khách hàng', esc(r.khachHang))}
       ${slDetailField('PO', esc(r.po))}
       ${slDetailField('WO', esc(r.wo))}
+      ${slDetailField('Đơn hàng liên kết', slOrderLabel(r.donHangId))}
+      ${slDetailField('Mã lô sản xuất', esc(r.maLoSX)||'CHƯA XÁC ĐỊNH')}
     </div>
     ${r.ghiChu?`<div style="margin-top:10px;padding:8px 10px;background:var(--amber-l);border-left:3px solid var(--amber-m);border-radius:0 8px 8px 0;line-height:1.5"><b>📝 Ghi chú:</b> ${esc(r.ghiChu)}</div>`:''}`;
   } else {
@@ -509,6 +536,9 @@ function slViewDetail(tab, id){
       ${slDetailField('Ngày', fmtDate(r.ngay))}
       ${slDetailField('Giờ nhập', (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'—')}
       ${slDetailField('Quy cách', esc(r.quyCach))}
+      ${slDetailField('Đơn hàng liên kết', slOrderLabel(r.donHangId))}
+      ${slDetailField('Mã lô sản xuất', esc(r.maLoSX)||'CHƯA XÁC ĐỊNH')}
+      ${slDetailField('Heat-Lot nguồn', esc(r.heatLot)||'CHƯA XÁC ĐỊNH')}
       ${slDetailField('Loại NL', esc(r.loaiNL))}
       ${slDetailField('Hàng', esc(r.hang))}
       ${slDetailField('Số thanh', fmtNum(r.soThanh))}
@@ -554,6 +584,7 @@ function mcOpenAdd(){
   $('mcMay').innerHTML = mcMachineOptionsHTML(dfCongDoan, slLastMayGet(CONGDOAN_MACHINE_GROUP[dfCongDoan]));
   $('mcLoaiNLList').innerHTML = mcLoaiNlOptionsHTML();
   $('mcKhachHangList').innerHTML = mcKhachHangOptionsHTML();
+  $('mcDonHangId').innerHTML = slOrderOptionsHTML(''); $('mcMaLoSX').value=''; $('mcHeatLot').value='';
   openModal('mcModal');
 }
 function mcOpenEdit(id){
@@ -570,6 +601,7 @@ function mcOpenEdit(id){
   $('mcMay').innerHTML = mcMachineOptionsHTML(edCongDoan, r.may||slLastMayGet(CONGDOAN_MACHINE_GROUP[edCongDoan]));
   $('mcLoaiNLList').innerHTML = mcLoaiNlOptionsHTML();
   $('mcKhachHangList').innerHTML = mcKhachHangOptionsHTML();
+  $('mcDonHangId').innerHTML = slOrderOptionsHTML(r.donHangId||''); $('mcMaLoSX').value=r.maLoSX||''; $('mcHeatLot').value=r.heatLot||'';
   openModal('mcModal');
 }
 function mcSave(){
@@ -584,6 +616,7 @@ function mcSave(){
     ngay, quyCach: qc, loaiNL: $('mcLoaiNL').value.trim(), hang: $('mcHang').value,
     soThanh: Number(soThanh), congDoan, may, ca: $('mcCa').value,
     nguoiSanXuat: nguoiSX, khachHang: $('mcKhachHang').value.trim(), ghiChu: $('mcGhiChu').value.trim(),
+    donHangId: $('mcDonHangId').value, maLoSX: $('mcMaLoSX').value.trim(), heatLot: $('mcHeatLot').value.trim(),
     updatedAt: Date.now(), updatedBy: actorName()
   };
   const idx = arr.findIndex(x=>x.id===rec.id);
