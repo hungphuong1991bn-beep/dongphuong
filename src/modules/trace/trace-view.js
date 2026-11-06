@@ -17,7 +17,7 @@ function renderTraceTab(){
       </div>
     </div>
     <div class="tr-search">
-      <input id="trInput" class="tr-input" type="search" autocomplete="off" placeholder="Mã đơn / PO / Heat-Lot / Mã lô SX / Mã QR / Tên khách hàng / Quy cách…" value="${esc(_trQ)}"
+      <input id="trInput" class="tr-input" type="search" autocomplete="off" placeholder="Mã đơn / PO / Heat-Lot / Mã lô SX / Mã QR / Tên khách hàng / Quy cách (vd 10x100)…" value="${esc(_trQ)}"
         onkeydown="if(event.key==='Enter')trRun()">
       <button class="btn btn-primary" onclick="trRun()">Tìm</button>
       <button class="btn btn-ghost" onclick="trStartScan()">📷 Quét QR</button>
@@ -82,7 +82,7 @@ function trOrderCard(o, res){
       <span class="tr-trace" style="color:${lvl[0]}">● ${lvl[1]}</span></div>
     <div class="tr-grid">
       <div><label>Mã PO</label>${trV(o.po)}</div>
-      <div><label>Quy cách</label>${trV(o.type)}</div>
+      <div><label>Quy cách</label>${trV([o.type, (typeof specStr==='function' && (o.thickness||o.width||o.phi||o.length)) ? specStr(o) : ''].filter(Boolean).join(' · '))}</div>
       <div><label>Ngày đặt hàng</label>${o.createdAt?fmtDate(new Date(o.createdAt).toISOString().slice(0,10)):TR_NA}</div>
       <div><label>Hạn giao</label>${o.deliveryDate?fmtDate(o.deliveryDate):TR_NA}</div>
       <div><label>Số lượng đặt</label>${o.qty?fmtNum(o.qty)+(o.isCoil?' cuộn':' thanh'):TR_NA}</div>

@@ -17,6 +17,42 @@ function trKey(s){
 function trText(s){
   return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().trim();
 }
+// ── TÌM THEO QUY CÁCH KÍCH THƯỚC (10x100, 10*100, 10 X 100, 10×100×4000, Φ18…) ──
+// Người dùng gõ dấu nhân bằng x / X / * / × / ✕ → quy hết về chữ "x"; bỏ khoảng trắng,
+// "mm", dấu phẩy thập phân → chấm. Chỉ coi là truy vấn quy cách khi có dạng SỐ x SỐ…
+// hoặc Φ/phi + số (ô nhập 1 con số trơn như "100" KHÔNG bị coi là quy cách để tránh khớp bừa).
+function trSpecKey(s){
+  return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase()
+    .replace(/[φϕø⌀]/g,'phi').replace(/[×✕✖✗*·]/g,'x')
+    .replace(/(\d),(\d)/g,'$1.$2').replace(/mm|cm/g,'').replace(/[^a-z0-9.]/g,'');
+}
+function trSpecQuery(raw){
+  const k = trSpecKey(raw);
+  return (/^(phi)?\d+(\.\d+)?(x\d+(\.\d+)?)+$/.test(k) || /^phi\d+(\.\d+)?(x\d+(\.\d+)?)*$/.test(k)) ? k : '';
+}
+// Khớp theo ranh giới từng số: "10x100" khớp "10x100x4000" nhưng KHÔNG khớp "110x100".
+// Trường tự do (vd. loại hàng "10*100 mạ", "TJ 10 x 100 đỏ") được tách thành các cụm số
+// "số x số x số" rồi mới so, nên chữ xung quanh không làm hỏng việc khớp.
+function trSpecTokens(field){
+  let f = String(field==null?'':field).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase()
+    .replace(/[φϕø⌀]/g,'phi').replace(/[×✕✖*·]/g,'x').replace(/(\d),(\d)/g,'$1.$2').replace(/mm|cm/g,' ');
+  f = f.replace(/phi\s*(?=\d)/g,'phi');
+  for(let i=0;i<3;i++) f = f.replace(/(\d)\s*x\s*(?=\d)/g,'$1x');
+  return f.match(/(?:phi)?\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)*/g) || [];
+}
+function trSpecHas(field, qSpec){
+  if(!qSpec) return false;
+  return trSpecTokens(field).some(t=>('x'+t+'x').indexOf('x'+qSpec+'x')>=0);
+}
+// Quy cách đầy đủ của 1 đơn / 1 mã QR từ các trường kích thước (giống specStr ở tab Đơn hàng)
+function trDimSpec(o){
+  if(!o) return '';
+  const t=o.thickness, w=o.width, l=o.length, phi=o.phi;
+  if(o.isCoil) return (phi && o.isRound) ? 'phi'+phi : [t,w].filter(Boolean).join('x');
+  if(phi && o.isRound) return 'phi'+phi+(l?'x'+l:'');
+  return [t,w,l].filter(Boolean).join('x');
+}
+
 // Nếu người dùng dán link QR công khai (?qr=DP-...) → lấy mã QR ra.
 function trExtractQr(q){
   const s = String(q||'').trim();
@@ -51,6 +87,7 @@ function trSearch(rawQuery, src){
   const why = (k,id,reason)=>{ (out.why[k+':'+id] = out.why[k+':'+id] || []).push(reason); };
   const exactOrContains = (field, key) => { const f=trKey(field); return !!f && (f===key || (key.length>=3 && f.indexOf(key)>=0)); };
   const textHas = (field) => !!qTxt && qTxt.length>=2 && trText(field).indexOf(qTxt)>=0;
+  const qSpec = trSpecQuery(query); // '' nếu ô nhập không có dạng quy cách
 
   // ── 1. SEEDS: khớp trực tiếp ───────────────────────────────────────
   src.orders.forEach(o=>{
@@ -60,12 +97,14 @@ function trSearch(rawQuery, src){
     if((o.matCodes||[]).some(c=>exactOrContains(c,qKey))) r.push('Mã nguyên liệu trên đơn');
     if(textHas(o.customer)) r.push('Tên khách hàng');
     if(textHas(o.type)) r.push('Quy cách sản phẩm');
+    else if(qSpec && (trSpecHas(o.type,qSpec) || trSpecHas(trDimSpec(o),qSpec))) r.push('Quy cách sản phẩm');
     if(r.length){ out.seeds.orders.push(o); r.forEach(x=>why('order',o.id,x)); }
   });
   src.qr.forEach(p=>{
     if(!p) return; const r=[];
     if(exactOrContains(p.qrCode,qKey)) r.push('Mã QR');
     if(exactOrContains(p.productCode,qKey)) r.push('Mã sản phẩm / thành phẩm');
+    if(qSpec && (trSpecHas(p.productName,qSpec) || trSpecHas(trDimSpec(p.spec),qSpec))) r.push('Quy cách sản phẩm');
     if(r.length){ out.seeds.qr.push(p); r.forEach(x=>why('qr',p.id,x)); }
   });
   [['nl',src.nl],['rut',src.rut],['db',src.db]].forEach(([k,arr])=>{
@@ -73,6 +112,7 @@ function trSearch(rawQuery, src){
       if(!r0) return; const r=[];
       if(exactOrContains(r0.heatLot,qKey)) r.push('Mã lô nguyên liệu / Heat-Lot');
       if(exactOrContains(r0.maLoSX,qKey)) r.push('Mã lô sản xuất');
+      if(qSpec && trSpecHas(r0.quyCach,qSpec)) r.push('Quy cách sản phẩm');
       if(r.length){ out.seeds[k].push(r0); r.forEach(x=>why(k,r0.id,x)); }
     });
   });

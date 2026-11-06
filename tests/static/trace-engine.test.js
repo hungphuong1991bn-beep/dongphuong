@@ -32,4 +32,24 @@ t('coverage đầy đủ/một phần',()=>{const r=trSearch('o1',src);assert.eq
 t('rút thiếu Heat-Lot → cảnh báo CHƯA XÁC ĐỊNH',()=>{const r=trSearch('o1',src);assert.ok(!r.gaps.some(g=>g.code==='NO_HEATLOT_rut'));const s2={...src,rut:[{id:'r9',donHangId:'o1'}]};assert.ok(trSearch('o1',s2).gaps.some(g=>g.code==='NO_HEATLOT_rut'));});
 t('ô nhập rỗng / ngắn → không khớp bừa',()=>{assert.equal(trSearch('',src).primary,null);assert.equal(ids(trSearch('h',src).primary.nl),'');});
 t('không đổi dữ liệu nguồn',()=>{const snap=JSON.stringify(src);trSearch('o1',src);trSearch('h-777',src);assert.equal(JSON.stringify(src),snap);});
+
+// ── Tìm theo quy cách kích thước: 10x100 / 10*100 / 10 X 100 / 10×100 ──
+const specSrc={
+ orders:[{id:'s1',customer:'A',po:'P1',type:'Đồng thanh dẹt',thickness:'10',width:'100',length:4000},
+         {id:'s2',customer:'B',po:'P2',type:'Đồng thanh dẹt',thickness:'110',width:'100',length:3000},
+         {id:'s3',customer:'C',po:'P3',type:'Đồng tròn',isRound:true,phi:18,length:6000},
+         {id:'s4',customer:'D',po:'P4',type:'10*100 mạ',thickness:'5',width:'30',length:2000}],
+ qr:[{id:'qs',qrCode:'DP-1',productCode:'SP-1',orderId:'s1',productName:'Đồng thanh',spec:{thickness:10,width:100,length:4000}}],
+ nl:[], rut:[{id:'rs',donHangId:'',heatLot:'',quyCach:'10 x 100'}], db:[]
+};
+['10x100','10*100','10X100','10×100','10 x 100',' 10 * 100 ','10x100mm'].forEach(q=>{
+  t('quy cách "'+q+'" tìm ra đơn 10x100 (và dòng sổ cùng quy cách)',()=>{const r=trSearch(q,specSrc);assert.ok(ids(r.seeds.orders).includes('s1'),ids(r.seeds.orders));assert.ok(ids(r.seeds.rut).includes('rs'));assert.ok(ids(r.seeds.qr).includes('qs'));});
+});
+t('gõ đủ 10x100x4000 vẫn ra đơn & QR (không cần dòng sổ)',()=>{const r=trSearch('10x100x4000',specSrc);assert.ok(ids(r.seeds.orders).includes('s1'));assert.ok(ids(r.seeds.qr).includes('qs'));assert.ok(!ids(r.seeds.orders).includes('s2'));});
+t('10x100 KHÔNG khớp 110x100 (so khớp theo ranh giới số)',()=>{assert.ok(!ids(trSearch('10x100',specSrc).seeds.orders).includes('s2'));});
+t('quy cách nằm ở giữa: 100x4000 khớp 10x100x4000',()=>{assert.ok(ids(trSearch('100x4000',specSrc).seeds.orders).includes('s1'));});
+t('loại hàng ghi sẵn 10*100 vẫn khớp khi gõ 10x100',()=>{const s={...specSrc,orders:[{id:'z',customer:'Z',type:'10*100 mạ'}]};assert.equal(ids(trSearch('10x100',s).seeds.orders),'z');});
+t('Φ18 / phi18 / Ø18 tìm ra đồng tròn',()=>{['Φ18','phi18','Ø18','phi 18'].forEach(q=>assert.ok(ids(trSearch(q,specSrc).seeds.orders).includes('s3'),q));});
+t('số trơn "100" không bị coi là quy cách',()=>{assert.equal(trSpecQuery('100'),'');assert.equal(trSpecQuery('po-100'),'');assert.equal(ids(trSearch('100',specSrc).seeds.rut),'');});
+t('số thập phân 2,5x30 = 2.5*30',()=>{assert.equal(trSpecQuery('2,5x30'),trSpecQuery('2.5*30'));});
 console.log(pass+' passed');
