@@ -1,11 +1,4 @@
 /* Giai đoạn 2 — widget điều hành nhà máy trên Tổng quan (dùng token của design-system.css) */
-.dp-quick{background:linear-gradient(135deg,#0E2A6B,#1F4FBF);border-radius:var(--ds-radius);padding:14px 16px;margin:0 0 14px;box-shadow:var(--ds-shadow)}
-.dp-quick-t{color:#fff;font:800 14px/1.2 var(--ds-font);margin-bottom:8px}
-.dp-quick-row{display:flex;gap:8px;flex-wrap:wrap}
-.dp-quick-row .ds-input{flex:1 1 280px;min-height:44px;border-color:transparent}
-.dp-quick-row .ds-btn{min-height:44px}
-.dp-quick-row .ds-btn:not(.primary){background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
-.dp-quick-row .ds-btn.primary{background:#fff;color:#1F4FBF;border-color:#fff}
 .dp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:12px 0}
 .dp-kpi .ov-kpi-val{font-size:22px}
 .dp-board{margin:12px 0}

@@ -1,5 +1,5 @@
 // src/modules/quality/cp-view.js — ControlPlan: điều hướng, Tổng quan (KPI + bộ lọc + thẻ biểu mẫu), danh sách phiếu
-const cpUI = {view:'home', arg:'', F:Object.assign({}, CP_FILTER0), q:'', page:1, ed:null};
+const cpUI = {view:'home', arg:'', F:Object.assign({}, CP_FILTER0), q:'', page:1, ed:null, og:{}};   // og: nhóm đang mở ở Tổng quan {A:true,...}
 const CP_PAGE = 50;
 
 function renderControlPlan(){
@@ -81,17 +81,35 @@ function cpHomeHtml(){
   if(empty) h+=`<div class="cp-banner info">Chưa có phiếu nào. ${cpCan('config')?'Quản trị viên vào <b>⚙️ Quản trị ▸ Nhập dữ liệu từ Excel</b> để nạp lịch sử và danh mục.':'Nhờ Quản trị viên nạp dữ liệu lịch sử từ Excel, hoặc bấm vào một biểu mẫu để tạo phiếu đầu tiên.'}</div>`;
   if(Object.keys(F).some(k=>F[k])) h+=`<div class="cp-banner info">Các KPI đang tính theo bộ lọc bên dưới.</div>`;
   h+=cpFiltersHtml();
+  // Toolbar: mở/thu gọn tất cả + xuất Excel toàn bộ
+  const nOpen=CP_GROUPS.filter(g=>cpUI.og[g.key]).length;
+  h+=`<div class="cp-gtools"><div class="cp-ghint">👇 Bấm vào từng nhóm để mở danh sách biểu mẫu của nhóm đó.</div><span class="grow"></span>
+    <button class="cp-btn" onclick="cpGroupAll(${nOpen<CP_GROUPS.length?'true':'false'})">${nOpen<CP_GROUPS.length?'⤢ Mở tất cả':'⤡ Thu gọn tất cả'}</button>
+    <button class="cp-btn g" onclick="cpExportAll()" title="Xuất toàn bộ ControlPlan ra một file Excel gồm trang Tổng quan và từng biểu mẫu">⬇ Xuất Excel toàn bộ</button></div>`;
+  const stats={}; CP_FORMS.forEach(f=>{ stats[f.key]=cpCardStats(f.key,F); });
   CP_GROUPS.forEach(g=>{
-    h+=`<div class="cp-group" style="--gc:${g.color}">${g.title}</div><div class="cp-cards">`;
-    CP_FORMS.filter(f=>f.g===g.key).forEach(f=>{
-      const s=cpCardStats(f.key,F), isForm=f.kind==='form';
+    const forms=CP_FORMS.filter(f=>f.g===g.key), isOpen=!!cpUI.og[g.key];
+    const frm=forms.filter(f=>f.kind==='form'), sumN=frm.reduce((t,f)=>t+stats[f.key].n,0), sumToday=frm.reduce((t,f)=>t+stats[f.key].today,0), sumNg=frm.reduce((t,f)=>t+stats[f.key].ng,0);
+    const chips=frm.length
+      ? `<span class="cp-gchip"><b>${sumN}</b> phiếu</span><span class="cp-gchip"><b>${sumToday}</b> hôm nay</span><span class="cp-gchip${sumNg?' ng':''}"><b>${sumNg}</b> ${g.key==='D'?'đang mở':'NG'}</span>`
+      : `<span class="cp-gchip"><b>${forms.reduce((t,f)=>t+stats[f.key].n,0)}</b> mục danh mục</span>`;
+    h+=`<section class="cp-gsec${isOpen?' open':''}" data-g="${g.key}" style="--gc:${g.color}">
+      <div class="cp-ghead" role="button" tabindex="0" aria-expanded="${isOpen}" onclick="cpToggleGroup('${g.key}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cpToggleGroup('${g.key}')}">
+        <span class="cp-gchev" aria-hidden="true">▸</span>
+        <div class="cp-gtitle"><b>${g.title}</b><small>${forms.length} biểu mẫu${frm.length?'':' · tiêu chuẩn tham chiếu'}</small></div>
+        <div class="cp-gchips">${chips}</div>
+        <button class="cp-btn cp-gx" onclick="event.stopPropagation();cpExportGroup('${g.key}')" title="Xuất Excel nhóm này">⬇ Excel</button>
+      </div>
+      <div class="cp-gbody"><div class="cp-cards">`;
+    forms.forEach(f=>{
+      const s=stats[f.key], isForm=f.kind==='form';
       const lbl=isForm?(f.key==='hold'?'Đang HOLD':(f.key==='ncr'||f.key==='eightd')?'Chưa đóng':'NG'):'';
       h+=`<div class="cp-card" style="--gc:${g.color}"><div class="cp-card-top"><div class="cp-ico">${f.icon}</div><div><h4>${f.no}. ${cpH(f.title)}</h4><div class="cp-code">${f.code?'Mã: '+cpH(f.code):'Mã biểu mẫu: chưa quy định'}</div></div></div>
         <div class="cp-desc">${cpH(f.desc)}</div>
         <div class="cp-stats"><div class="cp-stat"><b>${s.n}</b><span>${isForm?'Phiếu đã ghi':cpH(s.unit)}</span></div>${isForm?`<div class="cp-stat"><b>${s.today}</b><span>Hôm nay</span></div><div class="cp-stat"><b class="${s.ng?'ng':''}">${s.ng}</b><span>${lbl}</span></div>`:''}</div>
-        <div class="cp-card-foot"><span class="cp-live">● Hoạt động</span><button class="cp-btn p" onclick="cpOpenForm('${f.key}')">Mở biểu mẫu</button></div></div>`;
+        <div class="cp-card-foot"><span class="cp-live">● Hoạt động</span><button class="cp-btn" onclick="cpExportForm('${f.key}')" title="Xuất Excel biểu mẫu này">⬇ Excel</button><button class="cp-btn p" onclick="cpOpenForm('${f.key}')">Mở biểu mẫu</button></div></div>`;
     });
-    h+='</div>';
+    h+='</div></div></section>';
   });
   const toc=cpSeed().toc||{};
   if(toc.flow) h+=`<div class="cp-flow"><h5>Luồng liên kết dữ liệu</h5><div class="cp-flowrow">${String(toc.flow).split(/→|->/).map(x=>`<span>${cpH(x.trim())}</span>`).join('<i>→</i>')}</div></div>`;
@@ -101,6 +119,24 @@ function cpOpenForm(key){
   const f=cpFormDef(key);
   if(f.kind==='cp') return cpGo('cp'); if(f.kind==='pfmea') return cpGo('pfmea'); if(f.kind==='aql') return cpGo('aql'); if(f.kind==='defect') return cpGo('defects');
   cpGo('list', key);
+}
+
+// Mở / đóng nhóm ngay trên DOM (không vẽ lại cả trang → giữ nguyên vị trí cuộn, có hiệu ứng mượt).
+// Kiểu accordion: mở nhóm nào thì các nhóm khác tự thu lại; bấm lại nhóm đang mở để đóng.
+function cpToggleGroup(k){
+  const was=!!cpUI.og[k];
+  cpUI.og = was ? {} : {[k]:true};
+  cpSyncGroups();
+  if(!was){ const el=document.querySelector('#cpRoot .cp-gsec[data-g="'+k+'"]'); if(el) setTimeout(()=>{ try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){} }, 30); }
+}
+function cpGroupAll(on){ cpUI.og={}; if(on) CP_GROUPS.forEach(g=>{ cpUI.og[g.key]=true; }); cpRender(); }
+function cpSyncGroups(){
+  document.querySelectorAll('#cpRoot .cp-gsec').forEach(el=>{
+    const on=!!cpUI.og[el.getAttribute('data-g')]; el.classList.toggle('open', on);
+    const hd=el.querySelector('.cp-ghead'); if(hd) hd.setAttribute('aria-expanded', on?'true':'false');
+  });
+  const n=Object.keys(cpUI.og).length, b=document.querySelector('#cpRoot .cp-gtools .cp-btn:not(.g)');
+  if(b){ const all=n>=CP_GROUPS.length; b.textContent=all?'⤡ Thu gọn tất cả':'⤢ Mở tất cả'; b.setAttribute('onclick','cpGroupAll('+(all?'false':'true')+')'); }
 }
 
 // ── DANH SÁCH PHIẾU ──────────────────────────────────────────────────────────
@@ -162,7 +198,7 @@ function cpLinkPill(r){ const s=cpLinkStatus(r); return `<span class="cp-pill ${
 function cpStatusPill(s){ const c=/Đóng|RELEASE|Hoàn/i.test(s)?'ok':/Phế|HOLD|Mở/i.test(s)?'ng':'warn'; return `<span class="cp-pill ${c}">${cpH(s)}</span>`; }
 function cp8dProgress(r){ const t=cpToday(); let done=0, late=0; (r.steps||[]).forEach(s=>{ if(s.status==='Hoàn thành') done++; else if(s.due && s.due<t) late++; }); return {done,late}; }
 
-// ── Xuất Excel / PDF (in) ────────────────────────────────────────────────────
+// ── Xuất PDF (in) + ma trận dữ liệu ────────────────────────────────────────────────────
 function cpExportMatrix(key){
   const rows=cpListRows(key), type=CP_TYPE_OF_FORM[key], out=[];
   if(type==='chk'){
@@ -177,15 +213,7 @@ function cpExportMatrix(key){
   }
   return out;
 }
-async function cpDownloadXlsx(name, sheets){
-  try{ await ensureExcelJs(); }catch(e){}
-  if(typeof ExcelJS==='undefined'){ showToast('Không tải được thư viện Excel — thử lại khi có mạng', true); return; }
-  const wb=new ExcelJS.Workbook();
-  sheets.forEach(s=>{ const ws=wb.addWorksheet(s.name.slice(0,31)); s.rows.forEach(r=>ws.addRow(r.map(c=>c==null?'':c))); const h=ws.getRow(1); h.font={bold:true}; h.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2E8F0'}}; ws.views=[{state:'frozen',ySplit:1}]; ws.columns.forEach(c=>{ let m=10; c.eachCell({includeEmpty:false},x=>{ m=Math.max(m,Math.min(40,String(x.value).length+2)); }); c.width=m; }); });
-  const buf=await wb.xlsx.writeBuffer(), a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
-}
-function cpExportList(key){ cpDownloadXlsx('ControlPlan_'+key+'_'+cpToday()+'.xlsx',[{name:cpFormDef(key).title.slice(0,28),rows:cpExportMatrix(key)}]); }
+// cpDownloadXlsx / cpExportList / cpExportForm / cpExportGroup / cpExportAll → xem cp-export.js (xuất Excel chuyên nghiệp)
 function cpPrintMatrix(title, rows){
   const w=window.open('','_blank'); if(!w){ showToast('Trình duyệt chặn cửa sổ in — cho phép pop-up rồi thử lại', true); return; }
   w.document.write(`<html><head><meta charset="utf-8"><title>${cpH(title)}</title><style>body{font:11px Arial,sans-serif;margin:14px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #888;padding:3px 5px;text-align:left}th{background:#e2e8f0}h2{margin:0 0 8px}</style></head><body><h2>${cpH(title)}</h2><div>Xuất ngày ${cpFmtTs(Date.now())} · ${cpH(cpActor())}</div><br><table>${rows.map((r,i)=>'<tr>'+r.map(c=>`<${i?'td':'th'}>${cpH(c==null?'':c)}</${i?'td':'th'}>`).join('')+'</tr>').join('')}</table><script>setTimeout(function(){window.print()},300)<\/script></body></html>`);

@@ -9,26 +9,6 @@ const DP_NA = '<span class="ds-na">CHƯA CÓ DỮ LIỆU</span>';
 function dpSafe(fn, ...a){ try{ return fn(...a); }catch(e){ console.warn('[dashboard-factory]', fn.name, e); return ''; } }
 function dpActive(o){ return o && o.status!=='done'; }
 
-// ── G. Truy xuất nhanh ───────────────────────────────────────────────
-function buildDpQuickTrace(){
-  return `<div class="dp-quick">
-    <div class="dp-quick-t">🔎 Truy xuất nhanh</div>
-    <div class="dp-quick-row">
-      <input id="dpQuickInput" class="ds-input" type="search" autocomplete="off"
-        placeholder="Nhập mã đơn / PO / mã lô / Heat-Lot / mã sản phẩm / mã QR…"
-        onkeydown="if(event.key==='Enter')dpQuickTrace()">
-      <button class="ds-btn primary" onclick="dpQuickTrace()">Tra cứu</button>
-      <button class="ds-btn" onclick="dpQuickScan()">📷 Quét QR</button>
-    </div>
-  </div>`;
-}
-function dpQuickTrace(){
-  const v = (($('dpQuickInput')||{}).value||'').trim();
-  if(!v){ showToast('Nhập mã cần truy xuất', true); return; }
-  _trQ = v; goTab('truyXuat');   // renderTraceTab() tự chạy truy xuất với _trQ
-}
-function dpQuickScan(){ goTab('truyXuat'); setTimeout(()=>{ if(typeof trStartScan==='function') trStartScan(); }, 250); }
-
 // ── A. KPI bổ sung (chỉ số thật; thiếu nguồn → CHƯA CÓ DỮ LIỆU) ───────
 function buildDpExtraKpis(orders){
   const today0 = new Date(); today0.setHours(0,0,0,0);

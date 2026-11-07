@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [Chưa phát hành] Tổng quan & ControlPlan QC — gỡ Truy xuất nhanh, nhóm bấm-để-mở, xuất Excel chuyên nghiệp
+- **Tổng quan**: bỏ khối "Truy xuất nhanh" (`buildDpQuickTrace`, `dpQuickTrace`, `dpQuickScan` + CSS `.dp-quick*`). Tab Truy xuất riêng vẫn dùng bình thường.
+- **ControlPlan ▸ Tổng quan**: 4 nhóm A/B/C/D thành dạng accordion — bấm nhóm nào thì nhóm đó tự mở ra danh sách biểu mẫu (nhóm khác tự thu lại; bấm lại để đóng; có nút Mở/Thu gọn tất cả; phím Enter/Space dùng được). Đầu mỗi nhóm hiện sẵn tổng phiếu / hôm nay / NG. Vào biểu mẫu chỉ bằng nút "Mở biểu mẫu" trong thẻ; quay lại thì nhóm vẫn mở.
+- **Xuất Excel** (file mới `src/modules/quality/cp-export.js`, nạp sau `cp-reports.js`; đã thêm vào `index.html` + `sw.js`): xuất toàn bộ / theo nhóm / theo biểu mẫu / danh sách đang lọc. Có trang Tổng quan (KPI, danh mục biểu mẫu có liên kết nhảy trang), mỗi biểu mẫu một trang tính, logo + tên công ty, mã hồ sơ, ngày/người xuất, phạm vi lọc, tô màu OK/NG và trạng thái, ngày dd/mm/yyyy thật, AutoFilter, đóng băng tiêu đề, in A4 + lặp tiêu đề + số trang, khối chữ ký. 8D có thêm trang chi tiết từng bước. Hàm `cpDownloadXlsx` cũ (Báo cáo, Control Plan, PFMEA) chuyển sang khung mới nên các nút ⬇ Excel cũ cũng ra file chuẩn.
+- CHỈ ĐỌC dữ liệu, không ghi DB, không đổi schema.
+
 ## [Chưa phát hành] Giai đoạn 5 — Dọn dẹp, kiểm thử, bàn giao
 - Xoá 164 file thừa trong `src/assets/` (bản sao cũ của `modules/ components/ services/ core/ styles/ utils/ vendor/`; 154 file trùng y hệt bản chính, 9 file là bản CŨ hơn bản chính, 1 file `modules/dashboard/dashboard` trùng `dashboard.css`). Không file nào được `index.html`/`sw.js` nạp. **Giữ** `src/assets/brand-logo.js` (đang dùng). Danh sách file đã xoá: `docs/REMOVED-STALE-COPIES.txt`. Không ảnh hưởng chạy ứng dụng; chỉ giảm kích thước kho.
 - `tests/run-all.sh` thêm mục [5] chạy các bài kiểm thử mới (jsdom). `tests/package.json` thêm `jsdom`.

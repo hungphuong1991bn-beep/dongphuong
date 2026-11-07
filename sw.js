@@ -110,6 +110,7 @@ const ASSETS = [
   './src/modules/quality/cp-forms.js',
   './src/modules/quality/cp-master.js',
   './src/modules/quality/cp-reports.js',
+  './src/modules/quality/cp-export.js',
   './src/modules/reports/reports-view.js',
   './src/modules/customers/customers-view.js',
   './src/modules/audit/audit-view.js',

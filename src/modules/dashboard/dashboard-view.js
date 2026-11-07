@@ -295,7 +295,6 @@ function renderDashboard(){
       ${notifBanner}
       <div id="onlineEl"></div>
       ${workerPanel}
-      ${dpSafe(buildDpQuickTrace)}
 
       ${buildOvKpis(orders)}
       ${buildDpFactoryBlock(orders)}

@@ -106,10 +106,38 @@
 .cp-rsec{background:#fff;border:1px solid var(--cp-b);border-radius:12px;padding:10px 12px;margin-bottom:12px}
 .cp-rsec h4{margin:0 0 8px;font-size:14px}
 .cp-aqlhit{background:#fde68a !important;font-weight:800}
+/* ── Tổng quan: nhóm biểu mẫu dạng accordion (bấm nhóm → mở nhóm đó) ── */
+.cp-gtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0 10px}
+.cp-gtools .grow{flex:1 1 40px}
+.cp-ghint{font-size:12.5px;color:var(--text3,#64748b);font-weight:600}
+.cp-btn.g:hover{background:#065f46;border-color:#065f46;color:#fff}
+.cp-gsec{margin:0 0 10px;background:#fff;border:1px solid var(--cp-b);border-left:6px solid var(--gc);border-radius:14px;overflow:hidden;scroll-margin-top:64px;transition:box-shadow .2s,border-color .2s}
+.cp-gsec:hover{box-shadow:0 3px 14px rgba(15,23,42,.07)}
+.cp-gsec.open{box-shadow:0 8px 26px rgba(15,23,42,.1);border-color:var(--gc)}
+.cp-ghead{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:62px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;background:linear-gradient(90deg,rgba(148,163,184,.10),rgba(255,255,255,0) 70%)}
+.cp-ghead:focus-visible{outline:3px solid var(--gc);outline-offset:-3px}
+.cp-gchev{flex:0 0 30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--gc);color:#fff;font-size:14px;line-height:1;transition:transform .22s ease}
+.cp-gsec.open .cp-gchev{transform:rotate(90deg)}
+.cp-gtitle{flex:1 1 220px;min-width:0}
+.cp-gtitle b{display:block;font-size:14px;font-weight:800;letter-spacing:.3px;color:var(--gc);line-height:1.3}
+.cp-gtitle small{display:block;font-size:11.5px;color:var(--text3,#64748b);font-weight:600;margin-top:2px}
+.cp-gchips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cp-gchip{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--bg,#f1f5f9);color:var(--text2,#334155);white-space:nowrap}
+.cp-gchip b{font-weight:800;color:var(--text1,#0f172a)}
+.cp-gchip.ng{background:#fee2e2;color:#991b1b}.cp-gchip.ng b{color:#b91c1c}
+.cp-gx{min-height:36px;padding:0 12px;font-size:12.5px}
+.cp-gbody{display:none;padding:12px 14px 14px;border-top:1px solid var(--cp-b);background:var(--bg,#f8fafc)}
+.cp-gsec.open .cp-gbody{display:block;animation:cpGIn .24s ease}
+@keyframes cpGIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.cp-card-foot .cp-btn:not(.p){margin-left:auto;min-height:38px}
+.cp-card-foot .cp-btn.p{margin-left:0}
+@media (prefers-reduced-motion:reduce){.cp-gsec.open .cp-gbody{animation:none}.cp-gchev{transition:none}}
 @media (max-width:720px){
   .cp-title{font-size:17px}.cp-cards{grid-template-columns:1fr}.cp-kpis{grid-template-columns:repeat(2,1fr)}
   .cp-grid .w2{grid-column:auto}.cp-barrow{grid-template-columns:90px 1fr 84px}
   .cp-nav button{flex:1 1 auto;padding:9px 10px}.cp-btn{padding:0 12px}
+  .cp-gchips{display:none}.cp-ghead{padding:10px 12px;gap:10px}.cp-gx{padding:0 10px}.cp-ghint{flex:1 1 100%}
+  .cp-gtools .cp-btn{flex:1 1 auto}
   .cp-stick .cp-btn{flex:1}
 }
 @media print{
