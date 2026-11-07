@@ -76,7 +76,8 @@ const CP_PERM = {
   config:   ['admin'],                        // danh mục mã lỗi, phân quyền, nhập Excel
   investigate:['admin','qa','lead','qc'],     // HOLD: bắt đầu điều tra / gửi phê duyệt
   approve:  ['admin','qa'],                   // RELEASE / Phế phẩm / duyệt NCR / đóng 8D
-  verify:   ['admin','qa','lead']             // xác nhận hiệu lực NCR
+  verify:   ['admin','qa','lead'],            // xác nhận hiệu lực NCR
+  delete:   ['admin']                         // XOÁ HẲN phiếu Check Sheet nhóm B (độ thẳng, Đùn, Rút, Đánh bóng, Cắt)
 };
 function cpCan(action, rec){
   const r=cpRole(); if(!(CP_PERM[action]||[]).includes(r)) return false;
@@ -156,6 +157,18 @@ function cpDeleteDraft(id){
   const q=_cpQ[id]; if(q && q.base===0) delete _cpQ[id]; else _cpQ[id]={op:'del'};
   cpSaveLocal(); cpSaveQueue(); cpScheduleFlush(300); cpSyncBadge();
   try{ log('ControlPlan · Xoá bản nháp', (r.code||id), ''); }catch(e){}
+  return true;
+}
+
+// Admin xoá hẳn phiếu Check Sheet nhóm B (mọi trạng thái, kể cả đã hoàn tất / đã huỷ). Khác "huỷ" (void): bản ghi biến mất khỏi hệ thống và các máy khác.
+// Dấu vết còn lại: Nhật ký thao tác của app (mã phiếu, khách hàng, quy cách, lô, lý do, người xoá).
+function cpCanDeleteRec(r){ return !!(r && r.type==='chk' && cpCan('delete')); }
+function cpDeleteRecord(id, reason){
+  const r=cpGet(id); if(!cpCanDeleteRec(r)) return false;
+  cpRecs().splice(cpRecs().findIndex(x=>x.id===id),1); _cpIdx=null;
+  const q=_cpQ[id]; if(q && q.base===0) delete _cpQ[id]; else _cpQ[id]={op:'del'};
+  cpSaveLocal(); cpSaveQueue(); cpScheduleFlush(300); cpSyncBadge();
+  try{ log('ControlPlan · Xoá phiếu', [(r.code||id), r.customer, r.spec, r.lot?('lô '+r.lot):'', r.status==='draft'?'(nháp)':'', r.void?'(đã huỷ)':'', '— lý do: '+(reason||'')].filter(Boolean).join(' · '), r.orderId||''); }catch(e){}
   return true;
 }
 

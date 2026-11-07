@@ -313,6 +313,7 @@ function cpEdFooter(){
     } else if(cpCan('editAny') && r.status==='done' && !r.void){
       b+=`<button class="cp-btn p" onclick="cpUI.ed.ro=false;cpEdRender()">✏️ Sửa (ghi lý do & nhật ký)</button><button class="cp-btn d" onclick="cpVoid()">🚫 Huỷ phiếu</button>`;
     }
+    if(cpCanDeleteRec(r) && !ed.isNew && !(editable && r.status==='draft')) b+=`<button class="cp-btn d" onclick="cpDeleteRec()" title="Chỉ Quản trị viên — xoá hẳn phiếu, không khôi phục được">🗑 Xoá phiếu (Admin)</button>`;
     if(r.type==='fqc' && r.status==='done' && r.result==='NG' && !r.ngFollow && cpCan('create')) b+=`<button class="cp-btn d" onclick="cpNgDialog('${r.id}')">⚠ Xử lý NG (HOLD/NCR)</button>`;
   } else if(r.type==='ncr'){
     const s=r.status, can=cpCan('create');
@@ -435,6 +436,14 @@ function cpSave(complete, quiet){
   return rec;
 }
 function cpDraftDelete(){ const r=cpUI.ed.rec; if(!confirm('Xoá bản nháp '+(r.code||'')+'?')) return; cpDeleteDraft(r.id); cpEdClose(); }
+function cpDeleteRec(){
+  const r=cpGet(cpUI.ed.rec.id); if(!r) return;
+  if(!cpCanDeleteRec(r)){ showToast('🔒 Chỉ Quản trị viên mới được xoá phiếu Check Sheet', true); return; }
+  const linked=cpRecs().filter(x=>x && x.sourceId===r.id).length;
+  const why=prompt('XOÁ HẲN phiếu '+(r.code||'')+' — không khôi phục được.\n'+(linked?'⚠ Có '+linked+' hồ sơ NCR/HOLD/8D lập từ phiếu này (vẫn giữ, nhưng mất liên kết).\n':'')+'Nhập lý do xoá (bắt buộc):'); if(!why||!why.trim()) return;
+  if(!confirm('Xác nhận xoá vĩnh viễn phiếu '+(r.code||'')+(r.customer?' · '+r.customer:'')+'?')) return;
+  if(cpDeleteRecord(r.id, why.trim())){ showToast('🗑 Đã xoá phiếu '+(r.code||'')); cpEdClose(); }
+}
 function cpVoid(){
   const r=cpGet(cpUI.ed.rec.id); if(!r||cpGuard('editAny')) return;
   const why=prompt('Lý do huỷ phiếu '+r.code+' (bắt buộc). Phiếu không bị xoá, chỉ đánh dấu huỷ và ghi nhật ký:'); if(!why||!why.trim()) return;

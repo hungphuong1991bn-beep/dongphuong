@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [Chưa phát hành] ControlPlan QC nhóm B — Admin xoá phiếu
+- Mở một phiếu Check Sheet nhóm B (Kiểm tra độ thẳng, Đùn, Rút, Đánh bóng, Cắt) bằng tài khoản **Admin** → có nút **🗑 Xoá phiếu (Admin)** ở chân trang, dùng được với phiếu nháp, đã hoàn tất hoặc đang sửa. Các vai trò khác (QA, Trưởng QC, QC, SX, chỉ xem) không thấy nút và bị chặn cả khi gọi trực tiếp.
+- Bắt buộc nhập lý do + xác nhận lần 2; nếu phiếu đã có NCR/HOLD/8D lập từ nó thì cảnh báo trước (các hồ sơ đó vẫn giữ, chỉ mất liên kết).
+- Xoá HẲN (khác "Huỷ phiếu" chỉ đánh dấu): bản ghi biến mất khỏi máy này và đồng bộ xoá trên máy chủ/máy khác (dùng hàng đợi xoá sẵn có, chưa có mạng thì chờ gửi lại). Dấu vết còn lại ở **Nhật ký thao tác**: mã phiếu, khách hàng, quy cách, lô, lý do, người xoá.
+- Mã: `cp-core.js` (`CP_PERM.delete`, `cpCanDeleteRec`, `cpDeleteRecord`), `cp-forms.js` (`cpDeleteRec`, chân trang). Chỉ áp dụng loại phiếu `chk`; FQC / NCR / HOLD / 8D không đổi.
+- Lưu ý: phiếu nhập từ Excel nếu bị xoá thì lần nhập lại Excel có thể nạp lại. Đã kiểm tra cú pháp và quyền/hàng đợi xoá bằng Node; **chưa thử trên trình duyệt thật**.
+
 ## [Chưa phát hành] ControlPlan QC — sửa lỗi hiện tiêu đề nhưng nội dung vẫn là tab cũ; bấm thẻ mở thẳng biểu mẫu
 - **Sửa lỗi**: chuyển từ tab khác (vd Quản lý mã QR) sang ControlPlan QC, thanh trên cùng đã đổi nhưng nội dung vẫn là tab cũ. Nguyên nhân: `renderControlPlan()` thoát sớm khi cờ `cpUI.ed` (phiếu đang mở lần trước) còn sót hoặc khi một ô nhập đang được focus, dù trang ControlPlan lúc đó chưa hề được vẽ. Nay chỉ bỏ qua vẽ lại khi khung `#cpRoot` đang hiển thị; vừa chuyển từ tab khác sang thì luôn vẽ (phiếu đang soạn dở vẫn được giữ và mở lại).
 - **Phòng lỗi ngược lại**: `cpRender()` không ghi đè nội dung khi đang ở tab khác (các lệnh đồng bộ chạy nền gọi vẽ lại sau khi người dùng đã rời tab).
