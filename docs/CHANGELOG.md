@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [Chưa phát hành] ControlPlan QC — sửa lỗi hiện tiêu đề nhưng nội dung vẫn là tab cũ; bấm thẻ mở thẳng biểu mẫu
+- **Sửa lỗi**: chuyển từ tab khác (vd Quản lý mã QR) sang ControlPlan QC, thanh trên cùng đã đổi nhưng nội dung vẫn là tab cũ. Nguyên nhân: `renderControlPlan()` thoát sớm khi cờ `cpUI.ed` (phiếu đang mở lần trước) còn sót hoặc khi một ô nhập đang được focus, dù trang ControlPlan lúc đó chưa hề được vẽ. Nay chỉ bỏ qua vẽ lại khi khung `#cpRoot` đang hiển thị; vừa chuyển từ tab khác sang thì luôn vẽ (phiếu đang soạn dở vẫn được giữ và mở lại).
+- **Phòng lỗi ngược lại**: `cpRender()` không ghi đè nội dung khi đang ở tab khác (các lệnh đồng bộ chạy nền gọi vẽ lại sau khi người dùng đã rời tab).
+- **Bấm thẻ mở luôn**: ở Tổng quan ControlPlan, bấm vào bất kỳ chỗ nào trên thẻ biểu mẫu (vd nhóm B ▸ Kiểm tra độ thẳng) là mở thẳng danh sách/phiếu của biểu mẫu đó; nút "Mở biểu mẫu" và "⬇ Excel" vẫn dùng như cũ (không bị mở đúp). Dùng được phím Enter/Space khi thẻ đang được chọn.
+- Đã kiểm tra cú pháp và mô phỏng logic bằng Node; **chưa thử trên trình duyệt thật**.
+
+## [Chưa phát hành] ControlPlan QC — ô Khách hàng dạng hộp chọn
+- Các phiếu kiểm tra (ô **Khách hàng**: phiếu kiểm tra chuyền, FQC, 8D) nay có **mũi tên ▾** bấm để xổ toàn bộ danh sách khách hàng; gõ **chữ đầu** hoặc một phần tên (không cần dấu, không phân biệt hoa thường) thì danh sách tự lọc, tên bắt đầu bằng chữ gõ được xếp lên trước. Dùng được phím ↑ ↓ Enter Esc; vẫn gõ được tên khách mới.
+- Nguồn danh sách: khách hàng trong tab Đơn hàng + khách đã có trong các phiếu QC (trùng tên khác dấu/hoa thường chỉ giữ 1). Bộ lọc Khách hàng ở danh sách phiếu cũng được dùng danh sách này.
+- Sửa: `cp-core.js` (`cpCustomers`), `cp-forms.js` (`cpFld`, hàm `cpCb*`), `cp.css`. Chỉ ĐỌC dữ liệu, không đổi schema. Đã kiểm tra cú pháp và logic gộp/lọc bằng Node; **chưa thử trên trình duyệt thật / điện thoại**.
+
 ## [Chưa phát hành] Tổng quan & ControlPlan QC — gỡ Truy xuất nhanh, nhóm bấm-để-mở, xuất Excel chuyên nghiệp
 - **Tổng quan**: bỏ khối "Truy xuất nhanh" (`buildDpQuickTrace`, `dpQuickTrace`, `dpQuickScan` + CSS `.dp-quick*`). Tab Truy xuất riêng vẫn dùng bình thường.
 - **ControlPlan ▸ Tổng quan**: 4 nhóm A/B/C/D thành dạng accordion — bấm nhóm nào thì nhóm đó tự mở ra danh sách biểu mẫu (nhóm khác tự thu lại; bấm lại để đóng; có nút Mở/Thu gọn tất cả; phím Enter/Space dùng được). Đầu mỗi nhóm hiện sẵn tổng phiếu / hôm nay / NG. Vào biểu mẫu chỉ bằng nút "Mở biểu mẫu" trong thẻ; quay lại thì nhóm vẫn mở.

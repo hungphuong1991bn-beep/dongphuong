@@ -143,3 +143,17 @@
 @media print{
   body *{visibility:hidden}.cp-print,.cp-print *{visibility:visible}.cp-print{position:absolute;left:0;top:0;width:100%}
 }
+
+/* ô Khách hàng dạng hộp chọn (mũi tên + gợi ý khi gõ) */
+.cp-cb{position:relative}
+.cp-cb input{width:100%;box-sizing:border-box;padding-right:30px}
+.cp-cb-arrow{position:absolute;right:1px;top:1px;bottom:1px;width:28px;border:0;background:transparent;cursor:pointer;color:var(--text3,#64748b);font-size:14px;border-radius:0 6px 6px 0}
+.cp-cb-arrow:hover{background:rgba(100,116,139,.12)}
+.cp-cb-list{position:absolute;z-index:60;left:0;right:0;top:100%;margin-top:2px;max-height:240px;overflow-y:auto;background:var(--card,#fff);border:1px solid var(--border,#cbd5e1);border-radius:8px;box-shadow:0 8px 24px rgba(15,23,42,.18)}
+.cp-cb-list[hidden]{display:none}
+.cp-cb-it{padding:8px 10px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;color:var(--text,#0f172a)}
+.cp-cb-it:hover,.cp-cb-it.on{background:#dbeafe;color:#1e3a8a}
+.cp-cb-empty{padding:8px 10px;font-size:12px;color:var(--text3,#64748b);text-transform:none;letter-spacing:0;font-weight:500}
+
+.cp-card.click{cursor:pointer}
+.cp-card.click:focus-visible{outline:2px solid var(--gc);outline-offset:2px}

@@ -38,8 +38,48 @@ function cpFld(path,label,o){
   } else if(o.kind==='area') ctl=`<textarea ${common} oninput="cpEdIn(this)">${val}</textarea>`;
   else if(o.kind==='date') ctl=`<input type="date" ${common} value="${val}" onchange="cpEdIn(this,${o.struct?1:0})">`;
   else if(o.kind==='time') ctl=`<input type="time" ${common} value="${val}" onchange="cpEdIn(this)">`;
+  else if(o.combo==='customer') ctl=`<div class="cp-cb"><input ${common} value="${val}" autocomplete="off" placeholder="${cpH(o.ph||'Gõ chữ đầu hoặc bấm mũi tên để chọn…')}" ${o.ro?'readonly':''} oninput="cpEdIn(this);cpCbOpen(this)" onfocus="cpCbOpen(this)" onkeydown="cpCbKey(event,this)" onblur="cpCbBlur(this)"><button type="button" class="cp-cb-arrow" tabindex="-1" ${dis} onmousedown="event.preventDefault()" onclick="cpCbToggle(this)">▾</button><div class="cp-cb-list" hidden></div></div>`;
   else ctl=`<input ${common} value="${val}" ${o.kind==='num'?'inputmode="decimal"':''} ${o.list?`list="${o.list}"`:''} ${o.ph?`placeholder="${cpH(o.ph)}"`:''} ${o.ro?'readonly':''} oninput="cpEdIn(this)" ${o.struct?'onchange="cpEdIn(this,1)"':''}>`;
   return `<label class="cp-f ${o.cls||''}"><span>${label}${o.req?' *':''}</span>${ctl}<div class="cp-err" data-e="${path}"></div>${o.hint?`<small>${o.hint}</small>`:''}</label>`;
+}
+
+// ── ô Khách hàng dạng hộp chọn: mũi tên + gõ chữ đầu/tên để lọc ─────────────
+function cpCbMatch(q){
+  const all=cpCustomers(); const k=cpCustKey(q); if(!k) return all;
+  const pre=[], mid=[];
+  all.forEach(c=>{ const i=c.key.indexOf(k); if(i===0) pre.push(c); else if(i>0) mid.push(c); });
+  return pre.concat(mid);
+}
+function cpCbBox(el){ return el.closest('.cp-cb'); }
+function cpCbRender(box,hi){
+  const inp=box.querySelector('input'), list=box.querySelector('.cp-cb-list');
+  const m=cpCbMatch(box._all?'':inp.value); box._items=m; box._hi=(hi==null?(m.length&&box._q?0:-1):hi);
+  list.innerHTML=m.length?m.map((c,i)=>`<div class="cp-cb-it${i===box._hi?' on':''}" data-i="${i}" onmousedown="event.preventDefault();cpCbPick(this,${i})">${cpH(c.name)}</div>`).join(''):'<div class="cp-cb-empty">Không có khách hàng khớp — vẫn có thể gõ tên mới</div>';
+  list.hidden=false;
+}
+function cpCbOpen(inp){ const box=cpCbBox(inp); if(inp.disabled||inp.readOnly) return; box._all=false; box._q=!!inp.value.trim(); cpCbRender(box); }
+function cpCbToggle(btn){
+  const box=cpCbBox(btn), inp=box.querySelector('input'), list=box.querySelector('.cp-cb-list'); if(inp.disabled) return;
+  if(!list.hidden){ list.hidden=true; return; }
+  box._all=true; box._q=false; inp.focus(); cpCbRender(box,-1); box._all=true;
+}
+function cpCbPick(itEl,i){
+  const box=cpCbBox(itEl), inp=box.querySelector('input'), c=box._items[i]; if(!c) return;
+  inp.value=c.name; cpEdIn(inp); box.querySelector('.cp-cb-list').hidden=true;
+}
+function cpCbBlur(inp){ const box=cpCbBox(inp); setTimeout(()=>{ const l=box.querySelector('.cp-cb-list'); if(l) l.hidden=true; },150); }
+function cpCbKey(e,inp){
+  const box=cpCbBox(inp), list=box.querySelector('.cp-cb-list');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault();
+    if(list.hidden){ box._all=!inp.value.trim(); box._q=!!inp.value.trim(); cpCbRender(box,-1); }
+    const n=(box._items||[]).length; if(!n) return;
+    let h=box._hi+(e.key==='ArrowDown'?1:-1); h=h<0?n-1:h>=n?0:h;
+    box._hi=h; list.querySelectorAll('.cp-cb-it').forEach((x,i)=>{ x.classList.toggle('on',i===h); if(i===h) x.scrollIntoView({block:'nearest'}); });
+  } else if(e.key==='Enter'){
+    if(!list.hidden && box._hi>=0){ e.preventDefault(); cpCbPick(list.querySelector('.cp-cb-it.on')||list.firstChild,box._hi); }
+  } else if(e.key==='Escape'){ list.hidden=true; }
+  else if(e.key==='Tab'){ if(!list.hidden && box._hi>=0 && box._q){ cpCbPick(list.querySelector('.cp-cb-it.on'),box._hi); } list.hidden=true; }
 }
 function cpEdIn(el, structural){
   const ed=cpUI.ed; if(!ed||ed.ro) return;
@@ -94,7 +134,6 @@ function cpLinkBlock(){
   return `<div class="cp-sec">Liên kết đơn hàng / lô</div>${cpOrderListHtml()}
     <datalist id="cpLotList">${lots.map(x=>`<option value="${cpH(x.lot)}">${cpH(x.machine)}</option>`).join('')}</datalist>
     <datalist id="cpProdList">${prods.map(x=>`<option value="${cpH(x.code)}"></option>`).join('')}</datalist>
-    <datalist id="cpCustList">${cpCustomers().map(c=>`<option value="${cpH(c.name)}"></option>`).join('')}</datalist>
     <div class="cp-grid">
       <label class="cp-f w2"><span>Quét / nhập mã đơn, mã lô, mã QR</span><div style="display:flex;gap:6px"><input id="cpScan" placeholder="Quét bằng đầu đọc mã vạch hoặc dán mã…" ${ro?'disabled':''} onkeydown="if(event.key==='Enter'){event.preventDefault();cpScanResolve()}"><button type="button" class="cp-btn" ${ro?'disabled':''} onclick="cpScanResolve()">Tra</button></div></label>
       <label class="cp-f w2"><span>Đơn hàng</span><input list="cpOrdList" value="${cpH(r.orderId&&cpOrderById(r.orderId)?cpOrderLabel(cpOrderById(r.orderId)):'')}" placeholder="Gõ để tìm đơn hàng…" ${ro?'disabled':''} onchange="cpPickOrder(this.value)"></label>
@@ -125,7 +164,7 @@ function cpEdChk(){
   let h=cpLinkBlock()+`<div class="cp-sec">Thông tin phiếu</div><div class="cp-grid">
     ${cpFld('date','Ngày',{kind:'date',req:1})}
     ${dt?'':cpFld('shift','Ca',{opts:['Ca 1','Ca 2','Ca 3'],blank:false})}
-    ${cpFld('customer','Khách hàng',{list:'cpCustList',hint:r.orderId?'Tự điền từ đơn hàng':''})}
+    ${cpFld('customer','Khách hàng',{combo:'customer',hint:r.orderId?'Tự điền từ đơn hàng':''})}
     ${cpFld('spec','Quy cách',{req:1,ph:'vd 10*60, Ø71'})}
     ${cpFld('workshop','Xưởng sản xuất',{opts:ws})}
     ${machines.length?cpFld('machine','Máy',{opts:machines}):''}
@@ -178,7 +217,7 @@ function cpEdFqc(){
   const ed=cpUI.ed, r=ed.rec; cpFqcRecalc(r); const lk=r._lk, levels=((cpAqlRec()||{}).levels)||[];
   const lvOpts=levels.map(x=>({v:x,t:'AQL '+x}));
   return cpLinkBlock()+`<div class="cp-sec">Thông tin lô</div><div class="cp-grid">
-    ${cpFld('date','Ngày',{kind:'date',req:1})}${cpFld('productCode','Mã sản phẩm',{list:'cpProdList'})}${cpFld('customer','Khách hàng',{list:'cpCustList'})}
+    ${cpFld('date','Ngày',{kind:'date',req:1})}${cpFld('productCode','Mã sản phẩm',{list:'cpProdList'})}${cpFld('customer','Khách hàng',{combo:'customer'})}
     ${cpFld('po','PO',{})}${cpFld('lot','Mã lô',{list:'cpLotList'})}${cpFld('lotQty','Số lượng lô',{kind:'num',req:1,hint:'Quy mô lô (số lượng)'})}
     ${cpFld('inspector','QA/QC',{ro:!cpCan('editAny')})}</div>
     <div class="cp-sec">Kế hoạch lấy mẫu (tự tra bảng AQL)</div><div class="cp-grid">
@@ -250,7 +289,7 @@ function cpEd8d(){
   const ed=cpUI.ed, r=ed.rec, ro=ed.ro||r.status==='Đã đóng', t=cpToday(), p=cp8dProgress(r);
   const ncrs=cpOf('ncr').map(n=>({v:n.id,t:n.code}));
   let h=cpLinkBlock()+`<div class="cp-sec">Hồ sơ 8D</div><div class="cp-grid">${cpFld('title','Vấn đề / tiêu đề',{cls:'w2',req:1})}${cpFld('trigger','Nguồn phát sinh',{opts:['Lỗi nội bộ','Khiếu nại khách hàng','Lỗi lặp lại','Khác']})}
-    ${cpFld('leader','Trưởng nhóm 8D',{})}${cpFld('customer','Khách hàng',{list:'cpCustList'})}${cpFld('productCode','Mã sản phẩm',{list:'cpProdList'})}${cpFld('lot','Mã lô',{list:'cpLotList'})}${cpFld('ncrId','NCR liên quan',{opts:ncrs})}</div>
+    ${cpFld('leader','Trưởng nhóm 8D',{})}${cpFld('customer','Khách hàng',{combo:'customer'})}${cpFld('productCode','Mã sản phẩm',{list:'cpProdList'})}${cpFld('lot','Mã lô',{list:'cpLotList'})}${cpFld('ncrId','NCR liên quan',{opts:ncrs})}</div>
     <div class="cp-bar"><div class="cp-prog grow"><i style="width:${Math.round(p.done/9*100)}%"></i></div><b>${p.done}/9 bước</b>${p.late?`<span class="cp-pill ng">${p.late} bước quá hạn</span>`:''}</div><div class="cp-steps">`;
   r.steps.forEach((s,i)=>{
     const late=s.status!=='Hoàn thành' && s.due && s.due<t, pf='steps.'+i+'.';

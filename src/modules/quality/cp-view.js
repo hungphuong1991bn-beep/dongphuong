@@ -3,9 +3,15 @@ const cpUI = {view:'home', arg:'', F:Object.assign({}, CP_FILTER0), q:'', page:1
 const CP_PAGE = 50;
 
 function renderControlPlan(){
-  if(cpUI.ed) return;                                         // đang mở phiếu: không vẽ lại để khỏi mất chữ đang nhập
-  const a=document.activeElement;
-  if(a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.closest && a.closest('#cpRoot')) return;
+  // Chỉ bỏ qua vẽ lại khi trang ControlPlan ĐANG hiển thị (để khỏi mất chữ đang nhập).
+  // Nếu khung chưa có #cpRoot (vừa chuyển từ tab khác sang) thì BẮT BUỘC vẽ — trước đây cờ cpUI.ed
+  // còn sót từ lần mở phiếu trước khiến hàm thoát sớm, tiêu đề đổi nhưng nội dung vẫn là tab cũ.
+  const root=$('mc'), shown=!!(root && root.querySelector('#cpRoot'));
+  if(shown){
+    if(cpUI.ed) return;
+    const a=document.activeElement;
+    if(a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.closest && a.closest('#cpRoot')) return;
+  }
   cpRender();
 }
 function cpGo(view, arg){ cpUI.view=view; cpUI.arg=arg||''; cpUI.page=1; cpUI.q=''; cpUI.ed=null; cpRender(); const m=$('mc'); if(m) m.scrollTop=0; window.scrollTo(0,0); }
@@ -15,6 +21,7 @@ function cpSetQ(v){ cpUI.q=v; cpUI.page=1; cpRender(); }
 function cpPage(n){ cpUI.page=n; cpRender(); }
 
 function cpRender(){
+  if(typeof currentTab!=='undefined' && currentTab!=='controlPlan') return;   // gọi bất đồng bộ (đồng bộ dữ liệu...) khi đang ở tab khác: không được ghi đè nội dung tab đó
   const root=$('mc'); if(!root) return;
   const v=cpUI.view; let body='';
   try{
@@ -83,7 +90,7 @@ function cpHomeHtml(){
   h+=cpFiltersHtml();
   // Toolbar: mở/thu gọn tất cả + xuất Excel toàn bộ
   const nOpen=CP_GROUPS.filter(g=>cpUI.og[g.key]).length;
-  h+=`<div class="cp-gtools"><div class="cp-ghint">👇 Bấm vào từng nhóm để mở danh sách biểu mẫu của nhóm đó.</div><span class="grow"></span>
+  h+=`<div class="cp-gtools"><div class="cp-ghint">👇 Bấm vào từng nhóm để xem các biểu mẫu, bấm vào thẻ biểu mẫu để mở luôn.</div><span class="grow"></span>
     <button class="cp-btn" onclick="cpGroupAll(${nOpen<CP_GROUPS.length?'true':'false'})">${nOpen<CP_GROUPS.length?'⤢ Mở tất cả':'⤡ Thu gọn tất cả'}</button>
     <button class="cp-btn g" onclick="cpExportAll()" title="Xuất toàn bộ ControlPlan ra một file Excel gồm trang Tổng quan và từng biểu mẫu">⬇ Xuất Excel toàn bộ</button></div>`;
   const stats={}; CP_FORMS.forEach(f=>{ stats[f.key]=cpCardStats(f.key,F); });
@@ -104,10 +111,10 @@ function cpHomeHtml(){
     forms.forEach(f=>{
       const s=stats[f.key], isForm=f.kind==='form';
       const lbl=isForm?(f.key==='hold'?'Đang HOLD':(f.key==='ncr'||f.key==='eightd')?'Chưa đóng':'NG'):'';
-      h+=`<div class="cp-card" style="--gc:${g.color}"><div class="cp-card-top"><div class="cp-ico">${f.icon}</div><div><h4>${f.no}. ${cpH(f.title)}</h4><div class="cp-code">${f.code?'Mã: '+cpH(f.code):'Mã biểu mẫu: chưa quy định'}</div></div></div>
+      h+=`<div class="cp-card click" role="button" tabindex="0" title="Bấm để mở biểu mẫu" onclick="cpOpenForm('${f.key}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===this){event.preventDefault();cpOpenForm('${f.key}')}" style="--gc:${g.color}"><div class="cp-card-top"><div class="cp-ico">${f.icon}</div><div><h4>${f.no}. ${cpH(f.title)}</h4><div class="cp-code">${f.code?'Mã: '+cpH(f.code):'Mã biểu mẫu: chưa quy định'}</div></div></div>
         <div class="cp-desc">${cpH(f.desc)}</div>
         <div class="cp-stats"><div class="cp-stat"><b>${s.n}</b><span>${isForm?'Phiếu đã ghi':cpH(s.unit)}</span></div>${isForm?`<div class="cp-stat"><b>${s.today}</b><span>Hôm nay</span></div><div class="cp-stat"><b class="${s.ng?'ng':''}">${s.ng}</b><span>${lbl}</span></div>`:''}</div>
-        <div class="cp-card-foot"><span class="cp-live">● Hoạt động</span><button class="cp-btn" onclick="cpExportForm('${f.key}')" title="Xuất Excel biểu mẫu này">⬇ Excel</button><button class="cp-btn p" onclick="cpOpenForm('${f.key}')">Mở biểu mẫu</button></div></div>`;
+        <div class="cp-card-foot"><span class="cp-live">● Hoạt động</span><button class="cp-btn" onclick="event.stopPropagation();cpExportForm('${f.key}')" title="Xuất Excel biểu mẫu này">⬇ Excel</button><button class="cp-btn p" onclick="event.stopPropagation();cpOpenForm('${f.key}')">Mở biểu mẫu</button></div></div>`;
     });
     h+='</div></div></section>';
   });

@@ -459,7 +459,13 @@ function cpPeople(){
   (DB.users||[]).forEach(u=>{ if(u && (u.qcRole)) s.add(u.name||u.username); });
   return [...s].sort();
 }
-function cpCustomers(){ const c=cpCustCanon(); return Object.keys(c).sort((a,b)=>c[a].localeCompare(c[b],'vi')).map(k=>({key:k,name:c[k]})); }
+function cpCustomers(){
+  // Gộp: khách hàng trong tab Đơn hàng (nguồn chính) + khách đã có trong các phiếu QC; trùng tên (khác dấu/hoa thường) chỉ giữ 1.
+  const m={}; const c=cpCustCanon();
+  Object.keys(c).forEach(k=>{ m[k]=c[k]; });
+  (typeof DB!=='undefined' && DB.orders || []).forEach(o=>{ const n=String(o && o.customer || '').trim(); if(n){ const k=cpCustKey(n); if(!m[k]) m[k]=n; } });
+  return Object.keys(m).sort((a,b)=>m[a].localeCompare(m[b],'vi')).map(k=>({key:k,name:m[k]}));
+}
 function cpReviewList(){ return cpRecs().filter(r=>r && r.type==='chk' && r.review && r.review.length && !r.reviewed && !r.void); }
 
 // ── Khởi tạo phiếu mới ────────────────────────────────────────────────────────
