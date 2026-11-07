@@ -1,0 +1,18 @@
+05:36:43  ① Sao lưu dữ liệu hiện tại…
+05:36:43     Đã tải file sao lưu: 0 bản ghi.
+05:36:43  ② Đọc bộ dữ liệu Excel…
+05:36:43     Bộ dữ liệu hợp lệ: 1726 phiếu (Đùn 169, Rút 748, Đánh bóng 478, Cắt 189, Độ thẳng 142); 68 dòng bỏ qua (xem IMPORT-REPORT.md).
+05:36:43  ③ Thêm các bản ghi còn thiếu (không ghi đè)…
+05:36:43     Thêm mới 1760 · đã có sẵn (bỏ qua) 0
+05:36:43  ④ Đồng bộ lên máy chủ…
+05:36:43     Đã đồng bộ xong.
+05:36:43  ⑤ Đối chiếu sau khi nhập…
+05:36:43     ✔ Số bản ghi cục bộ: 0 → 1760
+05:36:43     ✔ Đùn: 169 / 169
+05:36:43     ✔ Rút: 748 / 748
+05:36:43     ✔ Đánh bóng: 478 / 478
+05:36:43     ✔ Cắt: 189 / 189
+05:36:43     ✔ Độ thẳng: 142 / 142
+05:36:43     ✔ Máy chủ có 1726 phiếu kiểm tra nguồn Excel (cần ≥ 1726)
+05:36:43     ✔ Lấy mẫu 12 phiếu so với máy chủ: khớp
+05:36:43  HOÀN TẤT — số liệu khớp.
