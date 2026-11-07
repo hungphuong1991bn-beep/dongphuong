@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [Chưa phát hành] Lịch làm việc — 3 ô thông tin bộ phận chỉ Admin thấy và dùng
+- Tab **Lịch làm việc**: ba ô **Tên bộ phận**, **📅 Thời gian áp dụng**, **⚠️ Ghi chú / cảnh báo chung** nay chỉ hiện với tài khoản **Admin**. Các tài khoản khác không còn thấy các ô nhập này (trước đây hiện ở dạng chỉ-đọc).
+- Hàm `llvSetMeta` thêm chốt chặn `isAdmin()` nên không thể sửa 3 trường này bằng cách gọi trực tiếp.
+- Giữ nguyên cho mọi người: bảng lịch (kèm tiêu đề, thời gian áp dụng và cảnh báo hiển thị phía trên bảng), nút In A4/A3, Chụp ảnh, Xuất Excel, Tạo mã QR. Dữ liệu và in/xuất không đổi.
+- Sửa: `src/modules/attendance/attendance-schedule.js`. Kiểm thử jsdom: Admin thấy đủ; Staff/Viewer không thấy; gọi `llvSetMeta` trực tiếp bị chặn. **Chưa thử trên thiết bị thật.**
+
 ## [Chưa phát hành] ControlPlan QC — sửa lỗi Huỷ phiếu / Xoá phiếu bấm không phản ứng
 - **Nguyên nhân**: các nút dùng `prompt()` / `confirm()` gốc của trình duyệt; trong app chạy thật (Android/WebView) hộp thoại gốc không hiện và trả về "huỷ" ngầm, nên bấm xong không có gì xảy ra (cùng nguyên nhân đã ghi ở `planning-detail.js`).
 - **Sửa**: thêm hộp thoại riêng `cpAsk()` (`cp-view.js`, dựng trên `cpModal` sẵn có): có ô nhập lý do bắt buộc (báo "Cần nhập lý do" nếu để trống), nút xác nhận/quay lại, không phụ thuộc hộp thoại của trình duyệt.

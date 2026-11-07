@@ -177,13 +177,15 @@ function renderLichLamViec(){
     </div>
     ${sheet?`
     <div class="card" style="padding:12px 14px">
+      ${admin?`<div id="llvMetaAdmin">
       <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Tên bộ phận</label>
       <input class="field-inp" value="${(sheet.name||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','name',this.value)" style="margin:4px 0 10px">
       <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">📅 Thời gian áp dụng</label>
       <input class="field-inp" value="${(sheet.period||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','period',this.value)" style="margin:4px 0 10px">
       <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">⚠️ Ghi chú / cảnh báo chung</label>
       <input class="field-inp" value="${(sheet.warning||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','warning',this.value)" style="margin:4px 0 0">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      </div>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:${admin?12:0}px">
         ${admin?`<button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="llvAddRow('${sheet.id}')">➕ Thêm nhân viên</button>`:''}
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A4')">🖨️ In A4</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A3')">🖨️ In A3</button>
@@ -272,7 +274,7 @@ function llvAddSheet(){if(guardViewer())return;
   renderLichLamViec();
 }
 
-function llvSetMeta(sheetId, field, value){if(guardViewer())return;
+function llvSetMeta(sheetId, field, value){if(guardViewer())return; if(!isAdmin()){ showToast('🔒 Chỉ Admin được sửa Tên bộ phận / Thời gian áp dụng / Ghi chú chung', true); return; }
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const old = s[field];
   value = (value||'').trim();
