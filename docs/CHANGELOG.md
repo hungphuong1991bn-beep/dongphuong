@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [Chưa phát hành] ControlPlan QC — sửa lỗi Huỷ phiếu / Xoá phiếu bấm không phản ứng
+- **Nguyên nhân**: các nút dùng `prompt()` / `confirm()` gốc của trình duyệt; trong app chạy thật (Android/WebView) hộp thoại gốc không hiện và trả về "huỷ" ngầm, nên bấm xong không có gì xảy ra (cùng nguyên nhân đã ghi ở `planning-detail.js`).
+- **Sửa**: thêm hộp thoại riêng `cpAsk()` (`cp-view.js`, dựng trên `cpModal` sẵn có): có ô nhập lý do bắt buộc (báo "Cần nhập lý do" nếu để trống), nút xác nhận/quay lại, không phụ thuộc hộp thoại của trình duyệt.
+- Áp dụng cho: **Huỷ phiếu**, **Xoá phiếu (Admin)**, **Xoá bản nháp**, HOLD ▸ **RELEASE** / **Phế phẩm**, **Xác nhận dữ liệu cần kiểm tra**, **Nhập dữ liệu Excel** (các nút này trước đó cũng bị cùng lỗi). Trong các file `cp-*.js` không còn `confirm()`/`prompt()` gốc.
+- Chưa sửa (ngoài phạm vi ControlPlan, cùng kiểu lỗi): `prompt()`/`confirm()` ở tab Check Sheet thiết bị, Kho/QR (nhập vị trí lưu kho, số phiếu xuất kho), sổ liệu.
+- Kiểm thử: chạy jsdom với `confirm`/`prompt` bị vô hiệu — huỷ phiếu, xoá phiếu, chặn khi thiếu lý do, chặn tài khoản không phải Admin đều đúng. **Chưa thử trên thiết bị thật.**
+
 ## [Chưa phát hành] ControlPlan QC nhóm B — Admin xoá phiếu
 - Mở một phiếu Check Sheet nhóm B (Kiểm tra độ thẳng, Đùn, Rút, Đánh bóng, Cắt) bằng tài khoản **Admin** → có nút **🗑 Xoá phiếu (Admin)** ở chân trang, dùng được với phiếu nháp, đã hoàn tất hoặc đang sửa. Các vai trò khác (QA, Trưởng QC, QC, SX, chỉ xem) không thấy nút và bị chặn cả khi gọi trực tiếp.
 - Bắt buộc nhập lý do + xác nhận lần 2; nếu phiếu đã có NCR/HOLD/8D lập từ nó thì cảnh báo trước (các hồ sơ đó vẫn giữ, chỉ mất liên kết).

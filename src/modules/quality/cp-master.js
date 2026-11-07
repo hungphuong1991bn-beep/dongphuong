@@ -118,9 +118,11 @@ function cpReviewHtml(){
 }
 function cpReviewOk(id){
   if(cpGuard('review')) return; const r=cpGet(id); if(!r) return;
-  const why=prompt('Ghi chú xác nhận (vd: "đã đối chiếu sổ giấy"). Giá trị gốc vẫn được giữ:'); if(why==null) return; if(!why.trim()){ showToast('Cần ghi chú xác nhận', true); return; }
-  const c=cpClone(r); c.reviewed=true; c.reviewNote=why.trim(); c.reviewedBy=cpActor(); c.reviewedAt=Date.now();
-  cpPut(c,{act:'Xác nhận dữ liệu cần kiểm tra', reason:why.trim()}); cpRender();
+  cpAsk({title:'Xác nhận dữ liệu cần kiểm tra', reason:true, label:'✔ Xác nhận', ph:'Ghi chú xác nhận, vd: đã đối chiếu sổ giấy', msg:'Giá trị gốc vẫn được giữ.'}, why=>{
+    const cur=cpGet(id); if(!cur) return;
+    const c=cpClone(cur); c.reviewed=true; c.reviewNote=why; c.reviewedBy=cpActor(); c.reviewedAt=Date.now();
+    cpPut(c,{act:'Xác nhận dữ liệu cần kiểm tra', reason:why}); cpRender();
+  });
 }
 
 // ── 6. QUẢN TRỊ ──────────────────────────────────────────────────────────────
@@ -160,9 +162,9 @@ function cpImpLog(s){ const i=cpUI.imp=cpUI.imp||{log:[],busy:false}; i.log.push
 function cpSig(r){ const o=cpStrip(r); ['rev','updatedAt','updatedBy','createdAt','createdBy','createdById','hist'].forEach(k=>delete o[k]); return JSON.stringify(o, Object.keys(o).sort()); }
 async function cpWaitFlush(ms){ const t0=Date.now(); while(cpPending() && Date.now()-t0<ms){ await cpFlush(); if(cpPending()) await new Promise(r=>setTimeout(r,800)); } return !cpPending(); }
 
-async function cpImportRun(){
+async function cpImportRun(confirmed){
   if(cpGuard('config')) return; const st=cpUI.imp=cpUI.imp||{log:[],busy:false}; if(st.busy) return;
-  if(!confirm('Nhập dữ liệu từ Excel vào ControlPlan?\n\nHệ thống sẽ tải bản sao lưu trước, chỉ thêm bản ghi còn thiếu và không sửa/xoá dữ liệu hiện có.')) return;
+  if(confirmed!==true){ cpAsk({title:'Nhập dữ liệu từ Excel', msg:'Nhập dữ liệu từ Excel vào ControlPlan?\n\nHệ thống sẽ tải bản sao lưu trước, chỉ thêm bản ghi còn thiếu và không sửa/xoá dữ liệu hiện có.', label:'⬆ Nhập dữ liệu'}, ()=>cpImportRun(true)); return; }
   st.busy=true; st.log=[]; cpRender();
   try{
     cpImpLog('① Sao lưu dữ liệu hiện tại…');

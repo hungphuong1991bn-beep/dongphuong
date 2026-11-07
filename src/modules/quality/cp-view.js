@@ -238,3 +238,20 @@ function cpSyncDialog(){
 }
 function cpModal(html){ cpModalClose(); const d=document.createElement('div'); d.className='cp-mod'; d.id='cpMod'; d.innerHTML='<div>'+html+'</div>'; document.body.appendChild(d); }
 function cpModalClose(){ const d=$('cpMod'); if(d) d.remove(); }
+// Hộp thoại xác nhận / nhập lý do của ControlPlan — THAY cho confirm()/prompt() gốc của trình duyệt
+// (không hoạt động trong app Android/WebView nên trước đây bấm Huỷ/Xoá phiếu không có phản ứng).
+// o: {title, msg, reason:true → bắt buộc nhập lý do, label, danger, ph}; cb(lý do) chỉ chạy khi bấm nút xác nhận.
+let _cpAskCb=null;
+function cpAsk(o, cb){
+  _cpAskCb=cb;
+  cpModal(`<h3>${cpH(o.title||'Xác nhận')}</h3>
+    <div style="white-space:pre-line;font-size:13.5px;line-height:1.5;margin-bottom:10px">${cpH(o.msg||'')}</div>
+    ${o.reason?`<textarea id="cpAskReason" rows="3" style="width:100%;box-sizing:border-box" placeholder="${cpH(o.ph||'Nhập lý do (bắt buộc)')}"></textarea><div id="cpAskErr" style="color:#b91c1c;font-size:12px;font-weight:700;min-height:16px;margin-top:2px"></div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button type="button" class="cp-btn" onclick="cpAskCancel()">Không, quay lại</button><button type="button" class="cp-btn ${o.danger?'d':'p'}" onclick="cpAskOk(${o.reason?1:0})">${cpH(o.label||'Đồng ý')}</button></div>`);
+  const t=$('cpAskReason'); if(t) setTimeout(()=>{ try{ t.focus(); }catch(e){} },30);
+}
+function cpAskCancel(){ _cpAskCb=null; cpModalClose(); }
+function cpAskOk(needReason){
+  let why=''; if(needReason){ const t=$('cpAskReason'); why=t?t.value.trim():''; if(!why){ const e=$('cpAskErr'); if(e) e.textContent='Cần nhập lý do.'; if(t) t.focus(); return; } }
+  const cb=_cpAskCb; _cpAskCb=null; cpModalClose(); if(cb) cb(why);
+}

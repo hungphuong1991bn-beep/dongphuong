@@ -435,19 +435,22 @@ function cpSave(complete, quiet){
   else { ed.ro=false; cpEdRender(); }
   return rec;
 }
-function cpDraftDelete(){ const r=cpUI.ed.rec; if(!confirm('Xoá bản nháp '+(r.code||'')+'?')) return; cpDeleteDraft(r.id); cpEdClose(); }
+function cpDraftDelete(){
+  const r=cpUI.ed.rec;
+  cpAsk({title:'Xoá bản nháp', msg:'Xoá bản nháp '+(r.code||'')+'? Không khôi phục được.', label:'🗑 Xoá nháp', danger:true}, ()=>{ cpDeleteDraft(r.id); showToast('🗑 Đã xoá bản nháp '+(r.code||'')); cpEdClose(); });
+}
 function cpDeleteRec(){
   const r=cpGet(cpUI.ed.rec.id); if(!r) return;
   if(!cpCanDeleteRec(r)){ showToast('🔒 Chỉ Quản trị viên mới được xoá phiếu Check Sheet', true); return; }
   const linked=cpRecs().filter(x=>x && x.sourceId===r.id).length;
-  const why=prompt('XOÁ HẲN phiếu '+(r.code||'')+' — không khôi phục được.\n'+(linked?'⚠ Có '+linked+' hồ sơ NCR/HOLD/8D lập từ phiếu này (vẫn giữ, nhưng mất liên kết).\n':'')+'Nhập lý do xoá (bắt buộc):'); if(!why||!why.trim()) return;
-  if(!confirm('Xác nhận xoá vĩnh viễn phiếu '+(r.code||'')+(r.customer?' · '+r.customer:'')+'?')) return;
-  if(cpDeleteRecord(r.id, why.trim())){ showToast('🗑 Đã xoá phiếu '+(r.code||'')); cpEdClose(); }
+  cpAsk({title:'🗑 Xoá hẳn phiếu '+(r.code||''), danger:true, reason:true, label:'🗑 Xoá vĩnh viễn', ph:'Lý do xoá phiếu (bắt buộc)',
+    msg:'Phiếu '+(r.code||'')+(r.customer?' · '+r.customer:'')+(r.spec?' · '+r.spec:'')+' sẽ bị xoá vĩnh viễn, không khôi phục được.'+(linked?'\n⚠ Có '+linked+' hồ sơ NCR/HOLD/8D lập từ phiếu này (vẫn giữ, nhưng mất liên kết).':'')},
+    why=>{ if(cpDeleteRecord(r.id, why)){ showToast('🗑 Đã xoá phiếu '+(r.code||'')); cpEdClose(); } else showToast('Không xoá được phiếu', true); });
 }
 function cpVoid(){
   const r=cpGet(cpUI.ed.rec.id); if(!r||cpGuard('editAny')) return;
-  const why=prompt('Lý do huỷ phiếu '+r.code+' (bắt buộc). Phiếu không bị xoá, chỉ đánh dấu huỷ và ghi nhật ký:'); if(!why||!why.trim()) return;
-  const c=cpClone(r); c.void=true; c.voidReason=why.trim(); cpPut(c,{act:'Huỷ phiếu', reason:why.trim()}); showToast('Đã huỷ '+c.code); cpEdClose();
+  cpAsk({title:'🚫 Huỷ phiếu '+(r.code||''), danger:true, reason:true, label:'🚫 Huỷ phiếu', ph:'Lý do huỷ phiếu (bắt buộc)', msg:'Phiếu không bị xoá, chỉ đánh dấu ĐÃ HUỶ và ghi nhật ký.'},
+    why=>{ const cur=cpGet(r.id); if(!cur) return; const c=cpClone(cur); c.void=true; c.voidReason=why; cpPut(c,{act:'Huỷ phiếu', reason:why}); showToast('Đã huỷ '+c.code); cpEdClose(); });
 }
 
 // ── Quy trình khi phát hiện NG ───────────────────────────────────────────────
@@ -501,11 +504,14 @@ function cpHoldAct(act){
     const E=cpValidate(rec,true); if(Object.keys(E).length){ ed.errs=E; cpEdValidateUI(); showToast('Hoàn thiện thông tin HOLD trước khi gửi', true); return; }
     if(!String(rec.investigation||'').trim()||!rec.disposition){ showToast('Cần kết quả điều tra và quyết định xử lý trước khi gửi phê duyệt', true); return; } rec.status='Chờ phê duyệt'; }
   else if(act==='release'){ if(!need('approve')) return; const e=cpHoldReleaseCheck(rec); if(e.length){ cpModal('<h3>Chưa thể RELEASE</h3><ul>'+e.map(x=>'<li>'+cpH(x)+'</li>').join('')+'</ul><div style="text-align:right"><button class="cp-btn" onclick="cpModalClose()">Đóng</button></div>'); return; }
-    if(!confirm('RELEASE lô '+(rec.lot||'')+' — số lượng '+rec.qty+'? Thao tác được ghi nhật ký.')) return; rec.status='RELEASE'; rec.releaseBy=cpActor(); rec.releaseAt=Date.now(); }
-  else if(act==='scrap'){ if(!need('approve')) return; if(rec.disposition!=='Phế phẩm'){ showToast('Chọn quyết định xử lý "Phế phẩm" trước', true); return; } if(!confirm('Xác nhận PHẾ PHẨM lô này?')) return; rec.status='Phế phẩm'; rec.releaseBy=cpActor(); rec.releaseAt=Date.now(); }
+    return cpAsk({title:'RELEASE lô '+(rec.lot||''), msg:'RELEASE lô '+(rec.lot||'')+' — số lượng '+rec.qty+'? Thao tác được ghi nhật ký.', label:'RELEASE'}, ()=>{ rec.status='RELEASE'; rec.releaseBy=cpActor(); rec.releaseAt=Date.now(); fin(); }); }
+  else if(act==='scrap'){ if(!need('approve')) return; if(rec.disposition!=='Phế phẩm'){ showToast('Chọn quyết định xử lý "Phế phẩm" trước', true); return; } return cpAsk({title:'PHẾ PHẨM', msg:'Xác nhận PHẾ PHẨM lô '+(rec.lot||'')+'?', label:'Phế phẩm', danger:true}, ()=>{ rec.status='Phế phẩm'; rec.releaseBy=cpActor(); rec.releaseAt=Date.now(); fin(); }); }
   else if(act==='reopen'){ if(!need('approve')) return; rec.status='Đang điều tra'; }
-  cpPut(rec,{act:{investigate:'HOLD → Đang điều tra',submit:'Gửi phê duyệt',release:'RELEASE lô',scrap:'Phế phẩm',reopen:'Trả về điều tra'}[act], changes:cpDiff(old,rec)});
-  showToast('✓ '+rec.code+' → '+rec.status); cpUI.ed=null; cpRender();
+  fin();
+  function fin(){
+    cpPut(rec,{act:{investigate:'HOLD → Đang điều tra',submit:'Gửi phê duyệt',release:'RELEASE lô',scrap:'Phế phẩm',reopen:'Trả về điều tra'}[act], changes:cpDiff(old,rec)});
+    showToast('✓ '+rec.code+' → '+rec.status); cpUI.ed=null; cpRender();
+  }
 }
 function cpNcrAct(act){
   const ed=cpUI.ed; if(!ed) return; const rec=cpNormalized(ed.rec), old=cpGet(rec.id)||{};
