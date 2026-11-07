@@ -59,6 +59,10 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
         Truy xuất &amp; Khiếu nại
       </button>
+      <button class="sb-item" title="ControlPlan – Hệ thống kiểm soát chất lượng" data-g="chatLuong" id="sbi-controlPlan" onclick="goTab('controlPlan')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ControlPlan QC
+      </button>
       <button class="sb-item" title="Quản lý mã QR" data-g="chatLuong" id="sbi-qrCode" onclick="goTab('qrCode')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Quản lý mã QR

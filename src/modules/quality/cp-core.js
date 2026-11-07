@@ -60,23 +60,23 @@ function cpClone(o){ return JSON.parse(JSON.stringify(o)); }
 
 // ── Phân quyền ControlPlan ────────────────────────────────────────────────────
 // Dùng vai trò sẵn có của app: admin → quản trị; staff + qcRole (do Admin gán trong ControlPlan ▸ Phân quyền)
-// → qc | lead | qa; staff không có qcRole → lead (toàn quyền nhập/sửa, không cần Trưởng QC; RELEASE/duyệt chỉ QA/Admin; Admin có thể đặt 'qc' hạn chế hoặc 'prod' chỉ xem); viewer/solieu → view.
-const CP_ROLE_LABEL = {admin:'Quản trị viên', qa:'QA / Quản lý chất lượng', full:'Nhân viên (toàn quyền trong ControlPlan)', lead:'Trưởng QC', qc:'Nhân viên (hạn chế: chỉ tạo phiếu)', prod:'Nhân viên (chỉ xem)', view:'Chỉ xem', none:'—'};
+// → qc | lead | qa; staff không có qcRole → prod (chỉ xem); viewer/solieu → view.
+const CP_ROLE_LABEL = {admin:'Quản trị viên', qa:'QA / Quản lý chất lượng', lead:'Trưởng QC', qc:'Nhân viên QC', prod:'Nhân viên sản xuất (xem)', view:'Chỉ xem', none:'—'};
 function cpRole(){
   const u=currentUser; if(!u) return 'none';
   if(u.role==='admin') return 'admin';
-  if(u.role==='staff') return ['qc','lead','qa','prod'].indexOf(u.qcRole)>=0 ? u.qcRole : 'full';   // staff mặc định = Nhân viên (nhập được phiếu); 'prod' = chỉ xem do Admin chọn
+  if(u.role==='staff') return ['qc','lead','qa'].indexOf(u.qcRole)>=0 ? u.qcRole : 'prod';
   return 'view';
 }
 const CP_PERM = {
-  create:   ['full','admin','qa','lead','qc'],      // tạo phiếu kiểm tra / NCR / HOLD / 8D
-  editAny:  ['full','admin','qa','lead'],            // sửa phiếu của người khác / phiếu đã hoàn tất (có lý do + nhật ký)
-  review:   ['full','admin','qa','lead'],            // xử lý dữ liệu "cần kiểm tra"
-  master:   ['full','admin','qa','lead'],            // sửa Control Plan / PFMEA
+  create:   ['admin','qa','lead','qc'],      // tạo phiếu kiểm tra / NCR / HOLD / 8D
+  editAny:  ['admin','qa','lead'],            // sửa phiếu của người khác / phiếu đã hoàn tất (có lý do + nhật ký)
+  review:   ['admin','qa','lead'],            // xử lý dữ liệu "cần kiểm tra"
+  master:   ['admin','qa','lead'],            // sửa Control Plan / PFMEA
   config:   ['admin'],                        // danh mục mã lỗi, phân quyền, nhập Excel
-  investigate:['full','admin','qa','lead','qc'],     // HOLD: bắt đầu điều tra / gửi phê duyệt
-  approve:  ['full','admin','qa'],                   // RELEASE / Phế phẩm / duyệt NCR / đóng 8D
-  verify:   ['full','admin','qa','lead']             // xác nhận hiệu lực NCR
+  investigate:['admin','qa','lead','qc'],     // HOLD: bắt đầu điều tra / gửi phê duyệt
+  approve:  ['admin','qa'],                   // RELEASE / Phế phẩm / duyệt NCR / đóng 8D
+  verify:   ['admin','qa','lead']             // xác nhận hiệu lực NCR
 };
 function cpCan(action, rec){
   const r=cpRole(); if(!(CP_PERM[action]||[]).includes(r)) return false;

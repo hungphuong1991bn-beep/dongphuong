@@ -58,7 +58,7 @@ function cpFiltersHtml(){
     <div><label>Từ ngày</label><input type="date" value="${cpH(F.from)}" onchange="cpSetF('from',this.value)"></div>
     <div><label>Đến ngày</label><input type="date" value="${cpH(F.to)}" onchange="cpSetF('to',this.value)"></div>
     <div><label>Công đoạn</label><select onchange="cpSetF('stage',this.value)">${cpOpts(stages,F.stage)}</select></div>
-    <div><label>Người kiểm tra</label><select onchange="cpSetF('qc',this.value)">${cpOpts(cpPeople(),F.qc)}</select></div>
+    <div><label>Nhân viên QC</label><select onchange="cpSetF('qc',this.value)">${cpOpts(cpPeople(),F.qc)}</select></div>
     <div><label>Khách hàng</label><select onchange="cpSetF('customer',this.value)">${cpOpts(cpCustomers().map(c=>({v:c.key,t:c.name})),F.customer)}</select></div>
     <div><label>Mã đơn hàng</label><input value="${cpH(F.order)}" placeholder="PO / mã đơn" onchange="cpSetF('order',this.value.trim())"></div>
     <div><label>Mã sản phẩm</label><input value="${cpH(F.product)}" onchange="cpSetF('product',this.value.trim())"></div>

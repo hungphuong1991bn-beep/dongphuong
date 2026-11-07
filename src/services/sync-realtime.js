@@ -84,6 +84,7 @@ function applyDataSnapshot(data){
   if(data.nguyenLieuLog){ const fresh=Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.nguyenLieuLog)){ DB.nguyenLieuLog=fresh; _lastSyncedArrSnap.nguyenLieuLog=snapshotArrById(DB.nguyenLieuLog); changed=true; } }
   if(data.mayRutLog){ const fresh=Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayRutLog)){ DB.mayRutLog=fresh; _lastSyncedArrSnap.mayRutLog=snapshotArrById(DB.mayRutLog); changed=true; } }
   if(data.mayDanhBongLog){ const fresh=Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayDanhBongLog)){ DB.mayDanhBongLog=fresh; _lastSyncedArrSnap.mayDanhBongLog=snapshotArrById(DB.mayDanhBongLog); changed=true; } }
+  if(typeof cpOnSnapshot==='function' && data.cpRecords && cpOnSnapshot(data.cpRecords)) changed = true;   // ControlPlan
   if(data.qrProducts){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
     if(JSON.stringify(freshQr)!==JSON.stringify(DB.qrProducts)){ DB.qrProducts = freshQr; _lastSyncedArrSnap.qrProducts=snapshotArrById(DB.qrProducts); changed = true; }
@@ -249,6 +250,7 @@ function handleRealtimeChange(path, val){
     const id = path.slice('/data/mayDanhBongLog/'.length);
     if(id && id.indexOf('/')===-1){ applySingleSlItemChange('mayDanhBongLog', id, val); setSyncDot('ok'); return; }
   }
+  if(path.indexOf('/data/cpRecords')===0){ if(typeof cpOnRealtime==='function') cpOnRealtime(path, val); setSyncDot('ok'); return; }   // ControlPlan
   const field = _FB_FIELD_MAP[path];
   if(field){ applyFieldChange(field, val); setSyncDot('ok'); return; }
   if(path==='/announce'){ checkAnnounce(); return; }

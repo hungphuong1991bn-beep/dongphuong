@@ -43,7 +43,7 @@ function cpReportsHtml(){
     ${cpAggTable('Theo công đoạn',D.stage,'Công đoạn')}
     <div class="cp-sec">Theo mã lỗi ngoại quan (số dòng đo NG)</div>${D.defect.length?cpTable(['Mã lỗi','Tên lỗi','Số dòng NG'],D.defect.map(d=>`<tr>${cpTd(d.code)}${cpTd(d.name)}${cpTd(d.n)}</tr>`)):'<div class="cp-empty">Chưa có dòng NG gắn mã lỗi.</div>'}
     ${D.ngNoCode?`<div class="cp-dinfo">${D.ngNoCode} dòng NG chưa gắn mã lỗi (dữ liệu lịch sử hoặc NG do số đo).</div>`:''}
-    ${cpAggTable('Theo khách hàng',D.customer,'Khách hàng')}${cpAggTable('Theo quy cách',D.spec,'Quy cách')}${cpAggTable('Theo máy',D.machine,'Máy')}${cpAggTable('Theo ca',D.shift,'Ca')}${cpAggTable('Theo nhân viên kiểm',D.inspector,'Người kiểm tra')}
+    ${cpAggTable('Theo khách hàng',D.customer,'Khách hàng')}${cpAggTable('Theo quy cách',D.spec,'Quy cách')}${cpAggTable('Theo máy',D.machine,'Máy')}${cpAggTable('Theo ca',D.shift,'Ca')}${cpAggTable('Theo nhân viên kiểm',D.inspector,'Nhân viên QC')}
     ${cpAggTable('Xu hướng theo tháng',D.month,'Tháng')}
     <div class="cp-sec">8D quá hạn</div>${D.d8Late.length?cpTable(['Hồ sơ 8D','Bước','Phụ trách','Hạn','Quá hạn (ngày)'],D.d8Late.map(x=>`<tr class="click" onclick="cpOpen('${x.id}')">${cpTd(x.code)}${cpTd(x.step+' – '+x.title)}${cpTd(x.owner)}${cpTd(cpFmtDate(x.due))}<td class="ng">${x.days}</td></tr>`)):'<div class="cp-empty">Không có bước 8D nào quá hạn.</div>'}
     <div class="cp-dinfo">HOLD: ${D.holdAll} phiếu (đã RELEASE ${D.holdRel}, phế phẩm ${D.holdScrap}, đang mở ${D.holdOpen}) · NCR: ${D.ncrAll} phiếu.</div>`;
@@ -53,7 +53,7 @@ function cpReportMatrices(){
   return [
     {name:'Tổng hợp',rows:[['Chỉ tiêu','Giá trị'],['Phiếu kiểm tra',D.ins.length],['OK',D.ins.filter(r=>r.result==='OK').length],['NG',D.ins.filter(r=>r.result==='NG').length],['Lô đang HOLD',D.holdOpen],['NCR chưa đóng',D.ncrOpen],['8D đang mở',D.d8Open],['Bước 8D quá hạn',D.d8Late.length],['Ngày xuất',cpToday()],['Người xuất',cpActor()]]},
     A('Công đoạn',D.stage),{name:'Mã lỗi',rows:[['Mã lỗi','Tên lỗi','Số dòng NG']].concat(D.defect.map(d=>[d.code,d.name,d.n]))},
-    A('Khách hàng',D.customer),A('Quy cách',D.spec),A('Máy',D.machine),A('Ca',D.shift),A('Người kiểm tra',D.inspector),A('Theo tháng',D.month),
+    A('Khách hàng',D.customer),A('Quy cách',D.spec),A('Máy',D.machine),A('Ca',D.shift),A('Nhân viên QC',D.inspector),A('Theo tháng',D.month),
     {name:'8D quá hạn',rows:[['Hồ sơ','Bước','Phụ trách','Hạn','Quá hạn (ngày)']].concat(D.d8Late.map(x=>[x.code,x.step+' '+x.title,x.owner,x.due,x.days]))}
   ];
 }

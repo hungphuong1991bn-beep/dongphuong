@@ -33,7 +33,7 @@ const CP_MASTER_FIELDS = {
   pfmea:[['stage','Công đoạn'],['requirement','Yêu cầu'],['failureMode','Dạng lỗi'],['effect','Ảnh hưởng'],['S','Severity S (1-10)','n'],['cause','Nguyên nhân'],['O','Occurrence O (1-10)','n'],['prevention','Kiểm soát phòng ngừa'],['detection','Kiểm soát phát hiện'],['D','Detection D (1-10)','n'],['action','Hành động khắc phục'],['owner','Người phụ trách'],['due','Hạn (YYYY-MM-DD)'],['status','Trạng thái']],
   defect:[['code','Mã lỗi'],['name','Tên lỗi'],['accept','Tiêu chuẩn đạt'],['reaction','Phản ứng khi NG'],['ref','Tham chiếu']]
 };
-const CP_MASTER_NEED = {cp:'master', pfmea:'master', defect:'master'};
+const CP_MASTER_NEED = {cp:'master', pfmea:'master', defect:'config'};
 function cpMasterEdit(type, id){
   if(cpGuard(CP_MASTER_NEED[type])) return;
   const seedKey={cp:'controlPlan',pfmea:'pfmea',defect:'defects'}[type];
@@ -99,7 +99,7 @@ function cpAqlHtml(){
 
 // ── 4. MÃ LỖI ────────────────────────────────────────────────────────────────
 function cpDefectsHtml(){
-  const l=cpDefects(), can=cpCan('master');
+  const l=cpDefects(), can=cpCan('config');
   return `<div class="cp-bar">${cpBackBtn()}<b style="font-size:16px">🔎 Danh mục mã lỗi ngoại quan</b><span class="grow"></span>${can?'<button class="cp-btn p" onclick="cpMasterEdit(\'defect\',\'new\')">➕ Thêm mã lỗi</button>':''}</div>
     <div class="cp-dinfo">Khi QC chọn mã lỗi trong phiếu, hệ thống tự điền tên lỗi, tiêu chuẩn đạt và phản ứng.</div>`+
     cpTable(['Mã','Tên lỗi','Tiêu chuẩn đạt','Phản ứng khi NG','Tham chiếu',''], l.map(d=>`<tr>${cpTd(d.code)}${cpTd(d.name)}${cpTd(d.accept)}${cpTd(d.reaction)}${cpTd(d.ref)}<td>${can?`<button class="cp-btn" onclick="cpMasterEdit('defect','${d.id}')">✏️</button>`:''}</td></tr>`));
@@ -129,8 +129,8 @@ function cpAdminHtml(){
   const staff=(DB.users||[]).filter(u=>u&&u.role==='staff'), logs=cpOf('importLog').sort((a,b)=>b.at-a.at), imp=cpUI.imp||{log:[],busy:false};
   const byForm={}; cpRecs().forEach(r=>{ if(r&&r.source==='excel'&&r.type==='chk') byForm[r.form]=(byForm[r.form]||0)+1; });
   return `<div class="cp-bar">${cpBackBtn()}<b style="font-size:16px">⚙️ Quản trị ControlPlan</b></div>
-  <div class="cp-sec">Phân quyền QC</div><div class="cp-dinfo">Vai trò QC chỉ áp dụng cho tài khoản "staff". Admin luôn có toàn quyền. Tài khoản nhân viên (staff) mặc định có TOÀN QUYỀN trong tab ControlPlan: nhập, sửa, RELEASE, duyệt NCR, đóng 8D, sửa danh mục. Chỉ phân quyền và nhập Excel dành cho Admin. Có thể hạ từng tài khoản xuống "hạn chế" hoặc "chỉ xem". Chỉ <b>QA</b> và <b>Admin</b> được RELEASE / phê duyệt NCR / đóng 8D.</div>
-  ${staff.length?cpTable(['Tài khoản','Vai trò ControlPlan'],staff.map((u,i)=>`<tr>${cpTd(u.name||u.username)}<td><select onchange="cpSetQcRole('${cpH(u.id)}',this.value)">${cpOpts([{v:'qc',t:'Hạn chế (chỉ tạo phiếu, không RELEASE/duyệt)'},{v:'prod',t:'Chỉ xem'}],(u.qcRole==='qc'||u.qcRole==='prod')?u.qcRole:'','Mặc định: toàn quyền trong ControlPlan')}</select></td></tr>`)):'<div class="cp-dinfo">Chưa có tài khoản staff.</div>'}
+  <div class="cp-sec">Phân quyền QC</div><div class="cp-dinfo">Vai trò QC chỉ áp dụng cho tài khoản "staff". Admin luôn có toàn quyền. Tài khoản chưa gán = chỉ xem. Chỉ <b>QA</b> và <b>Admin</b> được RELEASE / phê duyệt NCR / đóng 8D.</div>
+  ${staff.length?cpTable(['Tài khoản','Vai trò ControlPlan'],staff.map((u,i)=>`<tr>${cpTd(u.name||u.username)}<td><select onchange="cpSetQcRole('${cpH(u.id)}',this.value)">${cpOpts([{v:'qc',t:'Nhân viên QC'},{v:'lead',t:'Trưởng QC'},{v:'qa',t:'QA / Quản lý chất lượng'}],u.qcRole,'Chỉ xem (sản xuất)')}</select></td></tr>`)):'<div class="cp-dinfo">Chưa có tài khoản staff.</div>'}
   <div class="cp-sec">Nhập dữ liệu từ Excel (ControlPlan_AQL_Checksheet.xlsx)</div>
   <div class="cp-banner info">An toàn: ① tải bản sao lưu dữ liệu hiện tại ② kiểm tra bộ dữ liệu ③ <b>chỉ thêm bản ghi còn thiếu</b> (mã cố định theo sheet+dòng nên chạy lại không bị trùng, không ghi đè phiếu đã có/đã sửa) ④ đối chiếu số lượng + lấy mẫu kiểm tra ⑤ ghi nhật ký nhập. Phiếu nhập từ Excel được gắn nhãn <b>Excel</b>; phiếu mới trên phần mềm gắn <b>PM</b>.</div>
   <div class="cp-dinfo">Hiện có trên phần mềm (nguồn Excel): ${['dun','rut','danhbong','cat','dothang'].map(k=>CP_STAGE_LABEL[k]+' '+(byForm[k]||0)).join(' · ')}</div>

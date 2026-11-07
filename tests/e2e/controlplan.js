@@ -124,12 +124,12 @@ const ev=(p,f,a)=>p.evaluate(f,a);
   await ev(pg,(id)=>{ const h=cpClone(cpGet(id)); h.heldAt=Date.now()-3600000; const v=cpVerifyCandidates(h); h.verifyId=v.length?v[0].id:''; cpPut(h,{act:'gắn kiểm tra lại'}); },holdId);
   const chkAfter=await ev(pg,(id)=>cpHoldReleaseCheck(cpGet(id)),holdId);
   T('6 HOLD','có phiếu OK cùng lô → chỉ còn điều kiện NCR chưa đóng', chkAfter.length===1&&/NCR/.test(chkAfter[0]), chkAfter);
-  // nhân viên không được RELEASE
+  // nhân viên QC không được RELEASE
   await ev(pg,()=>{ window._admin=currentUser; currentUser=Object.assign({},currentUser,{role:'staff',qcRole:'qc'}); });
-  T('6 HOLD','nhân viên không có quyền RELEASE', await ev(pg,()=>!cpCan('approve')&&cpRole()==='qc'));
+  T('6 HOLD','nhân viên QC không có quyền RELEASE', await ev(pg,()=>!cpCan('approve')&&cpRole()==='qc'));
   await ev(pg,(id)=>{ cpGo('list','hold'); cpOpen(id); cpHoldAct('release'); },holdId);
   T('6 HOLD','QC tự RELEASE → bị từ chối', await ev(pg,(id)=>cpGet(id).status==='Chờ phê duyệt',holdId));
-  T('6 HOLD','tài khoản đặt "Chỉ xem" không nhập được', await ev(pg,()=>{ currentUser=Object.assign({},window._admin,{role:'staff',qcRole:'prod'}); return cpRole()==='prod'&&!cpCan('create'); }));
+  T('6 HOLD','nhân viên sản xuất (không qcRole) chỉ xem', await ev(pg,()=>{ currentUser=Object.assign({},window._admin,{role:'staff',qcRole:undefined}); return cpRole()==='prod'&&!cpCan('create'); }));
   await ev(pg,()=>{ currentUser=Object.assign({},window._admin,{role:'staff',qcRole:'qa'}); });
   // đóng NCR trước (qa)
   await ev(pg,(id)=>{ const n=cpClone(cpGet(cpGet(id).ncrId)); n.status='Chờ phê duyệt'; n.cause='Khuôn mòn (người điều tra)'; n.action='Thay khuôn'; n.disposition='Phế phẩm'; n.klass='Major'; n.verification='Đã kiểm tra'; n.verifiedBy='QA'; cpPut(n,{act:'test'}); cpOpen(n.id); cpNcrAct('approve'); },holdId);
@@ -222,9 +222,8 @@ const ev=(p,f,a)=>p.evaluate(f,a);
   // ── quyền xem
   await ev(pg,()=>doLogout()); await pg.waitForTimeout(400); await pg.evaluate(()=>{ localStorage.removeItem('sx_login_lock'); }); await pg.reload(); await pg.waitForTimeout(500);
   await login(pg,'nhanvien','nv123'); await ev(pg,()=>goTab('controlPlan')); await pg.waitForTimeout(500);
-  T('13 Quyền','tài khoản staff mặc định = toàn quyền nhập/sửa: có nút tạo phiếu, lưu được phiếu', await ev(pg,()=>{ cpGo('list','dun'); if(cpRole()!=='full'||!document.querySelector('#cpRoot .cp-btn.big')) return false; cpNew('dun'); const e=cpUI.ed.rec; e.spec='8*40'; e.customer='NV'; e.lines[0].thick='8'; e.lines[0].width='40'; e.lines[0].result='OK'; const r=cpSave(true); return !!r&&r.createdBy; }), await ev(pg,()=>cpRole()));
-  T('13 Quyền','staff mặc định: toàn quyền (nhập, sửa, duyệt/RELEASE, danh mục) nhưng không có quyền Quản trị', await ev(pg,()=>cpCan('approve')&&cpCan('create')&&cpCan('editAny')&&cpCan('verify')&&cpCan('master')&&!cpCan('config')));
-  T('13 Quyền','staff không thấy mục Quản trị', await ev(pg,()=>!Array.from(document.querySelectorAll('.cp-nav button')).some(b=>/Quản trị/.test(b.textContent))));
+  T('13 Quyền','nhân viên SX (chưa gán qcRole): xem được, không có nút tạo phiếu', await ev(pg,()=>{ cpGo('list','dun'); return cpRole()==='prod'&&!document.querySelector('#cpRoot .cp-btn.big'); }), await ev(pg,()=>cpRole()));
+  T('13 Quyền','nhân viên SX không thấy mục Quản trị', await ev(pg,()=>!Array.from(document.querySelectorAll('.cp-nav button')).some(b=>/Quản trị/.test(b.textContent))));
 
   fs.writeFileSync(path.join(out,'controlplan-results.json'),JSON.stringify(R,null,1));
   console.log(`\n${R.length-fails}/${R.length} đạt`); await browser.close(); server.close(); process.exit(fails?1:0);

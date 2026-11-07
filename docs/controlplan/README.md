@@ -1,6 +1,6 @@
 # ControlPlan – Hệ thống kiểm soát chất lượng (tab trong "Chất lượng")
 
-Tích hợp trực tiếp vào source hiện tại: menu **Chất lượng ▸ ControlPlan QC**. Nhân viên điền phiếu ngay trên phần mềm; Excel chỉ là nguồn nhập lịch sử và đối chiếu.
+Tích hợp trực tiếp vào source hiện tại: menu **Chất lượng ▸ ControlPlan QC**. Nhân viên QC điền phiếu ngay trên phần mềm; Excel chỉ là nguồn nhập lịch sử và đối chiếu.
 
 > **Lưu ý quan trọng:** phân hệ "Chất lượng/QC" mà tài liệu yêu cầu nhắc tới **chưa tồn tại** trong source (thư mục `modules/quality` là kiểm thành phẩm cũ). Vì vậy ControlPlan được tạo mới làm tab trong nhóm "Chất lượng", không sửa/ghi đè chức năng quality cũ.
 
@@ -51,7 +51,7 @@ Liên kết:  Đơn hàng (orderId) ─ Mã SP (productCode / qrProducts) ─ M�
 - Giá trị gốc luôn được giữ. Dòng không chắc chắn (kết luận lạ, ngày/lô lệch, số không đọc được…) vào mục **🔍 Cần kiểm tra**; không xoá, không suy đoán. 68 dòng không đủ dữ liệu (dòng mẫu trống) được liệt kê trong IMPORT-REPORT.md, không nhập.
 - "Mã SP" trong Excel thực chất là Xưởng (Xưởng 1/2/3) nên nhập vào trường Xưởng; cột "Lô" là mã ngày (ddmmyyyy), không coi là mã lô liên kết sổ máy → các phiếu lịch sử đều ở trạng thái **CHƯA XÁC ĐỊNH** liên kết đơn hàng.
 
-## 4. Hướng dẫn nhân viên
+## 4. Hướng dẫn nhân viên QC
 1. Menu **Chất lượng ▸ ControlPlan QC** → thẻ biểu mẫu cần dùng (Đùn, Rút, Đánh bóng, Cắt, Độ thẳng, FQC) → **Mở biểu mẫu** → **➕ Tạo phiếu**.
 2. Ngày, giờ, ca, tên bạn được điền sẵn. Chọn đơn hàng (gõ để tìm) **hoặc quét/dán mã đơn, mã lô, mã QR rồi bấm Tra** – phần mềm điền khách hàng, quy cách, mã SP, lô. Không tìm thấy thì để **CHƯA XÁC ĐỊNH**, đừng đoán.
 3. Nhập số đo (dấu phẩy hay chấm đều được), chọn mã lỗi ngoại quan từ danh sách (tự hiện tiêu chuẩn đạt + phản ứng), bấm **OK/NG** cho từng dòng. Bấm **➕ Thêm dòng đo** cho mẫu tiếp theo.
@@ -60,8 +60,8 @@ Liên kết:  Đơn hàng (orderId) ─ Mã SP (productCode / qrProducts) ─ M�
 6. Phiếu đã hoàn tất chỉ Trưởng QC/QA sửa được và **bắt buộc ghi lý do**. Mất mạng vẫn lưu được (góc phải hiện "chờ đồng bộ"); có mạng tự gửi lên.
 
 ## 5. Hướng dẫn Trưởng QC / QA / Quản trị
-- **Phân quyền** (Quản trị ▸ Phân quyền QC): Tài khoản nhân viên (staff) đang dùng trong sản xuất **mặc định có TOÀN QUYỀN trong tab ControlPlan** (nhập, sửa có lý do, xác nhận NCR, RELEASE/phế phẩm, duyệt NCR, đóng 8D, sửa danh mục). Riêng **Quản trị** (phân quyền, nhập Excel) chỉ Admin. Có thể hạ từng tài khoản xuống "hạn chế" hoặc "chỉ xem".
-- Nhân viên hạn chế: tạo phiếu, mở HOLD/NCR/8D, điều tra. Mức mặc định (toàn quyền nhập/sửa): + sửa phiếu hoàn tất (có lý do), xác nhận hiệu lực NCR, xử lý "Cần kiểm tra", sửa Control Plan/PFMEA. **QA/Admin: RELEASE, phế phẩm, duyệt NCR, đóng 8D.**
+- **Phân quyền** (Quản trị ▸ Phân quyền QC): gán từng tài khoản staff là *Nhân viên QC / Trưởng QC / QA*. Chưa gán = chỉ xem. Admin có toàn quyền.
+- Nhân viên QC: tạo phiếu, mở HOLD/NCR/8D, điều tra. Trưởng QC: + sửa phiếu hoàn tất (có lý do), xác nhận hiệu lực NCR, xử lý "Cần kiểm tra", sửa Control Plan/PFMEA. **QA/Admin: RELEASE, phế phẩm, duyệt NCR, đóng 8D.**
 - **RELEASE lô** cần: trạng thái "Chờ phê duyệt", quyết định = RELEASE, có kết quả điều tra, đã xác định lô, **đã gắn phiếu kiểm tra lại đạt (OK) đúng lô và sau thời điểm HOLD**, NCR liên quan đã xử lý xong. Thiếu điều kiện nào, nút báo rõ lý do.
 - **NCR**: Mở → Đang xử lý → (xác nhận hiệu lực) → Chờ phê duyệt → QA đóng.
 - **8D**: D0–D8 mỗi bước có người phụ trách, hạn, bằng chứng, trạng thái; bước quá hạn được báo ở Báo cáo; chỉ đóng khi D0–D7 xong và D8 có kết luận.

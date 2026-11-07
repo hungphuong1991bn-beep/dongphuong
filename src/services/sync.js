@@ -283,6 +283,7 @@ async function initAndStartSync(){
         if(data.nguyenLieuLog){ DB.nguyenLieuLog = Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); migrateSlLogIfArray('nguyenLieuLog','/data/nguyenLieuLog',data.nguyenLieuLog); }
         if(data.mayRutLog){ DB.mayRutLog = Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); migrateSlLogIfArray('mayRutLog','/data/mayRutLog',data.mayRutLog); }
         if(data.mayDanhBongLog){ DB.mayDanhBongLog = Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); migrateSlLogIfArray('mayDanhBongLog','/data/mayDanhBongLog',data.mayDanhBongLog); }
+        if(typeof cpOnBoot==='function') cpOnBoot(data.cpRecords);   // ControlPlan: nạp /data/cpRecords (không ghi đè)
         lsSave();
         _lastHash = hashOrders(DB.orders);
         DB.orders.forEach(o=>_knownIds.add(o.id));
