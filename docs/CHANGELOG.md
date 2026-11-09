@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [Chưa phát hành] Nâng cấp ERP/MES — Giai đoạn 2: Global Header duy nhất, gọn, responsive
+- **Gỡ tên công ty khỏi Global Header** (khối `topbar-company` desktop ≥1560px và `topbar-mh-company` mobile), kèm các luật CSS tương ứng. Không thay bằng nội dung khác, không để khoảng trống. Sidebar và file xuất (Excel/PDF) **giữ nguyên**; TV Mode giữ nguyên.
+- Header mobile (≤640px): tên tab + Làm mới + đồng bộ + thông báo + tài khoản + tìm kiếm trên 1 hàng, ngày • giờ (có giây) ở hàng 2; cao 66px (trước 130px, không có tên tab). Tablet (641–899px): 1 hàng chức năng + 1 hàng tìm kiếm, cao cố định 107px (trước 155–212px, rớt dòng theo tab).
+- Nút Làm mới trên mobile trước đây chỉ có tác dụng ở Tổng quan; nay các tab khác vẽ lại từ dữ liệu đã đồng bộ (chỉ đọc, không ghi Firebase).
+- **Điều hành SX (chế độ thường)**: ẩn Header riêng trùng lặp (logo/tên công ty, tiêu đề, Đồng bộ, chuông, tài khoản); giữ đồng hồ/ca và nút TV MODE. **TV MODE không đổi** (so điểm ảnh với bản gốc: 0 khác biệt ngoài chữ số đồng hồ).
+- Sửa lỗi có sẵn: trên mobile/tablet hẹp 4 nhóm máy ở Điều hành SX chồng đè lên nhau → xếp dọc.
+- **Gộp nút đồng bộ**: bỏ nút "Làm mới" riêng (chỉ ở Tổng quan); chỉ báo "Đồng bộ" nay là nút bấm duy nhất (chuột/Enter/Space; mobile: nút ⟳). Chỉ vẽ lại từ dữ liệu đã đồng bộ — bấm không phát sinh lượt ghi Firebase nào (đã đo qua nhật ký request của mock).
+- **Gộp thông báo**: bỏ nút 📢 khỏi Header; nút **📢 Soạn** (chỉ admin, tái dùng id `annWriteBtn` nên logic phân quyền ở `login.js`/`app.js` giữ nguyên) nằm trong panel chuông 🔔. `openAnnounce()` và nút ở Cài đặt không đổi.
+- **Sửa Header tràn**: ở 1024px Đồng bộ/Chuông/Tài khoản nằm ngoài mép phải (lỗi có sẵn). Bố cục 2 hàng áp dụng 641–1023px; 1024–1199px ẩn logo, ô tìm kiếm co lại, tên tab được ưu tiên. Kiểm bằng điều kiện "nằm trong khung màn hình" ở 10 kích thước × 8 tab.
+- Gỡ dòng tên công ty trong dropdown Tài khoản (mở từ avatar trên Header).
+- Điều hành SX dưới 1280px: các nhóm máy tự xuống dòng (trước đó chồng đè ở mobile, tablet và laptop 1024px).
+- **Giữ nguyên theo quyết định**: tên công ty ở Sidebar và thanh riêng của TV MODE; tiêu đề file xuất Excel/PDF.
+- Sửa: `GlobalHeader.js`, `NotificationCenter.js`, `account-menu.js`, `router.js`, `date.js`, `design-system.css`, `redesign-2026.css`, `index.html`, `sw.js`; thêm `src/styles/header-erp.css` (đã đăng ký trong `index.html` và `sw.js`). Gỡ lớp mới = bỏ dòng `<link>` header-erp.css.
+
 ## [Chưa phát hành] Lịch làm việc — 3 ô thông tin bộ phận chỉ Admin thấy và dùng
 - Tab **Lịch làm việc**: ba ô **Tên bộ phận**, **📅 Thời gian áp dụng**, **⚠️ Ghi chú / cảnh báo chung** nay chỉ hiện với tài khoản **Admin**. Các tài khoản khác không còn thấy các ô nhập này (trước đây hiện ở dạng chỉ-đọc).
 - Hàm `llvSetMeta` thêm chốt chặn `isAdmin()` nên không thể sửa 3 trường này bằng cách gọi trực tiếp.
