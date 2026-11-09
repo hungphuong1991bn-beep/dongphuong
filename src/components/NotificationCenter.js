@@ -9,6 +9,7 @@ document.write(`<!-- NOTIFICATION PANEL OVERLAY -->
   <div class="notif-panel-hd">
     <div class="notif-avatar" style="background:#eff6ff;font-size:18px">🔔</div>
     <h3>Thông báo</h3>
+    <button type="button" class="notif-ann-btn" id="annWriteBtn" style="display:none" onclick="openAnnounce()" title="Viết thông báo cho cả nhóm">📢 Soạn</button>
     <button onclick="markAllRead()" style="font-size:11.5px;color:var(--brand);border:1px solid #bfdbfe;background:#eff6ff;border-radius:7px;padding:4px 10px;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap">Đọc hết</button>
     <button onclick="closeNotifPanel()" style="border:none;background:var(--bg);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0">✕</button>
   </div>

@@ -6,29 +6,11 @@ document.write(`    <div class="topbar">
         <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <img id="topbarLogoImg" class="topbar-logo" src="" alt="logo">
-      <!-- ── Mobile Global Header (chỉ hiện ở mobile, mọi tab) — tên công ty
-           2 dòng ở giữa + hàng ngày/giờ/realtime + nút làm mới & tìm kiếm.
-           Xem CSS .topbar-mh (media max-width:640px). ── -->
-      <div class="topbar-company" aria-label="Công ty Cổ phần Công Thương Đông Phương">
-        <span class="tcm-1">Công ty cổ phần</span><span class="tcm-2">Công Thương Đông Phương</span>
-      </div>
+      <!-- Mobile: một khối gọn trong CÙNG Global Header (không có header thứ hai). Hàng 1 = tên tab + nút chức năng; hàng 2 = ngày • giờ realtime. -->
       <div class="topbar-mh">
-        <div class="topbar-mh-company">
-          <span>Công ty cổ phần</span>
-          <span>Công Thương Đông Phương</span>
-        </div>
-        <div class="topbar-mh-row">
-          <span class="topbar-mh-item">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span id="clockDateMobile">--/--/----</span>
-          </span>
-          <span class="topbar-mh-dot">•</span>
-          <span class="topbar-mh-item">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-            <span id="clockTimeMobile">--:--:--</span>
-          </span>
-          <span class="topbar-mh-spacer"></span>
-          <button type="button" class="topbar-mh-icon" onclick="topbarRefreshClick()" title="Làm mới dữ liệu">
+        <div class="topbar-mh-top">
+          <div class="topbar-mh-title" id="pageTitleMobile">Tổng quan</div>
+          <button type="button" class="topbar-mh-icon" onclick="topbarRefreshClick(this)" title="Làm mới dữ liệu">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
           </button>
           <span class="topbar-mh-sync" id="mhSyncDot" title="Trạng thái đồng bộ"></span>
@@ -43,6 +25,17 @@ document.write(`    <div class="topbar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
         </div>
+        <div class="topbar-mh-row">
+          <span class="topbar-mh-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="clockDateMobile">--/--/----</span>
+          </span>
+          <span class="topbar-mh-dot">•</span>
+          <span class="topbar-mh-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            <span id="clockTimeMobile">--:--:--</span>
+          </span>
+        </div>
         <div class="topbar-mh-searchrow" id="topbarMhSearchRow">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="tbGlobalSearchMobile" placeholder="🔍 Tìm mã đơn, khách hàng, &quot;gấp 1&quot;, &quot;kế hoạch&quot;..." oninput="tbGlobalSearchLive(this.value)" onkeydown="if(event.key==='Enter'){tbGlobalSearchGo(this.value);this.blur();}">
@@ -50,10 +43,6 @@ document.write(`    <div class="topbar">
         </div>
       </div>
       <div class="topbar-title" id="pageTitle">Tổng quan</div>
-      <button class="ov-refresh-btn" id="topbarRefreshBtn" style="display:none" onclick="topbarRefreshClick()" title="Làm mới dữ liệu">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        <span>Làm mới</span>
-      </button>
       <div class="tb-search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" class="tb-search-input" id="tbGlobalSearch" placeholder="🔍 Tìm & lọc thông minh: mã đơn, khách hàng, &quot;gấp 1&quot;, &quot;kế hoạch&quot;, &quot;đã giao&quot;..." title="Ô tìm kiếm chung cho mọi tab — tự nhận diện mức ưu tiên, trạng thái, khách hàng và tab cần xem ngay trong câu gõ vào. VD: &quot;Hoàng Gia gấp 2&quot;, &quot;kế hoạch chưa lên&quot;, &quot;đã giao tuần này&quot;" oninput="tbGlobalSearchLive(this.value)" onkeydown="if(event.key==='Enter'){tbGlobalSearchGo(this.value)}">
@@ -70,10 +59,7 @@ document.write(`    <div class="topbar">
           <span class="tc-time" id="clockTime">--:--:--</span>
         </div>
       </div>
-      <button class="ann-write-btn" id="annWriteBtn" onclick="openAnnounce()" title="Viết thông báo cho cả nhóm">
-        📢<span class="ann-btn-text"> Thông báo</span>
-      </button>
-      <div class="topbar-sync" id="syncDot" title="Trạng thái đồng bộ">
+      <div class="topbar-sync" id="syncDot" role="button" tabindex="0" onclick="topbarRefreshClick(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();topbarRefreshClick(this)}" title="Đồng bộ / làm mới dữ liệu — bấm để làm mới">
         <span class="sync-dot"></span>
         <span class="sync-text">
           <span class="sync-label" id="syncLabel">Đồng bộ</span>
@@ -114,8 +100,11 @@ function setSyncDot(state){
 
 // Nút "Làm mới" trên Global Header (chỉ hiện ở tab Tổng quan) — làm mới
 // đúng dữ liệu của tab đang mở, tránh phải tự cuộn xuống tìm nút riêng.
-function topbarRefreshClick(){
+function topbarRefreshClick(el){
+  // Nút ĐỒNG BỘ duy nhất của Global Header (desktop: chỉ báo đồng bộ; mobile: nút ⟳). Chỉ đọc, không ghi Firebase.
   if(currentTab==='dashboard' && typeof renderDashboard==='function') renderDashboard();
+  else if(typeof renderTab==='function'){ try{ renderTab(currentTab); }catch(e){ console.warn('[refresh]',e); } } // vẽ lại từ dữ liệu đã đồng bộ
+  if(el && el.setAttribute){ el.setAttribute('data-spin','1'); clearTimeout(el._spinT); el._spinT=setTimeout(()=>el.removeAttribute('data-spin'),700); } // dùng attribute: setSyncDot() ghi đè className nên class sẽ bị mất
 }
 
 // ── Bộ lọc chi tiết hợp nhất ở Topbar (thay cho nút riêng từng tab) ──
