@@ -202,6 +202,7 @@ const ASSETS = [
   './src/styles/design-system.css',
   './src/modules/dashboard/dashboard-factory.css',
   './src/styles/modules-insight.css',
+  './src/styles/header-erp.css',
   './src/modules/production/production-dh4.css'
 ];
 
