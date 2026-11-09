@@ -74,3 +74,21 @@
 
 /* ── Tab Khuôn (mobile): dải nút không xuống dòng làm nút cuối vượt khung 3px ── */
 @media (max-width:640px){ .khm-tabs{flex-wrap:wrap} }
+
+/* ── Desktop / laptop (≥1024px): thứ tự Global Header theo đặc tả ──
+   [Tên tab] [Ngày] [Giờ] [Đồng bộ] [Tìm kiếm] [Thông báo] [Tài khoản]
+   Chỉ đổi thứ tự hiển thị bằng `order` (không đổi DOM/id/onclick). Ô tìm kiếm co giãn
+   chiếm phần chỗ trống ở giữa; nút bộ lọc đi liền ngay sau ô tìm kiếm.
+   Dưới 1024px bố cục tablet/mobile ở trên giữ nguyên (hàng tìm kiếm riêng). */
+@media (min-width:1024px){
+  .topbar > .topbar-menu{order:0}
+  .topbar > .topbar-logo{order:1}
+  .topbar > .topbar-title{order:2}
+  .topbar > .tb-toolgroup{order:3}
+  .topbar > .topbar-sync{order:4}
+  .topbar > .tb-search-wrap{order:5;flex:1 1 220px;min-width:180px}
+  .topbar > .tb-filter-btn{order:6}
+  .topbar > .topbar-bell{order:7;margin-left:auto}   /* màn rộng (>1500px): Thông báo + Tài khoản dạt hẳn sang phải, không để khoảng trống lệch */
+  .topbar > .avatar-btn{order:8}
+  .topbar > .acc-dd{order:9}
+}

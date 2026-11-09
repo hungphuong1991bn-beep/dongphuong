@@ -67,7 +67,7 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Quản lý mã QR
       </button>
-      <div class="sb-section" data-g="nhaMay">Quản lý nhà máy</div>
+      <div class="sb-section" data-g="nhaMay">Quản trị</div>
       <button class="sb-item" title="Bảo trì máy 0" data-g="nhaMay" id="sbi-baoTriMay" onclick="goTab('baoTriMay')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
         Bảo trì máy <span class="sb-badge" id="sbBtmBadge" style="display:none">0</span>
@@ -92,12 +92,11 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/><path d="M9 16l1.5 1.5L15 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Chấm công
       </button>
-      <div class="sb-section" data-g="heThong">Hệ thống</div>
-      <button class="sb-item" title="Nhật ký thao tác !" data-g="heThong" id="sbi-nhatKy" onclick="goTab('nhatKy')">
+      <button class="sb-item" title="Nhật ký thao tác (Audit) !" data-g="nhaMay" id="sbi-nhatKy" onclick="goTab('nhatKy')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Nhật ký thao tác <span class="sb-badge" id="sbLogBadge" style="display:none">!</span>
       </button>
-      <button class="sb-item" title="Cài đặt 🆕" data-g="heThong" id="sbi-settings" onclick="goTab('settings')">
+      <button class="sb-item" title="Cài đặt 🆕" data-g="nhaMay" id="sbi-settings" onclick="goTab('settings')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Cài đặt <span class="sb-badge" id="sbVerBadge" style="display:none;background:var(--brand2)" title="Có bản cập nhật mới">🆕</span>
       </button>
