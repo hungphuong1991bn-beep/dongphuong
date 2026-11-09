@@ -92,7 +92,6 @@ function buildAccountDropdownHTML(){
       <div style="min-width:0">
         <div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</div>
         <div style="font-size:11px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.position||roleLabel(u.role)}</div>
-        <div style="font-size:10px;opacity:.7;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Công ty cổ phần Công Thương Đông Phương</div>
       </div>
     </div>
     <div class="acc-dd-sec">
