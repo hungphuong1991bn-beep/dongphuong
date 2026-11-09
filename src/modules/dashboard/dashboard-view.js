@@ -404,7 +404,7 @@ function buildDashboardStatusDonut(orders){
       <span class="chart-legend-val">${s.value}</span>
       <span class="chart-legend-pct">${total?Math.round(s.value/total*100):0}%</span>
     </div>`).join('');
-  return `<div style="display:flex;align-items:center;gap:14px">
+  return `<div class="ov-donut-row" style="display:flex;align-items:center;gap:14px">
     <div class="donut-wrap" style="width:110px;height:110px;flex-shrink:0">
       ${svgDonut(seg, 110, 16)}
       <div class="donut-center">

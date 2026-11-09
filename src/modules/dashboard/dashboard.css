@@ -145,7 +145,10 @@
 .donut-center-val{font-size:21px;font-weight:800;color:var(--text);line-height:1}
 .donut-center-lbl{font-size:8.5px;color:var(--text4);font-weight:700;letter-spacing:.4px;margin-top:2px}
 .chart-legend{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0}
-.chart-legend-row{display:flex;align-items:center;gap:7px;font-size:11.5px}
+/* Khung hẹp: chú thích tự xuống dưới biểu đồ thay vì bị ép/tràn */
+.ov-donut-row{flex-wrap:wrap}
+.ov-donut-row .chart-legend{flex:1 1 140px}
+.chart-legend-row{display:flex;align-items:center;gap:7px;font-size:11.5px;min-width:0;max-width:100%}
 .chart-legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
 .chart-legend-lbl{flex:1;color:var(--text2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chart-legend-val{font-weight:800;color:var(--text)}
