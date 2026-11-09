@@ -68,6 +68,7 @@ function goTab(tab){
   // Title
   const titles={controlPlan:'🛡️ ControlPlan – Chất lượng',dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu',truyXuat:'🔎 Truy xuất & Khiếu nại'};
   $('pageTitle').textContent=titles[tab]||tab;
+  { const _pm=$('pageTitleMobile'); if(_pm) _pm.textContent=titles[tab]||tab; } // tên tab trên Global Header mobile
   // Badge "Realtime" + nút "Làm mới" trên Global Header: chỉ hiện ở tab
   // Tổng quan (nơi dữ liệu cập nhật theo thời gian thực), các tab khác ẩn.
   const tlb=$('topbarLiveBadge'), trb=$('topbarRefreshBtn');

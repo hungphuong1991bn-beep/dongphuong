@@ -1,0 +1,76 @@
+/* ════════════════════════════════════════════════════════════════════
+   header-erp.css — Giai đoạn 2: Global Header duy nhất, gọn, responsive.
+   NẠP CUỐI CÙNG (sau design-system.css). Chỉ ghi đè bố cục Header; không đổi
+   id/onclick/chức năng. Gỡ lớp này = quay về bố cục cũ (trừ phần tên công ty
+   đã bị xoá khỏi markup).
+   Khối Header gồm: Tên tab · Ngày · Giờ realtime · Đồng bộ · Thông báo · Tài khoản · Tìm kiếm.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet / laptop nhỏ (641–1023px, Sidebar đang mở): 1 hàng chức năng + 1 hàng tìm kiếm, không rớt dòng ── */
+@media (min-width:641px) and (max-width:1023px){
+  :root{--top:107px}
+  .topbar{flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px}
+  .topbar-logo{display:none}
+  .topbar-title{flex:1 1 0;min-width:0;margin:0;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-timebox{display:flex}                                   /* giờ realtime luôn hiện (trước đây ẩn ≤760px) */
+  .tb-datebox .tb-chev,.avatar-btn .ab-text,.avatar-btn .ab-chev,.topbar-sync .sync-text{display:none}
+  .tb-datebox,.tb-timebox{padding:7px 9px}
+  .topbar .tb-search-wrap{order:10;flex:1 1 calc(100% - 46px);min-width:0;max-width:none;margin:0}
+  .tb-filter-btn{order:11}
+}
+
+/* ── Mobile (≤640px): hàng 1 = ☰ + tên tab + nút; hàng 2 = ngày • giờ ── */
+@media (max-width:640px){
+  :root{--top:66px}
+  .topbar{flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:8px 10px}
+  .topbar-menu{order:1;flex:0 0 auto;margin-top:2px}
+  .topbar-logo{display:none}
+  .topbar-mh{order:2;flex:1 1 0;min-width:0;width:auto;gap:2px}
+  .topbar-mh-top{display:flex;align-items:center;gap:4px;min-height:34px}
+  .topbar-mh-title{flex:1 1 0;min-width:0;color:#fff;font-size:16px;font-weight:800;line-height:1.2;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar-mh-row{padding-left:1px}
+}
+
+/* ── Điều hành SX (chế độ thường): bỏ Header riêng trùng lặp ──
+   Global Header đã có tên tab, đồng bộ, thông báo, tài khoản. Chỉ giữ đồng hồ/ca
+   và nút TV MODE của bảng điều hành. TV MODE (.dh-tv) giữ nguyên vì ở đó Global
+   Header bị ẩn nên thanh này là Header duy nhất. */
+#dhWrap:not(.dh-tv) .dh2-tb-left,
+#dhWrap:not(.dh-tv) .dh2-tb-center,
+#dhWrap:not(.dh-tv) .dh3-tb-sync-btn,
+#dhWrap:not(.dh-tv) .dh3-tb-bell,
+#dhWrap:not(.dh-tv) .dh3-tb-account{display:none!important}
+#dhWrap:not(.dh-tv) .dh2-topbar{justify-content:flex-end;background:none;border:0;box-shadow:none;padding:0;min-height:0}
+#dhWrap:not(.dh-tv) .dh2-tb-right{flex-wrap:wrap;justify-content:flex-end;max-width:100%}
+
+/* ── Điều hành SX dưới 1280px: các nhóm máy tự xuống dòng ──
+   Trước đây 4 nhóm (Đùn/Rút/Đánh bóng/Cắt) nằm ngang một hàng; khi màn hẹp mỗi nhóm bị nén nhưng
+   lưới thẻ bên trong cố định cột 200–240px → thẻ chồng đè lên nhau (mobile, tablet và laptop 1024).
+   Nay mỗi nhóm rộng tối thiểu 260px và tự xuống dòng (mobile = 1 nhóm/hàng). TV MODE và ≥1280px không đổi. */
+@media (max-width:1279px){
+  #dhWrap:not(.dh-tv) .dh3-machine-row{flex-wrap:wrap;align-items:flex-start;gap:14px}
+  #dhWrap:not(.dh-tv) .dh3-machine-row .dh-group{flex:1 1 260px;width:auto;min-width:0;max-width:100%}
+  #dhWrap:not(.dh-tv) .dh3-machine-row .dh-card-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr))}
+}
+
+/* ── Một nút đồng bộ + một điểm thông báo ──
+   • Đồng bộ: chỉ báo trạng thái (.topbar-sync) nay chính là nút bấm làm mới (trước đây có thêm nút "Làm mới" riêng ở Tổng quan).
+   • Thông báo: bỏ nút 📢 khỏi Header; "Soạn thông báo" (admin) nằm trong panel của chuông 🔔. */
+.topbar-sync[role=button]{cursor:pointer;transition:background .15s}
+.topbar-sync[role=button]:hover{background:var(--bg2)}
+.topbar-sync[role=button]:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.topbar-sync[data-spin] .sync-dot,.topbar-mh-icon[data-spin] svg{animation:ovSpin .6s linear}
+.notif-ann-btn{font-size:11.5px;font-weight:600;color:var(--brand);border:1px solid #bfdbfe;background:#eff6ff;border-radius:7px;padding:4px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;align-items:center;gap:4px}
+
+/* ── Laptop / desktop hẹp (1024–1199px, Sidebar đang mở): không để nút bị đẩy ra ngoài mép phải ──
+   Ô tìm kiếm gốc có min-width:180px nên Đồng bộ/Chuông/Tài khoản nằm ngoài khung ở 1024px.
+   Tên tab được ưu tiên hơn logo và ô tìm kiếm. */
+@media (min-width:1024px) and (max-width:1199px){
+  .topbar-logo{display:none}
+  .topbar .tb-search-wrap{min-width:90px;flex:1 1 90px}
+  .topbar-title{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tb-datebox .tb-chev{display:none}
+}
+
+/* ── Tab Khuôn (mobile): dải nút không xuống dòng làm nút cuối vượt khung 3px ── */
+@media (max-width:640px){ .khm-tabs{flex-wrap:wrap} }

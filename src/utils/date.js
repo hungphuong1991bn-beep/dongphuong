@@ -28,7 +28,7 @@ function updateTopbarClock(){
   if(dEl){
     dEl.textContent = vnDateDMY(now);
   }
-  if(tElM) tElM.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  if(tElM) tElM.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`; // mobile: hiện cả giây (giờ realtime)
   if(dElM) dElM.textContent = vnDateDMY(now);
   if(typeof dhTickClock==='function') dhTickClock();
 }

@@ -130,11 +130,6 @@
 }
 
 /* ═══ HEADER ═══ */
-.topbar-company{display:none;flex-direction:column;line-height:1.15;margin:0 6px 0 2px;white-space:nowrap}
-.topbar-company .tcm-1{font:600 9.5px/1.2 var(--ds-font);color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
-.topbar-company .tcm-2{font:800 12.5px/1.2 var(--ds-font);color:var(--navy)}
-@media(min-width:1560px){.topbar-company{display:flex}}
-@media(min-width:1100px){body.sb-collapsed .topbar-company{display:flex}}
 /* Header gọn dần theo bề rộng: ưu tiên giữ ô tìm kiếm, đồng bộ, thông báo, tài khoản */
 .topbar .ov-refresh-btn{white-space:nowrap;flex-shrink:0}
 .topbar .tb-search-wrap{min-width:180px}
