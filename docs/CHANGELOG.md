@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [Chưa phát hành] Nâng cấp ERP/MES — rà soát giao diện toàn hệ thống (Header, Sidebar, laptop 1180px)
+Phương pháp: đo trước/sau bằng `tests/e2e/ui-audit.js` (19 tab × 5 kích thước: 1440, 1180, 820, 390, 360px) trên Firebase giả lập. Trước: 3 tab tràn ngang ở laptop 1180px; sau: 0.
+- **Global Header (≥1024px)**: đổi thứ tự hiển thị thành Tên tab → Ngày → Giờ → Đồng bộ → Tìm kiếm (+ nút lọc) → Thông báo → Tài khoản bằng CSS `order` (không đổi DOM, id, onclick). Thông báo + Tài khoản dạt phải ở màn rộng. Dưới 1024px giữ nguyên bố cục tablet/mobile cũ. File: `src/styles/header-erp.css`.
+- **Sidebar**: gộp nhóm "Hệ thống" vào "Quản lý nhà máy" và đặt tên nhóm là **Quản trị** (Nhật ký thao tác, Cài đặt nằm trong nhóm này). Không thêm/xoá menu, giữ nguyên id + onclick + phân quyền. File: `src/components/Sidebar.js`.
+- **Sửa tràn ngang laptop 1180px**: (1) hàng 6 ô thống kê ở Đơn hàng / Đơn hoàn thành chỉ dùng 6 cột khi ≥1280px, dưới đó 3 cột (`src/modules/orders/orders.css`); (2) biểu đồ donut + chú thích ở Tổng quan tự xuống dòng khi khung hẹp (`dashboard.css`, thêm class `ov-donut-row` ở `dashboard-view.js`).
+- **Bảng Đơn hàng**: cột Thao tác cố định 56px (trước 33px ở 1180px làm nút ⋮ bị cắt mép, tiêu đề rớt 4 dòng); ≤1360px nới 2 cột ngày, cho Loại/Nguyên liệu xuống dòng. Ô bị cắt chữ ở 1180px (3 dòng đầu): 27 → 16.
+- Thêm `tests/e2e/ui-audit.js` (đo tràn ngang, thứ tự Header, nhóm Sidebar, lỗi console).
+
 ## [Chưa phát hành] Nâng cấp ERP/MES — Giai đoạn 2: Global Header duy nhất, gọn, responsive
 - **Gỡ tên công ty khỏi Global Header** (khối `topbar-company` desktop ≥1560px và `topbar-mh-company` mobile), kèm các luật CSS tương ứng. Không thay bằng nội dung khác, không để khoảng trống. Sidebar và file xuất (Excel/PDF) **giữ nguyên**; TV Mode giữ nguyên.
 - Header mobile (≤640px): tên tab + Làm mới + đồng bộ + thông báo + tài khoản + tìm kiếm trên 1 hàng, ngày • giờ (có giây) ở hàng 2; cao 66px (trước 130px, không có tên tab). Tablet (641–899px): 1 hàng chức năng + 1 hàng tìm kiếm, cao cố định 107px (trước 155–212px, rớt dòng theo tab).
