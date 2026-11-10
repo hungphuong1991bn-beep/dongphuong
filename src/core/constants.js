@@ -26,6 +26,9 @@ const FB_REFRESH_LS  = 'sx_fb_refresh_v1';
 // code mới được đẩy lên nhánh main — không cần sửa tay số này nữa.
 const APP_VERSION    = '2.5.1';
 const APP_BUILD_DATE = '2026-07-04';
+// Thông tin tác giả — hiển thị ở Cài đặt ▸ Phiên bản ứng dụng và trong "Sao chép chẩn đoán".
+const APP_DEVELOPER      = 'Vũ Thái Hùng';
+const APP_DEVELOPER_UNIT = 'Bộ phận Thanh Cái · Đông Phương';
 
 // Thang màu mức ưu tiên: 1 dải màu chuyển dần từ đỏ đậm (khẩn cấp nhất)
 // sang cam/hổ phách rồi tới xám-xanh trung tính (ít khẩn cấp hơn) — thay

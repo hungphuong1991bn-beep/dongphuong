@@ -1,5 +1,5 @@
 // src/modules/quality/cp-view.js — ControlPlan: điều hướng, Tổng quan (KPI + bộ lọc + thẻ biểu mẫu), danh sách phiếu
-const cpUI = {view:'home', arg:'', F:Object.assign({}, CP_FILTER0), q:'', page:1, ed:null, og:{}};   // og: nhóm đang mở ở Tổng quan {A:true,...}
+const cpUI = {view:'home', arg:'', F:Object.assign({}, CP_FILTER0), q:'', page:1, ed:null, og:{}, fOpen:null};   // fOpen: bộ lọc đang mở? (null = tự theo cỡ màn hình)   // og: nhóm đang mở ở Tổng quan {A:true,...}
 const CP_PAGE = 50;
 
 function renderControlPlan(){
@@ -34,6 +34,7 @@ function cpRender(){
     else if(v==='defects') body=cpDefectsHtml();
     else if(v==='reports') body=cpReportsHtml();
     else if(v==='review') body=cpReviewHtml();
+    else if(v==='alert') body=cpAlertViewHtml(cpUI.arg);
     else if(v==='admin') body=cpAdminHtml();
     else body=cpHomeHtml();
   }catch(e){ console.error(e); body='<div class="cp-banner err">Lỗi hiển thị: '+cpH(e.message)+'</div>'; }
@@ -52,7 +53,7 @@ function cpRender(){
 }
 
 // ── thành phần dùng chung ─────────────────────────────────────────────────────
-function cpResPill(r){ const x=CP_RES[r]||CP_RES.UNK; return `<span class="cp-pill ${x.c}">${x.t}</span>`; }
+function cpResPill(r){ const x=CP_RES[r]||CP_RES.UNK; const ic=x.c==='ok'?'✔ ':x.c==='ng'?'✖ ':'? '; return `<span class="cp-pill ${x.c}" role="img" aria-label="${x.t}">${ic}${x.t}</span>`; }
 function cpSrcPill(r){ return r.source==='excel'?'<span class="cp-pill xl" title="Dữ liệu lịch sử nhập từ Excel">Excel</span>':'<span class="cp-pill blue">PM</span>'; }
 function cpBackBtn(to){ return `<button class="cp-btn" onclick="cpGo('${to||'home'}')">← Quay lại</button>`; }
 function cpOpts(list, cur, blank){ return (blank===false?'':`<option value="">${cpH(blank||'— Tất cả —')}</option>`)+list.map(o=>{ const v=typeof o==='object'?o.v:o, t=typeof o==='object'?o.t:o; return `<option value="${cpH(v)}"${String(v)===String(cur)?' selected':''}>${cpH(t)}</option>`; }).join(''); }
@@ -60,8 +61,9 @@ function cpOpts(list, cur, blank){ return (blank===false?'':`<option value="">${
 function cpFiltersHtml(){
   const F=cpUI.F;
   const stages=['dothang','dun','rut','danhbong','cat','fqc'].map(k=>({v:k,t:CP_STAGE_LABEL[k]}));
-  const any=Object.keys(F).some(k=>F[k]);
-  return `<div class="cp-filters"><div class="cp-fgrid">
+  const any=Object.keys(F).some(k=>F[k]), nAct=Object.keys(F).filter(k=>F[k]).length;
+  const open=cpUI.fOpen==null ? (typeof window==='undefined'||window.innerWidth>768) : cpUI.fOpen;   // mobile: mặc định gập để thấy dữ liệu ngay
+  return `<details class="cp-fdet"${open?' open':''} ontoggle="cpUI.fOpen=this.open"><summary><span>🔎 Bộ lọc</span>${nAct?`<span class="cp-badge on">${nAct}</span><span class="cp-fhint">đang lọc</span>`:'<span class="cp-fhint">bấm để mở</span>'}</summary><div class="cp-filters"><div class="cp-fgrid">
     <div><label>Từ ngày</label><input type="date" value="${cpH(F.from)}" onchange="cpSetF('from',this.value)"></div>
     <div><label>Đến ngày</label><input type="date" value="${cpH(F.to)}" onchange="cpSetF('to',this.value)"></div>
     <div><label>Công đoạn</label><select onchange="cpSetF('stage',this.value)">${cpOpts(stages,F.stage)}</select></div>
@@ -73,7 +75,7 @@ function cpFiltersHtml(){
     <div><label>Kết quả</label><select onchange="cpSetF('result',this.value)">${cpOpts([{v:'OK',t:'OK'},{v:'NG',t:'NG'},{v:'UNK',t:'Chưa xác định'}],F.result)}</select></div>
     <div><label>Nguồn</label><select onchange="cpSetF('source',this.value)">${cpOpts([{v:'app',t:'Nhập trên phần mềm'},{v:'excel',t:'Lịch sử từ Excel'}],F.source)}</select></div>
     <div style="display:flex;align-items:flex-end">${any?'<button class="cp-btn" onclick="cpResetF()">✕ Xoá lọc</button>':''}</div>
-  </div></div>`;
+  </div></div></details>`;
 }
 
 // ── TỔNG QUAN ────────────────────────────────────────────────────────────────
@@ -81,7 +83,7 @@ function cpHomeHtml(){
   const K=cpKpis(cpUI.F), F=cpUI.F;
   const kp=(n,l,c,go)=>`<div class="cp-kpi${go?' click':''}" style="--k:${c}" ${go?`onclick="${go}"`:''}><b>${n}</b><span>${l}</span></div>`;
   const empty=!cpRecs().some(r=>r.type==='chk'||r.type==='fqc');
-  let h=`<div class="cp-kpis">
+  let h=cpAlertPanelHtml()+`<div class="cp-kpis">
     ${kp(K.total,'Tổng số phiếu kiểm tra','#2563eb')}${kp(K.today,'Số phiếu hôm nay','#0d9488')}${kp(K.ok,'Phiếu đạt OK','#047857')}${kp(K.ng,'Phiếu NG','#dc2626')}
     ${kp(K.holdOpen,'Lô đang HOLD',' #d97706',"cpGo('list','hold')")}${kp(K.ncrOpen,'NCR chưa đóng','#9333ea',"cpGo('list','ncr')")}${kp(K.d8Open,'Hành động 8D đang xử lý','#0369a1',"cpGo('list','eightd')")}
     ${kp(K.unk,'Chưa xác định kết quả','#64748b',"cpGo('review')")}${kp(K.drafts,'Bản nháp','#94a3b8')}</div>`;
@@ -166,36 +168,38 @@ function cpListHtml(key){
   let head, line;
   if(type==='chk' && key!=='dothang'){
     const hasLen=key!=='dun';
-    head=['Ngày','Mã phiếu','Ca','Khách hàng','Quy cách','Xưởng / Máy','Mã lô','Giờ','Mẫu','Dày','Rộng'].concat(hasLen?['Dài']:[]).concat(['Ngoại quan','Kết luận','QC','Liên kết','Nguồn']);
-    line=(r,l)=>[cpFmtDate(r.date),r.code,r.shift,cpCust(r),r.spec,[r.workshop,r.machine].filter(Boolean).join(' / ')||'—',r.lot||'—',l.time,l.n,cpV(l.thick),cpV(l.width)].concat(hasLen?[cpV(l.length)]:[]).concat([cpAppear(l), cpResPill(l.result), r.inspector, cpLinkPill(r), cpSrcPill(r)]);
+    head=['Ngày','Mã phiếu','Ca','Khách hàng','Quy cách','Xưởng / Máy','Mã lô','Giờ','Mẫu','Dày','Rộng'].concat(hasLen?['Dài']:[]).concat(['Ngoại quan','Kết luận','QC','Ghi lúc','Liên kết','Nguồn']);
+    line=(r,l)=>[cpFmtDate(r.date),r.code,r.shift,cpCust(r),r.spec,[r.workshop,r.machine].filter(Boolean).join(' / ')||'—',r.lot||'—',l.time,l.n,cpV(l.thick),cpV(l.width)].concat(hasLen?[cpV(l.length)]:[]).concat([cpAppear(l), cpResPill(l.result), r.inspector, cpWhen(r), cpLinkPill(r), cpSrcPill(r)]);
   } else if(key==='dothang'){
-    head=['Ngày','Mã phiếu','Khách hàng','Quy cách','Xưởng','Mã lô','Cạnh','Mặt','Vểnh','Vặn','Tiêu chuẩn','Kết luận','QC','Liên kết','Nguồn'];
-    line=(r,l)=>[cpFmtDate(r.date),r.code,cpCust(r),r.spec,r.workshop||'—',r.lot||'—',l.edge,l.face,l.warp,l.twist,r.standard,cpResPill(l.result),r.inspector,cpLinkPill(r),cpSrcPill(r)];
+    head=['Ngày','Mã phiếu','Khách hàng','Quy cách','Xưởng','Mã lô','Cạnh','Mặt','Vểnh','Vặn','Tiêu chuẩn','Kết luận','QC','Ghi lúc','Liên kết','Nguồn'];
+    line=(r,l)=>[cpFmtDate(r.date),r.code,cpCust(r),r.spec,r.workshop||'—',r.lot||'—',l.edge,l.face,l.warp,l.twist,r.standard,cpResPill(l.result),r.inspector,cpWhen(r),cpLinkPill(r),cpSrcPill(r)];
   }
   if(type==='chk'){
     const flat=[]; rows.forEach(r=>(r.lines||[]).forEach(l=>flat.push([r,l])));
     const tot=flat.length, pages=Math.max(1,Math.ceil(tot/CP_PAGE)); cpUI.page=Math.min(cpUI.page,pages);
     const sl=flat.slice((cpUI.page-1)*CP_PAGE, cpUI.page*CP_PAGE);
-    h+=`<div class="cp-tw"><table class="cp-t"><thead><tr>${head.map(x=>`<th>${x}</th>`).join('')}${''}</tr></thead><tbody>${sl.map(([r,l])=>`<tr class="click${r.status==='draft'?' draft':''}" onclick="cpOpen('${r.id}')">${line(r,l).map(c=>`<td>${typeof c==='string'&&c.startsWith('<span')?c:cpH(c==null||c===''?'—':c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    h+=`<div class="cp-tw"><table class="cp-t stack"><thead><tr>${head.map(x=>`<th>${x}</th>`).join('')}${''}</tr></thead><tbody>${sl.map(([r,l])=>`<tr class="click${r.status==='draft'?' draft':''}" onclick="cpOpen('${r.id}')">${cpTdRow(line(r,l),head)}</tr>`).join('')}</tbody></table></div>`;
     return h+cpPager(tot,pages,'dòng đo / '+rows.length+' phiếu');
   }
   const cols={
-    fqc:['Ngày','Mã phiếu','Khách hàng','Mã SP','Mã lô','SL lô','Code / Cỡ mẫu','Major / Minor / Critical','Kết luận','QA/QC','Nguồn'],
-    ncr:['Số NCR','Ngày','Mã SP','Mã lô','Công đoạn','Mô tả NG','SL ảnh hưởng','Phân loại','Trạng thái','Quyết định'],
+    fqc:['Ngày','Mã phiếu','Khách hàng','Mã SP','Mã lô','SL lô','Code / Cỡ mẫu','Major / Minor / Critical','Kết luận','QA/QC','Ghi lúc','Nguồn'],
+    ncr:['Số NCR','Ngày','Mã SP','Mã lô','Công đoạn','Mô tả NG','SL ảnh hưởng','Phân loại','Trạng thái','Quyết định','Người tạo'],
     hold:['Số HOLD','Ngày giờ','Mã SP','Mã lô','SL','Lý do','Trạng thái','Người HOLD','NCR'],
     eightd:['Số 8D','Ngày mở','Vấn đề','Khách hàng','Mã lô','Tiến độ','Quá hạn','Trạng thái','Phụ trách']
   }[key];
   const cell={
-    fqc:r=>[cpFmtDate(r.date),r.code,cpCust(r),r.productCode||'CHƯA XÁC ĐỊNH',r.lot||'—',r.lotQty,(r.aqlCode||'—')+' / '+(r.sampleSize||'—'),(r.majorNG||0)+' / '+(r.minorNG||0)+' / '+(r.criticalNG||0),cpResPill(r.result),r.inspector,cpSrcPill(r)],
-    ncr:r=>[r.code,cpFmtDate(r.date),r.productCode||'—',r.lot||'—',r.stage,String(r.desc||'').slice(0,70),r.qtyAffected,r.klass,cpStatusPill(r.status),r.disposition||'—'],
+    fqc:r=>[cpFmtDate(r.date),r.code,cpCust(r),r.productCode||'CHƯA XÁC ĐỊNH',r.lot||'—',r.lotQty,(r.aqlCode||'—')+' / '+(r.sampleSize||'—'),(r.majorNG||0)+' / '+(r.minorNG||0)+' / '+(r.criticalNG||0),cpResPill(r.result),r.inspector,cpWhen(r),cpSrcPill(r)],
+    ncr:r=>[r.code,cpFmtDate(r.date),r.productCode||'—',r.lot||'—',r.stage,String(r.desc||'').slice(0,70),r.qtyAffected,r.klass,cpStatusPill(r.status),r.disposition||'—',r.createdBy||'—'],
     hold:r=>[r.code,cpFmtTs(r.heldAt),r.productCode||'—',r.lot||'—',r.qty,String(r.reason||'').slice(0,60),cpStatusPill(r.status),r.holdBy,(cpGet(r.ncrId)||{}).code||'—'],
     eightd:r=>{ const p=cp8dProgress(r); return [r.code,cpFmtDate(r.date),String(r.title||'').slice(0,60),cpCust(r),r.lot||'—',p.done+'/9',p.late?`<span class="cp-pill ng">${p.late} bước</span>`:'—',cpStatusPill(r.status),r.leader]; }
   }[key];
   const pages=Math.max(1,Math.ceil(rows.length/CP_PAGE)); cpUI.page=Math.min(cpUI.page,pages);
   const sl=rows.slice((cpUI.page-1)*CP_PAGE, cpUI.page*CP_PAGE);
-  h+=`<div class="cp-tw"><table class="cp-t"><thead><tr>${cols.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${sl.map(r=>`<tr class="click" onclick="cpOpen('${r.id}')">${cell(r).map(c=>`<td>${typeof c==='string'&&c.startsWith('<span')?c:cpH(c==null||c===''?'—':c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  h+=`<div class="cp-tw"><table class="cp-t stack"><thead><tr>${cols.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${sl.map(r=>`<tr class="click" onclick="cpOpen('${r.id}')">${cpTdRow(cell(r),cols)}</tr>`).join('')}</tbody></table></div>`;
   return h+cpPager(rows.length,pages,'phiếu');
 }
+// Ô bảng kèm data-label: trên mobile/tablet bảng tự chuyển thành thẻ (CSS .cp-t.stack), mỗi ô hiện tên cột
+function cpTdRow(cells, heads){ return cells.map((c,i)=>`<td data-label="${cpH((heads&&heads[i])||'')}">${typeof c==='string'&&c.startsWith('<span')?c:cpH(c==null||c===''?'—':c)}</td>`).join(''); }
 function cpPager(tot,pages,unit){
   return `<div class="cp-pager"><button class="cp-btn" ${cpUI.page<=1?'disabled':''} onclick="cpPage(${cpUI.page-1})">‹</button><span>Trang ${cpUI.page}/${pages} · ${tot} ${unit}</span><button class="cp-btn" ${cpUI.page>=pages?'disabled':''} onclick="cpPage(${cpUI.page+1})">›</button></div>`;
 }
@@ -254,4 +258,50 @@ function cpAskCancel(){ _cpAskCb=null; cpModalClose(); }
 function cpAskOk(needReason){
   let why=''; if(needReason){ const t=$('cpAskReason'); why=t?t.value.trim():''; if(!why){ const e=$('cpAskErr'); if(e) e.textContent='Cần nhập lý do.'; if(t) t.focus(); return; } }
   const cb=_cpAskCb; _cpAskCb=null; cpModalClose(); if(cb) cb(why);
+}
+
+
+// ══ NÂNG CẤP 2026 ═══════════════════════════════════════════════════════════
+// ── Cảnh báo dữ liệu chưa nhập (Tổng quan) + màn hình chi tiết từng loại ──
+function cpAlertPanelHtml(){
+  const A=cpAlertList();
+  if(!A.length){
+    return cpRecs().some(r=>r&&!r.void&&cpIsInspection(r)) ? `<div class="cp-alerts ok">✔ Không có cảnh báo: mọi phiếu nhập trên phần mềm đều có kết luận, mã lô và đơn hàng.</div>` : '';
+  }
+  const total=A.reduce((s,a)=>s+a.n,0);
+  return `<section class="cp-alerts" aria-label="Cảnh báo cần xử lý"><div class="cp-alerts-h">⚠️ Cảnh báo cần xử lý <span class="cp-badge">${total>999?'999+':total}</span></div>
+    <div class="cp-alerts-l">${A.map(a=>`<button type="button" class="cp-al ${a.sev}" onclick="cpGo('alert','${a.key}')"><b>${a.n}</b><span>${cpH(a.title)}</span><i aria-hidden="true">Xem ›</i></button>`).join('')}</div></section>`;
+}
+function cpAlertViewHtml(kind){
+  const a=cpAlertList().find(x=>x.key===kind);
+  let h=`<div class="cp-bar">${cpBackBtn()}<b style="font-size:16px">⚠️ ${a?cpH(a.title):'Cảnh báo'}</b></div>`;
+  if(!a) return h+`<div class="cp-empty">✔ Không còn cảnh báo loại này.</div>`;
+  h+=`<div class="cp-banner ${a.sev==='bad'?'err':'warn'}"><b>${cpH(a.why)}.</b> Bấm vào dòng để mở phiếu và bổ sung.</div>`;
+  const heads=['Mã phiếu','Loại','Ngày','Khách hàng','Mã lô','Người','Ghi lúc','Trạng thái'];
+  const lbl=r=>r.type==='chk'?(CP_STAGE_LABEL[r.form]||r.form):({fqc:'FQC',hold:'HOLD',ncr:'NCR',eightd:'8D'}[r.type]||r.type);
+  const rows=a.rows.slice().sort((x,y)=>cpRecTs(y)-cpRecTs(x)).slice(0,200);
+  h+=`<div class="cp-tw"><table class="cp-t stack"><thead><tr>${heads.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr class="click" onclick="cpOpen('${cpH(r.id)}')">${cpTdRow([
+    r.code||'(chưa có mã)', lbl(r), cpFmtDate(r.date||cpYmd(new Date(r.createdAt||r.heldAt||0))), cpCust(r), r.lot||'CHƯA XÁC ĐỊNH', r.inspector||r.holdBy||r.leader||r.createdBy||'—', cpWhen(r),
+    (r.type==='chk'||r.type==='fqc')?(r.status==='draft'?'<span class="cp-pill unk">Nháp</span>':cpResPill(r.result)):cpStatusPill(r.status)],heads)}</tr>`).join('')}</tbody></table></div>`;
+  if(a.rows.length>rows.length) h+=`<div class="cp-dinfo">Hiển thị ${rows.length}/${a.rows.length} phiếu mới nhất.</div>`;
+  return h;
+}
+// ── Lịch sử kiểm tra cùng đơn / lô / mã sản phẩm (trong màn hình mở phiếu) ──
+function cpHistOpen(id){
+  const ed=cpUI.ed;
+  if(ed && !ed.ro) return cpAsk({title:'Mở phiếu khác?', msg:'Các thay đổi chưa lưu trên phiếu đang mở sẽ bị bỏ.', danger:true}, ()=>cpOpen(id));
+  cpOpen(id);
+}
+function cpHistoryHtml(rec){
+  const head='<div class="cp-sec">Lịch sử kiểm tra cùng đơn / lô</div>';
+  if(!(rec.orderId||String(rec.lot||'').trim()||String(rec.productCode||'').trim()))
+    return head+'<div class="cp-dinfo">Phiếu chưa có đơn hàng, mã lô hoặc mã sản phẩm nên CHƯA TRA ĐƯỢC lịch sử — chọn đơn hoặc nhập mã lô ở phần liên kết phía trên.</div>';
+  const H=cpHistoryFor(rec);
+  if(!H.length) return head+'<div class="cp-dinfo">Chưa có phiếu kiểm tra nào khác cùng đơn / lô / mã sản phẩm.</div>';
+  const lbl=r=>r.type==='chk'?(CP_STAGE_LABEL[r.form]||r.form):({fqc:'FQC',hold:'HOLD',ncr:'NCR'}[r.type]||r.type);
+  const SHOW=8, items=H.slice(0,SHOW).map(({r,via})=>{
+    const res=(r.type==='chk'||r.type==='fqc')?(r.status==='draft'?'<span class="cp-pill unk">Nháp</span>':cpResPill(r.result)):cpStatusPill(r.status);
+    return `<li class="cp-hl" role="button" tabindex="0" onclick="cpHistOpen('${cpH(r.id)}')" onkeydown="if(event.key==='Enter')cpHistOpen('${cpH(r.id)}')">${res}<b>${cpH(lbl(r))}</b><span>${cpH(r.code||'—')}</span><span class="cp-hl-m">${cpH(cpWhen(r))} · ${cpH(r.inspector||r.holdBy||r.createdBy||'chưa ghi người kiểm tra')}</span><small>${cpH(via)}</small></li>`;
+  }).join('');
+  return head+`<ul class="cp-hls">${items}</ul>${H.length>SHOW?`<div class="cp-dinfo">và ${H.length-SHOW} phiếu cũ hơn.</div>`:''}`;
 }

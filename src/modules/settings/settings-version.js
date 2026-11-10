@@ -95,7 +95,7 @@ function buildVersionCard(){
   const usedTxt = fmtUsedSince(getFirstOpenTs());
   return `
     <div class="ver-top">
-      <div class="ver-icon">🏭</div>
+      <div class="ver-logo">${window.BRAND_LOGO_URL?`<img src="${window.BRAND_LOGO_URL}" alt="Logo Đông Phương – Tâm sáng rạng tín bền" decoding="async" onerror="this.replaceWith(document.createTextNode('🏭'))">`:'🏭'}</div>
       <div>
         <div class="ver-name">SX Đông Phương</div>
         <div class="ver-num" id="verNumLine">Phiên bản ${displayVersion} · ${buildTxt}</div>
@@ -115,6 +115,11 @@ function buildVersionCard(){
     <div style="margin-top:12px">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>💾 Dữ liệu offline đã lưu</span><span>${storageKB.toFixed(0)} KB</span></div>
       <div class="ver-storage-bar"><div class="ver-storage-fill" style="width:${storagePct}%"></div></div>
+    </div>
+    <div class="ver-credit">
+      <span>NGƯỜI PHÁT TRIỂN</span>
+      <b>${APP_DEVELOPER}</b>
+      <small>${APP_DEVELOPER_UNIT}</small>
     </div>
     <button class="ver-check-btn" id="verCheckBtn" onclick="checkUpdateManual()">${verCheckIconSvg()}<span>Kiểm tra cập nhật ngay</span></button>
     <div class="ver-sub-actions">
@@ -200,6 +205,7 @@ async function copyDiagnosticInfo(){
   const lines = [
     `SX Đông Phương — Thông tin chẩn đoán`,
     `Phiên bản: ${displayVersion} (#${commitTxt})`,
+    `Người phát triển: ${APP_DEVELOPER} (${APP_DEVELOPER_UNIT})`,
     `Kết nối mạng: ${navigator.onLine?'Online':'Offline'}`,
     `Service Worker: ${swOn?'Đang hoạt động':'Chưa đăng ký'}`,
     `Chế độ chạy: ${isStandalone?'Ứng dụng đã cài (PWA)':'Trình duyệt web'}`,

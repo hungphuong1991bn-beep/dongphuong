@@ -1,42 +1,6 @@
-/* ▸ src/styles/responsive-mobile.css — đoạn LIÊN TIẾP dòng 4087–4158 của CSS gốc; thứ tự nạp = thứ tự cascade, KHÔNG đổi thứ tự ◂ */
-/* ══════════════════════════════════════════════════════════════════
-   TỐI ƯU HIỂN THỊ MOBILE — bổ sung (không đổi cấu trúc/logic hiện có):
-   1) Dải ô KPI (Chờ SX / Đang SX / Ưu tiên / Trễ / Hoàn thành / Tổng kg)
-      luôn xếp ĐỦ 6 Ô TRÊN 1 HÀNG, thu gọn tối đa để không chiếm nhiều
-      không gian màn hình — áp dụng cho mọi tab dùng chung .dd-stats
-      (Đơn Hàng / Kế hoạch SX / Đơn hoàn thành).
-   2) Thẻ kế hoạch sản xuất (.kh-plan-card): giảm khoảng đệm/khoảng
-      cách giữa các khối để đỡ chiếm không gian dọc trên điện thoại.
-   ══════════════════════════════════════════════════════════════════ */
-@media(max-width:900px){
-  .dd-stats,
-  .kh-kpi-row.dd-stats{grid-template-columns:repeat(6,1fr)!important;gap:5px!important}
-  .dd-stat,
-  .kh-kpi-row.dd-stats .dd-stat{
-    flex-direction:column!important;align-items:center!important;justify-content:center!important;
-    text-align:center!important;gap:2px!important;padding:6px 2px 5px!important;border-radius:9px!important;
-  }
-  .dd-stat-ic,
-  .kh-kpi-row.dd-stats .dd-stat-ic{width:19px!important;height:19px!important;font-size:10px!important;border-radius:6px!important;margin:0 auto}
-  .dd-stat-txt,
-  .kh-kpi-row.dd-stats .dd-stat-txt{width:100%;align-items:center;gap:0!important}
-  .dd-stat-n,
-  .kh-kpi-row.dd-stats .dd-stat-n{font-size:12.5px!important;letter-spacing:-.2px;line-height:1.1!important}
-  .dd-stat-l,
-  .kh-kpi-row.dd-stats .dd-stat-l{
-    font-size:6.9px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
-    line-height:1.15!important;font-weight:800!important;
-  }
-  .kh-kpi-row.dd-stats .dd-stat-sub{display:none!important}
-}
-@media(max-width:480px){
-  .dd-stats,.kh-kpi-row.dd-stats{gap:4px!important}
-  .dd-stat,.kh-kpi-row.dd-stats .dd-stat{padding:5px 1px 4px!important}
-  .dd-stat-ic,.kh-kpi-row.dd-stats .dd-stat-ic{width:17px!important;height:17px!important;font-size:9px!important}
-  .dd-stat-n,.kh-kpi-row.dd-stats .dd-stat-n{font-size:11.5px!important}
-  .dd-stat-l,.kh-kpi-row.dd-stats .dd-stat-l{font-size:6.4px!important}
-}
-
+/* ▸ src/styles/responsive-mobile.css — chỉ còn tối ưu thẻ Kế hoạch SX trên mobile ◂
+   Đã gỡ khối ép KPI 6 cột/1 hàng (chữ 6.4px): .dd-stats nay do orders.css (2→3→6 cột) và
+   planning-erp.css (.kh-kpi-row: 6→3→2→1 cột) điều khiển, đúng đặc tả responsive. */
 /* Thẻ kế hoạch SX gọn hơn trên mobile — giảm đệm dọc giữa các khối */
 @media(max-width:640px){
   .kh-plan-grid{gap:8px!important}

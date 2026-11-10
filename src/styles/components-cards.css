@@ -127,14 +127,6 @@
 /* Đồng hồ số chạy */
 .run-clock{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;font-family:monospace;background:var(--navy);color:#7EA6FF;padding:2px 8px;border-radius:6px;letter-spacing:1px;white-space:nowrap}
 .pri-chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
-
-/* ── STATS GRID ── */
-/* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.stat-card{background:var(--card);border-radius:15px;padding:13px 12px;box-shadow:var(--sh);cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .15s;border:1px solid var(--border);position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;inset:0;opacity:0;background:rgba(255,255,255,.6);transition:opacity .1s}
-.stat-card:active{transform:scale(.97);box-shadow:var(--sh2)}
-.stat-card:active::before{opacity:1}
 .stat-icon-wrap{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(15,23,42,.04)}
 .stat-right{flex:1;min-width:0}
 .stat-num{font-size:26px;font-weight:800;color:var(--text);line-height:1}

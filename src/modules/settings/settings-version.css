@@ -2,7 +2,8 @@
 /* ── Cài đặt: phiên bản & cập nhật ──────────────────────────── */
 .ver-card{padding:16px}
 .ver-top{display:flex;align-items:center;gap:12px}
-.ver-icon{width:46px;height:46px;border-radius:12px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 3px 10px rgba(30,58,138,.25)}
+.ver-logo{width:76px;height:60px;border-radius:12px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:22px;box-shadow:0 2px 8px rgba(30,58,138,.12)}
+.ver-logo img{width:100%;height:100%;object-fit:contain;display:block;transform:scale(1.25)}   /* ảnh gốc có lề trắng rộng → phóng nhẹ để logo rõ hơn */
 .ver-name{font-size:14.5px;font-weight:800;color:var(--text)}
 .ver-num{font-size:12px;color:var(--text3);margin-top:1px;font-variant-numeric:tabular-nums}
 .ver-status-badge{margin-left:auto;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
@@ -30,4 +31,7 @@
 .ver-ghost-btn:active{opacity:.75}
 .ver-ghost-btn svg{width:14px;height:14px;stroke-width:2;flex-shrink:0}
 .ver-ghost-btn.danger{border-color:#fecaca;color:var(--red-m,#dc2626);background:#fef2f2}
-
+.ver-credit{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);text-align:center}
+.ver-credit span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--text4)}
+.ver-credit b{display:block;margin-top:2px;font-size:14.5px;font-weight:800;color:var(--text)}
+.ver-credit small{display:block;margin-top:2px;font-size:11px;color:var(--text4)}

@@ -153,6 +153,7 @@ function cpEdHtml(){
     <div class="cp-dinfo">Mã phiếu: <b>${cpH(r.code||'(tự cấp khi lưu)')}</b> · Trạng thái: <b>${cpH(r.status==='draft'?'Bản nháp':r.status==='done'?'Đã hoàn tất':r.status)}</b>${r.void?' · <span class="cp-pill ng">ĐÃ HUỶ</span>':''}${r.createdBy?' · Tạo bởi '+cpH(r.createdBy)+' '+cpFmtTs(r.createdAt):''}${r.updatedBy&&r.rev>1?' · Sửa cuối bởi '+cpH(r.updatedBy)+' '+cpFmtTs(r.updatedAt):''}</div>
     ${r.review&&r.review.length&&!r.reviewed?`<div class="cp-banner warn"><b>Dữ liệu cần kiểm tra:</b><ul style="margin:4px 0 0 18px">${r.review.map(x=>`<li>${cpH(x)}</li>`).join('')}</ul></div>`:''}
     <div id="cpErrSum"></div>${body}
+    ${cpHistoryHtml(r)}
     ${hist.length?`<div class="cp-sec">Nhật ký thay đổi</div><ul class="cp-hist">${hist.map(h=>`<li><b>${cpFmtTs(h.ts)}</b> · ${cpH(h.by)} — ${cpH(h.act)}${h.reason?' ("'+cpH(h.reason)+'")':''}${(h.ch&&h.ch.length)?'<br><span style="color:#64748b">'+h.ch.map(cpH).join('; ')+'</span>':''}</li>`).join('')}</ul>`:''}
     ${cpEdFooter()}</div>`;
 }
@@ -175,23 +176,24 @@ function cpEdChk(){
   </div>`;
   if(!dt) h+=`<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:12.5px">Dung sai tuỳ chọn (tự cảnh báo khi số đo ngoài khoảng)</summary><div class="cp-grid" style="margin-top:6px">
     ${['thick:Dày'].concat(form!=='dun'?[]:[]).concat(['width:Rộng']).concat(form==='dun'?[]:['length:Dài']).map(x=>{ const [k,t]=x.split(':'); return cpFld('tol.'+k+'.min',t+' – min',{kind:'num'})+cpFld('tol.'+k+'.max',t+' – max',{kind:'num'}); }).join('')}</div></details>`;
-  h+=`<div class="cp-sec">Kết quả đo theo mẫu</div><div class="cp-lines"><table class="cp-lt"><thead><tr><th>Mẫu</th><th>Giờ</th>${dt?'<th>Độ thẳng cạnh</th><th>Độ thẳng mặt</th><th>Độ vểnh</th><th>Độ vặn</th>':`<th>Dày</th><th>Rộng</th>${form==='dun'?'':'<th>Dài</th>'}<th style="min-width:200px">Ngoại quan</th><th>SL ảnh hưởng</th>`}<th>Kết luận</th><th></th></tr></thead><tbody>`;
+  h+=`<div class="cp-sec">Kết quả đo theo mẫu</div><div class="cp-lines"><table class="cp-lt stack"><thead><tr><th>Mẫu</th><th>Giờ</th>${dt?'<th>Độ thẳng cạnh</th><th>Độ thẳng mặt</th><th>Độ vểnh</th><th>Độ vặn</th>':`<th>Dày</th><th>Rộng</th>${form==='dun'?'':'<th>Dài</th>'}<th style="min-width:200px">Ngoại quan</th><th>SL ảnh hưởng</th>`}<th>Kết luận</th><th></th></tr></thead><tbody>`;
   r.lines.forEach((l,i)=>{
     const pfx='lines.'+i+'.';
-    const cell=(k,o)=>`<td>${cpLineIn(pfx+k,o)}</td>`;
-    h+=`<tr class="${l.result==='NG'?'ngrow':''}"><td style="width:56px">${cpLineIn(pfx+'n',{kind:'num'})}</td>${cell('time',{kind:'time'})}`;
+    const LBL={time:'Giờ',thick:'Dày',width:'Rộng',length:'Dài',edge:'Độ thẳng cạnh',face:'Độ thẳng mặt',warp:'Độ vểnh',twist:'Độ vặn'};
+    const cell=(k,o)=>`<td data-label="${LBL[k]||''}">${cpLineIn(pfx+k,o)}</td>`;
+    h+=`<tr class="${l.result==='NG'?'ngrow':''}"><td style="width:56px" data-label="Mẫu">${cpLineIn(pfx+'n',{kind:'num'})}</td>${cell('time',{kind:'time'})}`;
     if(dt) h+=['edge','face','warp','twist'].map(k=>cell(k,{list:'cpDat',ph:'Đạt / mm'})).join('');
     else{
       h+=cell('thick',{kind:'num'})+cell('width',{kind:'num'})+(form==='dun'?'':cell('length',{kind:'num'}));
       const d=cpDefect(l.appearance);
-      h+=`<td>${cpLineIn(pfx+'appearance',{opts:cpDefects().map(x=>({v:x.code,t:x.code+(x.code==='OK'?'':' – '+x.name)})),blank:false,struct:1})}
+      h+=`<td data-label="Ngoại quan">${cpLineIn(pfx+'appearance',{opts:cpDefects().map(x=>({v:x.code,t:x.code+(x.code==='OK'?'':' – '+x.name)})),blank:false,struct:1})}
         ${l.appearance&&l.appearance!=='OK'?'':(l.appearanceNote?`<div class="cp-dinfo">Ghi chú gốc: ${cpH(l.appearanceNote)}</div>`:'')}
         ${d&&d.code!=='OK'?`<div class="cp-dinfo"><b>Đạt khi:</b> ${cpH(d.accept)}<br><b>Phản ứng khi NG:</b> ${cpH(d.reaction)}</div>`:''}</td>
-        <td style="width:90px">${l.result==='NG'?cpLineIn(pfx+'qtyNG',{kind:'num',ph:'SL'}):'<span style="color:#94a3b8">—</span>'}</td>`;
+        <td style="width:90px" data-label="SL NG">${l.result==='NG'?cpLineIn(pfx+'qtyNG',{kind:'num',ph:'SL'}):'<span style="color:#94a3b8">—</span>'}</td>`;
     }
-    h+=`<td><div class="cp-seg"><button type="button" class="ok ${l.result==='OK'?'on':''}" ${ro?'disabled':''} onclick="cpSetLine(${i},'result','OK')">OK</button><button type="button" class="ng ${l.result==='NG'?'on':''}" ${ro?'disabled':''} onclick="cpSetLine(${i},'result','NG')">NG</button></div>
+    h+=`<td data-label="Kết luận"><div class="cp-seg"><button type="button" class="ok ${l.result==='OK'?'on':''}" ${ro?'disabled':''} onclick="cpSetLine(${i},'result','OK')">OK</button><button type="button" class="ng ${l.result==='NG'?'on':''}" ${ro?'disabled':''} onclick="cpSetLine(${i},'result','NG')">NG</button></div>
       ${l.resultRaw&&l.result==='UNK'?`<div class="cp-dinfo">Gốc: "${cpH(l.resultRaw)}"</div>`:''}<div class="cp-err" data-e="${pfx}result"></div><div class="cp-err" data-e="${pfx}x"></div></td>
-      <td>${ro||r.lines.length<2?'':`<button type="button" class="cp-btn" title="Xoá dòng" onclick="cpDelLine(${i})">✕</button>`}</td></tr>`;
+      <td class="cp-lt-x">${ro||r.lines.length<2?'':`<button type="button" class="cp-btn" title="Xoá dòng" onclick="cpDelLine(${i})">✕</button>`}</td></tr>`;
   });
   h+=`</tbody></table></div><datalist id="cpDat"><option value="Đạt"></option></datalist>${ro?'':'<div class="cp-bar"><button type="button" class="cp-btn big" onclick="cpAddLine()">➕ Thêm dòng đo</button></div>'}
     <div class="cp-bar"><span class="cp-res">Kết luận phiếu: <b id="cpResB" class="unk">—</b></span></div>`;

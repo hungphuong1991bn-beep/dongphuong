@@ -69,7 +69,7 @@
 .cp-pager{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;font-size:13px}
 .cp-empty{padding:34px 16px;text-align:center;color:var(--text3,#64748b);background:#fff;border:1px dashed var(--border,#cbd5e1);border-radius:12px}
 /* editor */
-.cp-ed{background:#fff;border:1px solid var(--cp-b);border-radius:14px;padding:14px 14px 80px}
+.cp-ed{background:#fff;border:1px solid var(--cp-b);border-radius:14px;padding:14px}
 .cp-ed h3{margin:0 0 4px;font-size:17px}
 .cp-sec{margin:14px 0 6px;font-weight:800;font-size:12.5px;color:#1e40af;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #dbeafe;padding-bottom:3px}
 .cp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
@@ -88,7 +88,9 @@
 .cp-seg button.ok.on{background:#047857;color:#fff}.cp-seg button.ng.on{background:#dc2626;color:#fff}
 .cp-seg button:disabled{cursor:default}
 .cp-dinfo{font-size:11.5px;color:#475569;line-height:1.4;padding:3px 2px}
-.cp-stick{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid #cbd5e1;padding:10px 14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;box-shadow:0 -4px 14px rgba(15,23,42,.08)}
+/* sticky (không dùng fixed): thanh nút luôn nằm sát đáy vùng cuộn, phía trên thanh điều hướng của app, không bị đẩy xuống cuối trang */
+/* bottom âm = đúng bằng padding-bottom của .main-wrap (layout-content.css: nav+safe+70px; responsive.css ≥700px: 24px) → thanh nút bám sát đáy vùng nhìn thấy */
+.cp-stick{position:sticky;bottom:calc(-1 * (var(--nav,60px) + var(--safe-b,0px) + 70px));z-index:6;margin:16px -14px -14px;background:#fff;border-top:1px solid #cbd5e1;border-radius:0 0 14px 14px;padding:10px 84px 10px 14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;box-shadow:0 -4px 14px rgba(15,23,42,.08)}
 .cp-res{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:15px}
 .cp-res b{padding:4px 14px;border-radius:10px;font-size:18px}
 .cp-res b.ok{background:#d1fae5;color:#047857}.cp-res b.ng{background:#fee2e2;color:#b91c1c}.cp-res b.unk{background:#e2e8f0;color:#475569}
@@ -157,3 +159,84 @@
 
 .cp-card.click{cursor:pointer}
 .cp-card.click:focus-visible{outline:2px solid var(--gc);outline-offset:2px}
+
+
+/* ══ NÂNG CẤP 2026 — bộ lọc gập, cảnh báo, lịch sử, bảng→thẻ. Breakpoint chuẩn: 768 / 1024 ══ */
+.cp-fdet{margin-bottom:14px}
+.cp-fdet>summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;background:#fff;border:1px solid var(--cp-b);border-radius:12px;font-weight:700;font-size:13.5px;color:var(--text2,#334155);cursor:pointer;list-style:none}
+.cp-fdet>summary::-webkit-details-marker{display:none}
+.cp-fdet>summary::after{content:'▾';margin-left:auto;transition:transform .15s}
+.cp-fdet[open]>summary::after{transform:rotate(180deg)}
+.cp-fdet[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.cp-fdet .cp-filters{margin-bottom:0;border-top-left-radius:0;border-top-right-radius:0}
+.cp-fdet>summary:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.cp-fhint{font-size:11.5px;font-weight:600;color:var(--text3,#64748b)}
+.cp-fdet .cp-badge,.cp-alerts-h .cp-badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:99px;background:#dc2626;color:#fff;font-size:11px;line-height:18px;text-align:center}
+.cp-fdet .cp-badge{background:#1d4ed8}
+
+.cp-alerts{background:#fff;border:1px solid #fecaca;border-left:5px solid #dc2626;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.cp-alerts.ok{background:#ecfdf5;border:1px solid #a7f3d0;border-left-width:5px;border-left-color:#047857;color:#065f46;font-size:13px;font-weight:600}
+.cp-alerts-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:800;font-size:14px;color:#991b1b}
+.cp-alerts-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.cp-al{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border-radius:10px;border:1px solid;background:#fff;text-align:left;font:inherit;cursor:pointer}
+.cp-al b{min-width:34px;text-align:center;font-size:20px;line-height:1}
+.cp-al span{flex:1;font-size:12.5px;font-weight:600;line-height:1.35}
+.cp-al i{font-style:normal;font-size:12px;font-weight:700;opacity:.8}
+.cp-al.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.cp-al.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.cp-al:hover{box-shadow:0 2px 8px rgba(15,23,42,.12)}
+.cp-al:focus-visible,.cp-hl:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+
+.cp-hls{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.cp-hl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 10px;border:1px solid var(--cp-b);border-radius:10px;background:#fff;cursor:pointer;font-size:12.5px}
+.cp-hl:hover{border-color:#2563eb;background:#f8fbff}
+.cp-hl-m{color:var(--text3,#64748b)}
+.cp-hl small{margin-left:auto;font-weight:700;font-size:11px;color:#1e40af;background:#eff6ff;border-radius:99px;padding:1px 8px}
+.cp-pill[role=img]{letter-spacing:.2px}
+
+/* Bảng danh sách → thẻ trên tablet & điện thoại (mỗi ô có nhãn cột) */
+@media(max-width:1024px){
+  .cp-tw{border:0;background:transparent;overflow:visible}
+  .cp-t.stack,.cp-t.stack tbody{display:block}
+  .cp-t.stack thead{display:none}
+  .cp-t.stack tbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+  .cp-t.stack tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:10px 12px;background:#fff;border:1px solid var(--cp-b);border-radius:12px}
+  .cp-t.stack tr.draft{border-style:dashed;background:#f8fafc}
+  .cp-t.stack td{display:block;min-width:0;padding:0;border:0;font-size:13px;overflow-wrap:anywhere}
+  .cp-t.stack td::before{content:attr(data-label);display:block;margin-bottom:1px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text3,#64748b)}
+  .cp-t.stack td[data-label=""]::before{display:none}
+  .cp-t.stack tbody tr.click:hover td{background:transparent}
+}
+/* Nhập số đo theo thẻ trên điện thoại (không phải kéo ngang) */
+@media(max-width:768px){
+  .cp-sub{display:none}
+  .cp-lines{border:0;overflow:visible}
+  .cp-lt{min-width:0}
+  .cp-lt.stack,.cp-lt.stack tbody{display:block}
+  .cp-lt.stack thead{display:none}
+  .cp-lt.stack tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;margin-bottom:10px;padding:12px;background:#fff;border:1px solid var(--cp-b);border-radius:12px}
+  .cp-lt.stack tr.ngrow{background:#fef2f2;border-color:#fecaca}
+  .cp-lt.stack td{display:block;min-width:0;padding:0;border:0;width:auto!important}   /* !important có chủ đích: ghi đè style="width:…" nằm trong HTML */
+  .cp-lt.stack td::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text3,#64748b)}
+  .cp-lt.stack td[data-label=""]::before,.cp-lt.stack td.cp-lt-x::before{display:none}
+  .cp-lt.stack td[data-label="Ngoại quan"],.cp-lt.stack td[data-label="Kết luận"],.cp-lt.stack td.cp-lt-x{grid-column:1/-1}
+  .cp-lt.stack td.cp-lt-x{text-align:right}
+  .cp-seg{display:flex;width:100%}.cp-seg button{flex:1}
+  .cp-alerts-l{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.cp-fdet>summary::after{transition:none}}
+
+@media(min-width:700px){.cp-stick{bottom:-24px}}
+@media(max-width:768px){
+  .cp-stick{gap:8px;padding:8px 84px 8px 12px}
+  .cp-stick .cp-btn,.cp-stick .cp-btn.big{flex:1 1 38%;min-height:44px;padding:0 8px;font-size:13px}
+  .cp-stick input{max-width:none!important;flex:1 1 100%}   /* ô "Lý do sửa" có style max-width nằm trong HTML */
+  .cp-kpis{gap:8px}.cp-kpi{padding:8px 10px}.cp-kpi b{font-size:22px}.cp-kpi span{font-size:11px}
+}
+/* thẻ dòng đo: đưa thông tin quan trọng (mã phiếu, kết luận, người kiểm tra, thời điểm) lên đầu */
+@media(max-width:1024px){
+  .cp-t.stack td[data-label="Mã phiếu"],.cp-t.stack td[data-label="Số NCR"],.cp-t.stack td[data-label="Số HOLD"],.cp-t.stack td[data-label="Số 8D"]{order:-4}
+  .cp-t.stack td[data-label="Kết luận"],.cp-t.stack td[data-label="Trạng thái"]{order:-3}
+  .cp-t.stack td[data-label="QC"],.cp-t.stack td[data-label="QA/QC"],.cp-t.stack td[data-label="Người"]{order:-2}
+  .cp-t.stack td[data-label="Ghi lúc"]{order:-1}
+}

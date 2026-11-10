@@ -16,23 +16,23 @@ const CP_PATH = '/data/cpRecords';
 // ── Danh mục biểu mẫu (13 mục nghiệp vụ) ───────────────────────────────────────
 const CP_STAGE_LABEL = {dun:'Đùn', rut:'Rút', danhbong:'Đánh bóng', cat:'Cắt', dothang:'Độ thẳng', fqc:'FQC'};
 const CP_FORM_PREFIX = {dun:'DUN', rut:'RUT', danhbong:'DB', cat:'CAT', dothang:'DT'};
-const CP_GROUPS = [
-  {key:'A', title:'NHÓM A – QUẢN LÝ TIÊU CHUẨN', color:'#2563EB'},
-  {key:'B', title:'NHÓM B – KIỂM TRA TRONG QUÁ TRÌNH', color:'#0D9488'},
-  {key:'C', title:'NHÓM C – KIỂM TRA THÀNH PHẨM', color:'#7C3AED'},
-  {key:'D', title:'NHÓM D – XỬ LÝ SẢN PHẨM KHÔNG PHÙ HỢP', color:'#DC2626'}
+const CP_GROUPS = [   // 4 nhóm theo đặc tả: Control Plan · AQL · Kiểm tra QC · Hồ sơ chất lượng (mã A–D giữ nguyên để xuất Excel/đồng bộ không đổi)
+  {key:'A', title:'CONTROL PLAN – KẾ HOẠCH KIỂM SOÁT & PFMEA', color:'#2563EB'},
+  {key:'B', title:'AQL – CỠ MẪU & MÃ LỖI NGOẠI QUAN', color:'#0D9488'},
+  {key:'C', title:'KIỂM TRA QC – CHECK SHEET CÔNG ĐOẠN & FQC', color:'#7C3AED'},
+  {key:'D', title:'HỒ SƠ CHẤT LƯỢNG – NCR · HOLD · 8D', color:'#DC2626'}
 ];
 // kind: master = bảng danh mục (không "phiếu"); form = có phiếu
 const CP_FORMS = [
   {no:1,  g:'A', key:'cp',      kind:'cp',      icon:'📐', title:'Control Plan – Kế hoạch kiểm soát', code:'CP', desc:'Đặc tính, tiêu chuẩn, thiết bị, cỡ mẫu, tần suất, phản ứng khi NG. Bấm biểu mẫu để mở đúng Check Sheet.'},
   {no:2,  g:'A', key:'pfmea',   kind:'pfmea',   icon:'⚠️', title:'PFMEA – Phân tích rủi ro quá trình', code:'PFMEA', desc:'Dạng lỗi tiềm ẩn, S–O–D, RPN tự tính, hành động khắc phục và người phụ trách.'},
-  {no:3,  g:'A', key:'aql',     kind:'aql',     icon:'🧮', title:'AQL – Cỡ mẫu & tiêu chí chấp nhận', code:'ISO 2859-1', desc:'Tra Code, cỡ mẫu, Ac/Re theo quy mô lô và mức AQL (bảng tham khảo của công ty).'},
-  {no:4,  g:'A', key:'defects', kind:'defect',  icon:'🔎', title:'Danh mục mã lỗi ngoại quan', code:'QA-QC-VS-001', desc:'OK, NG-01 … NG-12: tên lỗi, tiêu chuẩn đạt, phản ứng khi NG.'},
-  {no:5,  g:'B', key:'dothang', kind:'form',    icon:'📏', title:'Kiểm tra độ thẳng', code:'', desc:'Độ thẳng cạnh/mặt, độ vểnh, độ vặn theo tiêu chuẩn 0,50–1mm.'},
-  {no:6,  g:'B', key:'dun',     kind:'form',    icon:'🔧', title:'Check Sheet công đoạn Đùn', code:'FR-EX-01 · SOP-01', desc:'Dày, rộng, ngoại quan theo từng mẫu; liên kết đơn hàng & lô.'},
-  {no:7,  g:'B', key:'rut',     kind:'form',    icon:'🔩', title:'Check Sheet công đoạn Rút', code:'FR-RU-01 · SOP-02', desc:'Dày, rộng, dài, ngoại quan; liên kết sổ máy Rút.'},
-  {no:8,  g:'B', key:'danhbong',kind:'form',    icon:'✨', title:'Check Sheet công đoạn Đánh bóng', code:'FR-PO-01 · SOP-03', desc:'Kích thước và ngoại quan sau đánh bóng; liên kết sổ máy Đánh bóng.'},
-  {no:9,  g:'B', key:'cat',     kind:'form',    icon:'✂️', title:'Check Sheet công đoạn Cắt', code:'FR-CT-01 · SOP-04', desc:'Dài, dày, rộng, bavia/ngoại quan; liên kết công đoạn Cắt.'},
+  {no:3,  g:'B', key:'aql',     kind:'aql',     icon:'🧮', title:'AQL – Cỡ mẫu & tiêu chí chấp nhận', code:'ISO 2859-1', desc:'Tra Code, cỡ mẫu, Ac/Re theo quy mô lô và mức AQL (bảng tham khảo của công ty).'},
+  {no:4,  g:'B', key:'defects', kind:'defect',  icon:'🔎', title:'Danh mục mã lỗi ngoại quan', code:'QA-QC-VS-001', desc:'OK, NG-01 … NG-12: tên lỗi, tiêu chuẩn đạt, phản ứng khi NG.'},
+  {no:5,  g:'C', key:'dothang', kind:'form',    icon:'📏', title:'Kiểm tra độ thẳng', code:'', desc:'Độ thẳng cạnh/mặt, độ vểnh, độ vặn theo tiêu chuẩn 0,50–1mm.'},
+  {no:6,  g:'C', key:'dun',     kind:'form',    icon:'🔧', title:'Check Sheet công đoạn Đùn', code:'FR-EX-01 · SOP-01', desc:'Dày, rộng, ngoại quan theo từng mẫu; liên kết đơn hàng & lô.'},
+  {no:7,  g:'C', key:'rut',     kind:'form',    icon:'🔩', title:'Check Sheet công đoạn Rút', code:'FR-RU-01 · SOP-02', desc:'Dày, rộng, dài, ngoại quan; liên kết sổ máy Rút.'},
+  {no:8,  g:'C', key:'danhbong',kind:'form',    icon:'✨', title:'Check Sheet công đoạn Đánh bóng', code:'FR-PO-01 · SOP-03', desc:'Kích thước và ngoại quan sau đánh bóng; liên kết sổ máy Đánh bóng.'},
+  {no:9,  g:'C', key:'cat',     kind:'form',    icon:'✂️', title:'Check Sheet công đoạn Cắt', code:'FR-CT-01 · SOP-04', desc:'Dài, dày, rộng, bavia/ngoại quan; liên kết công đoạn Cắt.'},
   {no:10, g:'C', key:'fqc',     kind:'form',    icon:'✅', title:'FQC – Kiểm tra thành phẩm theo AQL', code:'FR-FQC-01 · SOP-05', desc:'Tự tra AQL, tự kết luận lô theo số lỗi Major/Minor/Critical.'},
   {no:11, g:'D', key:'ncr',     kind:'form',    icon:'📝', title:'NCR – Báo cáo sản phẩm không phù hợp', code:'NCR', desc:'Số NCR tự động, hành động ngăn chặn/khắc phục, QA phê duyệt.'},
   {no:12, g:'D', key:'hold',    kind:'form',    icon:'🛑', title:'HOLD / RELEASE – Cách ly & giải phóng lô', code:'HOLD', desc:'HOLD → Đang điều tra → Chờ phê duyệt → RELEASE / Phế phẩm. Chỉ QA được Release.'},
@@ -502,4 +502,42 @@ function cpBlank(form){
     return Object.assign(base,{status:'Đang xử lý', code:'', title:'', customer:'', productCode:'', lot:'', orderId:'', orderCode:'', ncrId:'', trigger:'', leader:cpActor(), w5h2:{what:'',where:'',when:'',who:'',why:'',how:'',howMany:''}, steps});
   }
   return base;
+}
+
+// ══ NÂNG CẤP 2026 — cảnh báo dữ liệu chưa nhập · lịch sử kiểm tra · thời gian kiểm tra (hàm thuần, CHỈ ĐỌC) ══
+// Thời điểm ghi phiếu: chỉ trả giờ khi bản ghi thật sự có createdAt; nếu chỉ có ngày thì chỉ hiện ngày (không bịa giờ).
+function cpWhen(r){ if(!r) return '—'; if(r.heldAt && r.type==='hold') return cpFmtTs(r.heldAt); return r.createdAt ? cpFmtTs(r.createdAt) : (r.date ? cpFmtDate(r.date) : '—'); }
+function cpRecTs(r){ return (r&&(r.createdAt||r.heldAt))||Date.parse((r&&r.date)||'')||0; }
+// Cảnh báo về phiếu NHẬP TRÊN PHẦN MỀM (phiếu Excel đã có hộp "Cần kiểm tra" riêng). Không đoán: chỉ đếm trường thật sự trống.
+function cpAlertList(now){
+  now = now || Date.now();
+  const recs = cpRecs().filter(r=>r && !r.void), insp = recs.filter(cpIsInspection);
+  const app = insp.filter(r=>r.status!=='draft' && r.source!=='excel');
+  const noLot = r => !String(r.lot||r.lotSX||'').trim();
+  const today = cpToday();
+  const defs = [
+    {key:'unk',   sev:'bad',  title:'Phiếu đã hoàn tất nhưng chưa có kết luận OK / NG', why:'Chưa chọn OK/NG hoặc chưa nhập số đo', rows:app.filter(r=>r.result!=='OK'&&r.result!=='NG')},
+    {key:'hold',  sev:'bad',  title:'Lô đang HOLD chưa được giải quyết', why:'Đang chờ điều tra / phê duyệt', rows:cpOf('hold').filter(h=>CP_HOLD_OPEN.includes(h.status))},
+    {key:'d8late',sev:'bad',  title:'Hồ sơ 8D có bước quá hạn', why:'Có bước chưa hoàn thành đã quá hạn', rows:cpOf('eightd').filter(x=>x.status!=='Đã đóng' && (x.steps||[]).some(s=>s.status!=='Hoàn thành' && s.due && s.due<today))},
+    {key:'nolot', sev:'warn', title:'Phiếu chưa có mã lô', why:'Thiếu mã lô → CHƯA XÁC ĐỊNH, không truy xuất ngược được', rows:app.filter(noLot)},
+    {key:'noorder',sev:'warn',title:'Phiếu chưa gắn đơn hàng', why:'Thiếu ID đơn hàng → không nối được với Truy xuất', rows:app.filter(r=>!r.orderId)},
+    {key:'draft', sev:'warn', title:'Bản nháp quá 24 giờ chưa hoàn tất', why:'Nháp lâu chưa bấm Hoàn tất', rows:insp.filter(r=>r.status==='draft' && cpRecTs(r) && now-cpRecTs(r)>24*3600e3)}
+  ];
+  return defs.map(d=>Object.assign(d,{n:d.rows.length})).filter(d=>d.n>0);
+}
+// Lịch sử kiểm tra của cùng đơn / lô / mã sản phẩm — nối CHỈ bằng khóa, không ghép theo tên khách hàng.
+function cpHistoryFor(rec){
+  if(!rec) return [];
+  const lot=cpNorm(rec.lot||rec.lotSX), prod=cpNorm(rec.productCode), oid=rec.orderId||'', out=[];
+  cpRecs().forEach(r=>{
+    if(!r || r.void || r.id===rec.id) return;
+    if(!(r.type==='chk'||r.type==='fqc'||r.type==='ncr'||r.type==='hold')) return;
+    let via='';
+    if(oid && r.orderId===oid) via='Cùng đơn hàng';
+    else if(lot && cpNorm(r.lot||r.lotSX)===lot) via='Cùng mã lô';
+    else if(prod && cpNorm(r.productCode)===prod) via='Cùng mã sản phẩm';
+    if(via) out.push({r, via});
+  });
+  out.sort((a,b)=>cpRecTs(b.r)-cpRecTs(a.r));
+  return out.slice(0,30);
 }

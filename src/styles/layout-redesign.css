@@ -16,7 +16,8 @@ body{letter-spacing:-.1px}
 
 /* ── App shell background ── */
 #appScreen{background:var(--bg)}
-.main-content{animation:rzFadeUp .28s ease-out both}
+/* backwards (không phải both): giữ transform sau khi chạy xong sẽ biến #mc thành khối chứa của mọi phần tử position:fixed bên trong → nút cố định trôi theo cuối trang */
+.main-content{animation:rzFadeUp .28s ease-out backwards}
 
 /* ── Topbar ── */
 .topbar{
@@ -72,20 +73,6 @@ body{letter-spacing:-.1px}
   .sidebar{background:var(--card)}
   .sb-header{background:var(--navy)}
 }
-
-/* ── KPI / stat cards ── */
-.stats-grid{gap:12px}
-.stat-card{
-  border-radius:var(--r);
-  border:1px solid var(--border);
-  box-shadow:var(--sh);
-  padding:16px 14px;
-  gap:12px;
-  transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
-  animation:rzFadeUp .3s ease-out both;
-}
-.stat-card:hover{transform:translateY(-2px);box-shadow:var(--sh2);border-color:#d7dfe9}
-.stat-card:active{transform:translateY(0) scale(.98)}
 .stat-icon-wrap{border-radius:12px}
 .stat-num{font-weight:800;letter-spacing:-.5px}
 

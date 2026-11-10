@@ -14,6 +14,8 @@ function trBuildCsvRows(res){
     (P.nl||[]).forEach(r=>rows.push([grp+' · Sổ nguyên liệu', r.ngay||'', r.po||'', r.khachHang||'', r.nguyenLieu||'', r.heatLot||'', r.maLoSX||'', r.soLuong||'', r.may||'']));
     (P.rut||[]).forEach(r=>rows.push([grp+' · Sổ máy rút', r.ngay||'', '', r.khachHang||'', r.quyCach||'', r.heatLot||'', r.maLoSX||'', r.soThanh||'', r.may||'']));
     (P.db||[]).forEach(r=>rows.push([grp+' · Sổ đánh bóng + cắt', r.ngay||'', '', r.khachHang||'', r.quyCach||'', r.heatLot||'', r.maLoSX||'', r.soThanh||'', [r.congDoan,r.may].filter(Boolean).join(' / ')]));
+    (P.qc||[]).forEach(q=>rows.push([grp+' · Phiếu QC', q.date||'', q.code||'', q.customer||'', q.productCode||(q.form||q.type||''), '', q.lot||'', '',
+      [q.void?'ĐÃ HUỶ':(q.status==='draft'?'NHÁP':(q.type==='hold'?'HOLD':q.type==='ncr'?'NCR':(q.result||'UNK'))), q.inspector||q.holdBy||q.createdBy||'', q.createdAt?new Date(q.createdAt).toISOString().replace('T',' ').slice(0,16):''].filter(Boolean).join(' / ')]));
     (P.qr||[]).forEach(p=>rows.push([grp+' · QR / thành phẩm', '', p.qrCode||'', '', p.productName||p.productCode||'', '', '', p.quantity||'', [p.currentStage, p.qcResult].filter(Boolean).join(' / ')]));
   };
   if(res.primary) add('Liên kết trực tiếp', res.primary);
@@ -23,7 +25,7 @@ function trBuildCsvRows(res){
 function trExportCsv(){
   const q = (_trQ||'').trim();
   if(!q){ showToast('Nhập mã và tìm trước khi xuất', true); return; }
-  let res; try{ res = trSearch(q); }catch(e){ console.warn('[trace-export]', e); showToast('Không xuất được kết quả', true); return; }
+  let res; try{ res = trSearch(q, undefined, (typeof _trScope!=='undefined'?_trScope:'all')); }catch(e){ console.warn('[trace-export]', e); showToast('Không xuất được kết quả', true); return; }
   const rows = trBuildCsvRows(res);
   if(rows.length<2){ showToast('Không có kết quả để xuất', true); return; }
   const csv = '\ufeff' + rows.map(r=>r.map(trCsvCell).join(',')).join('\r\n');
@@ -40,6 +42,6 @@ dpEnhanceRender('trRun', ()=>{
   const old = document.getElementById('trExportBar'); if(old) old.remove();
   if(!(_trQ||'').trim() || !box.querySelector('.tr-sec')) return;
   const bar = document.createElement('div'); bar.id = 'trExportBar'; bar.className = 'dp-strip';
-  bar.innerHTML = '<button class="ds-btn sm" onclick="trExportCsv()">📥 Xuất kết quả CSV</button> <span class="dp-hint" style="display:inline">Gồm đơn, dòng sổ, QR trực tiếp và nhóm dùng chung lô.</span>';
+  bar.innerHTML = '<button class="ds-btn sm" onclick="trExportCsv()">📥 Xuất kết quả CSV</button> <span class="dp-hint" style="display:inline">Gồm đơn, dòng sổ, phiếu QC, QR trực tiếp và nhóm dùng chung lô.</span>';
   box.insertBefore(bar, box.firstChild);
 });
