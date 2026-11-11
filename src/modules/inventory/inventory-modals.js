@@ -5,7 +5,7 @@ document.write(`<!-- 📊 Số liệu — Thêm/Sửa Sổ nguyên liệu -->
 <div class="modal" id="nlModal">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="nlModalTitle">Thêm dòng Sổ nguyên liệu</div>
+    <div class="modal-title" id="nlModalTitle">Thêm dòng Sổ máy đùn</div>
     <div id="nlErr" class="modal-err"></div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Ngày *</div><input id="nlNgay" type="date" class="field-inp"></div>

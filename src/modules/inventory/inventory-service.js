@@ -47,7 +47,8 @@ function slSoonExpireInfo(tab){
 // Banner cảnh báo hiển thị NGAY TRÊN đầu tab 📊 Số liệu (luôn đúng thời
 // điểm thực tế vì tính lại mỗi lần render, không phụ thuộc thông báo
 // có bị bỏ lỡ hay không) — kèm nút xuất Excel nhanh cho đúng sổ đó.
-function slRemindBannerHTML(){
+function slRemindBannerHTML(){ return ''; } // tự xoá đã tắt (xoá thủ công bởi Admin) — không còn banner cảnh báo
+function _slRemindBannerHTML_legacy(){
   const parts = Object.keys(SL_META).map(k=>{
     const info = slSoonExpireInfo(k);
     if(!info) return '';

@@ -18,7 +18,7 @@ let _slEditId = null;
 // Mỗi sổ 1 màu riêng để nổi bật, hiện đại: Nguyên liệu = xanh lá (Emerald),
 // Máy Rút = xanh dương (Blue), Đánh bóng + Cắt = tím (Violet).
 const SL_META = {
-  nguyenLieu:  {field:'nguyenLieuLog', save:'saveNguyenLieuLog', label:'Sổ nguyên liệu',            icon:'🧪', code:'TC-02', color:'#059669', colorLight:'#ECFDF5', congDoan:null},
+  nguyenLieu:  {field:'nguyenLieuLog', save:'saveNguyenLieuLog', label:'Sổ máy đùn',                icon:'🏭', code:'TC-02', color:'#059669', colorLight:'#ECFDF5', congDoan:null},
   mayRut:      {field:'mayRutLog',     save:'saveMayRutLog',     label:'Sổ máy Rút',                 icon:'↘️', code:'TC-03', color:'#2563EB', colorLight:'#EFF6FF', congDoan:['Rút']},
   mayDanhBong: {field:'mayDanhBongLog',save:'saveMayDanhBongLog',label:'Sổ máy Đánh bóng + Cắt',      icon:'✨', code:'TC-04', color:'#7C3AED', colorLight:'#F5F3FF', congDoan:['Đánh bóng','Cắt']}
 };
@@ -171,7 +171,7 @@ function renderSoLieu(){
   const tabsHtml = Object.keys(SL_META).map(k=>{
     const m = SL_META[k], n = slArr(k).length, active = _slTab===k;
     const soon = slSoonExpireInfo(k);
-    const soonDot = soon ? `<span title="${soon.count} dòng sắp bị tự động xoá" style="position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:#dc2626;color:#fff;font-size:9.5px;font-weight:800;line-height:16px;text-align:center;box-shadow:0 0 0 2px #fff">${soon.count>9?'9+':soon.count}</span>` : '';
+    const soonDot = soon ? `<span title="${soon.count} dòng quá hạn lưu — Admin có thể dọn thủ công" style="position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:#dc2626;color:#fff;font-size:9.5px;font-weight:800;line-height:16px;text-align:center;box-shadow:0 0 0 2px #fff">${soon.count>9?'9+':soon.count}</span>` : '';
     return `<button class="sl-tab-card ${active?'active':''}" style="--sl-c:${m.color};--sl-c-l:${m.colorLight};position:relative" onclick="goSlTab('${k}')">
       ${soonDot}
       <div class="sl-tab-icon">${m.icon}</div>
@@ -190,7 +190,7 @@ function renderSoLieu(){
       <button class="khm-add-btn" style="background:#334155" onclick="slPrintExport('${_slTab}')">🖨️ In / Xuất PDF</button>
       ${isSlEditor()?`<button class="khm-add-btn" style="background:${SL_META[_slTab].color}" onclick="slOpenAdd()">+ Thêm dòng</button>`:''}
     </div>
-    <div style="font-size:11.5px;color:var(--text4);margin:-4px 0 10px">⏳ Dữ liệu quá <b>32 ngày</b> (tính theo Ngày ghi) sẽ tự động bị xoá khỏi sổ để gọn nhẹ — hãy xuất Excel/PDF lưu trữ định kỳ nếu cần giữ lại lâu dài.</div>
+    <div style="font-size:11.5px;color:var(--text4);margin:-4px 0 10px">🗂 Dữ liệu sổ được giữ lại, <b>không tự động xoá</b>. Dòng quá <b>${SL_AUTOCLEAN_DAYS} ngày</b> chỉ được dọn thủ công bởi Admin sau khi xuất Excel/PDF lưu trữ. ${typeof dpSlCleanupBtnHTML==='function'?dpSlCleanupBtnHTML():''}</div>
     <div id="slBody"></div>
   `;
   renderSlBody();
@@ -405,7 +405,7 @@ function nlTPPack(){ return _nlTPItems.map(x=>String(x||'').trim()).filter(Boole
 function nlOpenAdd(){
   if(guardSlEdit())return;
   _slEditId = null;
-  $('nlModalTitle').textContent = 'Thêm dòng Sổ nguyên liệu';
+  $('nlModalTitle').textContent = 'Thêm dòng Sổ máy đùn';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlSoMet','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
   $('nlNgay').value = todayStr();
@@ -423,7 +423,7 @@ function nlOpenEdit(id){
   if(guardSlEdit())return;
   const r = slArr('nguyenLieu').find(x=>x.id===id); if(!r) return;
   _slEditId = id;
-  $('nlModalTitle').textContent = 'Sửa dòng Sổ nguyên liệu';
+  $('nlModalTitle').textContent = 'Sửa dòng Sổ máy đùn';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   $('nlNgay').value=r.ngay||''; $('nlNguyenLieu').value=r.nguyenLieu||''; $('nlHeatLot').value=r.heatLot||'';
   $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; _nlTPItems = nlTPFromRecord(r); nlTPRender();
@@ -475,7 +475,7 @@ function nlSave(){
   nlLastKhuSet(khuMay); slLastMaySet(khuMay, may); // nhớ khu máy + máy vừa dùng
   saveNguyenLieuLog();
   const logLabel = nl || (phe?`Phế/đầu mẩu ${fmtNum(phe)}kg`:'') || (phoi?`Phoi ${fmtNum(phoi)}kg`:'') || '(dòng trống)';
-  log('Sổ nguyên liệu', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
+  log('Sổ máy đùn', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
   closeModal('nlModal');
   renderSoLieu();
   showToast(_slEditId?'✅ Đã cập nhật':'✅ Đã thêm dòng mới');
