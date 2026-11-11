@@ -11,7 +11,7 @@ function trBuildCsvRows(res){
   const rows = [H];
   const add = (grp, P) => {
     (P.orders||[]).forEach(o=>rows.push([grp+' · Đơn hàng', o.createdAt?new Date(o.createdAt).toISOString().slice(0,10):'', o.po||'', o.customer||'', o.type||'', '', '', o.qty||'', (typeof ddStatusMeta==='function'?ddStatusMeta(o).label:o.status||'')]));
-    (P.nl||[]).forEach(r=>rows.push([grp+' · Sổ nguyên liệu', r.ngay||'', r.po||'', r.khachHang||'', r.nguyenLieu||'', r.heatLot||'', r.maLoSX||'', r.soLuong||'', r.may||'']));
+    (P.nl||[]).forEach(r=>rows.push([grp+' · Sổ máy đùn', r.ngay||'', r.po||'', r.khachHang||'', r.nguyenLieu||'', r.heatLot||'', r.maLoSX||'', r.soLuong||'', r.may||'']));
     (P.rut||[]).forEach(r=>rows.push([grp+' · Sổ máy rút', r.ngay||'', '', r.khachHang||'', r.quyCach||'', r.heatLot||'', r.maLoSX||'', r.soThanh||'', r.may||'']));
     (P.db||[]).forEach(r=>rows.push([grp+' · Sổ đánh bóng + cắt', r.ngay||'', '', r.khachHang||'', r.quyCach||'', r.heatLot||'', r.maLoSX||'', r.soThanh||'', [r.congDoan,r.may].filter(Boolean).join(' / ')]));
     (P.qc||[]).forEach(q=>rows.push([grp+' · Phiếu QC', q.date||'', q.code||'', q.customer||'', q.productCode||(q.form||q.type||''), '', q.lot||'', '',

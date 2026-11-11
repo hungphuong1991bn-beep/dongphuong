@@ -46,7 +46,7 @@ function htDaysUntilPurge(o){
 }
 function htIsExpiringSoon(o){
   const d = htDaysUntilPurge(o);
-  return d!=null && d>=0 && d<=HT_PURGE_WARN_DAYS;
+  return d!=null && d<=HT_PURGE_WARN_DAYS; // gồm cả đơn đã quá hạn (không còn tự xoá — chờ Admin dọn)
 }
 
 // Trạng thái nghiệp vụ của 1 đơn thành phẩm — 5 mốc: Hoàn thành → Đã nhập
@@ -183,7 +183,7 @@ function htmCard(o){
       <span class="htm-code">${o.customer||'—'}</span>
       <span class="htm-badge" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.label}</span>
     </div>
-    ${expSoon?`<div class="htm-expire-pill" title="Đơn sẽ tự động bị XOÁ VĨNH VIỄN (không khôi phục được) nếu không có thao tác gì thêm">⏳ ${purgeDays<=0?'Sắp bị tự động xoá':'Còn '+purgeDays+' ngày sẽ tự động xoá'}</div>`:''}
+    ${expSoon?`<div class="htm-expire-pill" title="Đơn đã gần/quá hạn lưu 30 ngày — chỉ Admin mới dọn được (thủ công, không khôi phục được)">⏳ ${purgeDays<=0?'Quá hạn lưu — chờ Admin dọn':'Còn '+purgeDays+' ngày tới hạn lưu'}</div>`:''}
     <div class="htm-grid">
       <div class="htm-cell"><span class="htm-lbl">Nguyên liệu</span><span class="htm-val">${ddMaterialLabel(o.material)}</span></div>
       <div class="htm-cell"><span class="htm-lbl">PO</span><span class="htm-val">${o.po||'—'}</span></div>
@@ -222,7 +222,7 @@ function htRow(o, stt){
         <span class="dd-status-pill ht-status-pill-modern" style="background:${st.bg};color:${st.color};border-color:${st.border}"><span class="ht-status-ic">${htStageIcon(st.key)}</span>${st.label}</span>
         ${htStatusSub(o,st)?`<div class="ht-status-sub">${htStatusSub(o,st)}</div>`:''}
         ${fresh?'<span class="ht-fresh-pill">Mới</span>':''}
-        ${expSoon?`<span class="ht-expire-pill" title="Đơn sẽ tự động bị XOÁ VĨNH VIỄN (không khôi phục được) nếu không có thao tác gì thêm">⏳ ${purgeDays<=0?'Sắp bị':'Còn '+purgeDays+' ngày'} xoá</span>`:''}
+        ${expSoon?`<span class="ht-expire-pill" title="Đơn đã gần/quá hạn lưu 30 ngày — chỉ Admin mới dọn được (thủ công, không khôi phục được)">⏳ ${purgeDays<=0?'Sắp bị':'Còn '+purgeDays+' ngày'} xoá</span>`:''}
       </div>
     </td>
     <td>${htConfirmedBy(o)}</td>
@@ -271,7 +271,7 @@ function renderHoanThanh(){
     {key:'wh_all',    icon:'📦', ic:'#DBEAFE', col:'#1D4ED8', n:inWh,      l:'Đã nhập kho'},
     {key:'shipping',  icon:'🚚', ic:'#DBEAFE', col:'#1D4ED8', n:waitShip,  l:'Chờ giao'},
     {key:'delivered', icon:'✅', ic:'#F3E8FF', col:'#6D28D9', n:delivered, l:'Đã giao'},
-    {key:'expiringSoon', icon:'⏳', ic:'#FCF1DE', col:'#8A5A0E', n:expiringCount, l:'Sắp bị tự động xoá'},
+    {key:'expiringSoon', icon:'⏳', ic:'#FCF1DE', col:'#8A5A0E', n:expiringCount, l:'Sắp tới hạn dọn'},
   ];
 
   const selIds = list.map(o=>o.id);
@@ -294,7 +294,7 @@ function renderHoanThanh(){
     {key:'today', c:'#0C7A54', bg:'#E3F5EE', icon:'📅', n:doneToday, l:'Hoàn thành hôm nay', unit:'đơn', clickable:true},
     {key:'kg',    c:'#7C3AED', bg:'#F3E8FF', icon:'📊', n:totalKg.toLocaleString('vi-VN'), l:'SL hoàn thành', unit:'kg', clickable:false},
     {key:'cust',  c:'#C2700A', bg:'#FCF1DE', icon:'👥', n:totalCustomers, l:'Khách hàng', unit:'khách hàng', clickable:false},
-    {key:'expiringSoon', c:'#8A5A0E', bg:'#FCF1DE', icon:'⏳', n:expiringCount, l:'Sắp bị tự động xoá', unit:'đơn', clickable:true},
+    {key:'expiringSoon', c:'#8A5A0E', bg:'#FCF1DE', icon:'⏳', n:expiringCount, l:'Sắp tới hạn dọn', unit:'đơn', clickable:true},
   ];
   const htmDateTabs = [
     {key:'all',       l:'Tất cả'},
@@ -324,7 +324,7 @@ function renderHoanThanh(){
     </div>
 
     ${expiringCount>0 ? `<div class="warn-banner" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;cursor:pointer" onclick="htSetFilter('expiringSoon')">
-      <span>⏳ <b>${expiringCount} đơn</b> sắp bị tự động XOÁ VĨNH VIỄN (không khôi phục được) trong vòng ${HT_PURGE_WARN_DAYS} ngày tới (đã hoàn thành ≥ ${AUTOCLEAN_DAYS-HT_PURGE_WARN_DAYS} ngày) — xuất Excel hoặc xử lý sớm nếu cần giữ lại.</span>
+      <span>⏳ <b>${expiringCount} đơn</b> sắp tới hạn lưu ${AUTOCLEAN_DAYS} ngày trong ${HT_PURGE_WARN_DAYS} ngày tới. Hệ thống KHÔNG tự xoá — chỉ Admin dọn thủ công. ${typeof dpOrdersCleanupBtnHTML==='function'?dpOrdersCleanupBtnHTML():''}</span>
       <span style="font-weight:800;white-space:nowrap">Xem ngay →</span>
     </div>` : ''}
 

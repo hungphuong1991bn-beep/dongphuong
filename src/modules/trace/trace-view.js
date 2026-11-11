@@ -99,7 +99,7 @@ function trOrderCard(o, res){
       <div><label>Giao hàng</label>${o.delivered?('Đã giao'+(o.deliveredAt?' · '+fmtDateTime(o.deliveredAt):'')):'Chưa giao / chưa có dữ liệu giao'}</div>
       <div><label>Số mã QR / lô nguyên liệu</label>${qrs.length} / ${lots.size}</div>
     </div>
-    <div class="tr-chips">${chk(cov.parts.nguyenLieu,'Sổ nguyên liệu')}${chk(cov.parts.mayRut,'Sổ máy rút')}${chk(cov.parts.mayDanhBong,'Sổ máy đánh bóng')}${chk(cov.parts.qr,'QR / thành phẩm')}</div>
+    <div class="tr-chips">${chk(cov.parts.nguyenLieu,'Sổ máy đùn')}${chk(cov.parts.mayRut,'Sổ máy rút')}${chk(cov.parts.mayDanhBong,'Sổ máy đánh bóng')}${chk(cov.parts.qr,'QR / thành phẩm')}</div>
     ${reasons.length?`<div class="tr-why">Khớp theo: ${[...new Set(reasons)].map(esc).join(', ')}</div>`:''}
   </div>`;
 }
@@ -221,7 +221,7 @@ function trResultHTML(res){
   // 3. Dữ liệu gốc từng sổ (giữ nguyên bảng cũ, gập lại)
   const nlAll = [...P.nl, ...(res.material.nl||[]).filter(r=>!P.nl.some(x=>x.id===r.id))];
   h += `<details class="tr-fold"><summary>📚 Dữ liệu gốc từng sổ <span class="tr-cnt" style="--c:#475569">${nlAll.length+P.rut.length+P.db.length+P.qr.length+qcN}</span></summary>`;
-  h += trSection('🧪','Sổ nguyên liệu / đùn', nlAll.length, trLedgerTable('nguyenLieu', nlAll), '#059669');
+  h += trSection('🧪','Sổ máy đùn', nlAll.length, trLedgerTable('nguyenLieu', nlAll), '#059669');
   h += trSection('↘️','Sổ máy rút', P.rut.length, trLedgerTable('mayRut', P.rut), '#2563eb');
   h += trSection('✨','Sổ máy đánh bóng + cắt', P.db.length, trLedgerTable('mayDanhBong', P.db), '#7c3aed');
   h += trSection('✅','Phiếu QC (kết quả kiểm tra, người kiểm tra, thời gian)', qcN, trQcTable(P.qc||[],res), '#0369a1');
@@ -238,7 +238,7 @@ function trResultHTML(res){
     h += trSection('⚠️','Đơn / dòng khác dùng chung lô nguyên liệu (có thể liên quan)', nRel,
       `<div class="tr-warn">Chỉ là danh sách để khoanh vùng — hệ thống không kết luận nguyên nhân và không tự cách ly hàng.</div>
        ${R.orders.length?`<div class="tr-cards">${R.orders.map(o=>trOrderCard(o,res)).join('')}</div>`:''}
-       ${R.nl.length?`<div class="tr-sub2">Sổ nguyên liệu</div>${trLedgerTable('nguyenLieu',R.nl)}`:''}
+       ${R.nl.length?`<div class="tr-sub2">Sổ máy đùn</div>${trLedgerTable('nguyenLieu',R.nl)}`:''}
        ${R.rut.length?`<div class="tr-sub2">Sổ máy rút</div>${trLedgerTable('mayRut',R.rut)}`:''}
        ${R.db.length?`<div class="tr-sub2">Sổ máy đánh bóng + cắt</div>${trLedgerTable('mayDanhBong',R.db)}`:''}`, '#b91c1c');
   }

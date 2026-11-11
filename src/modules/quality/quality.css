@@ -15,8 +15,8 @@
 .htm-head-btn:active{background:var(--bg)}
 .htm-head-btn.xls{color:#0C7A54;border-color:#9BE8C4;background:#E3F5EE}
 
-.htm-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
-.htm-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;box-shadow:var(--sh);cursor:pointer;transition:transform .1s ease,border-color .12s ease;text-align:left}
+.htm-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.htm-stat{min-width:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;box-shadow:var(--sh);cursor:pointer;transition:transform .1s ease,border-color .12s ease;text-align:left}
 .htm-stat:active{transform:scale(.97)}
 .htm-stat.static{cursor:default}
 .htm-stat.static:active{transform:none}

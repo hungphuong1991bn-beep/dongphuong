@@ -199,7 +199,7 @@ function trSearch(rawQuery, src, scope){
   out.primary.orders.forEach(o=>{
     const nO = ['nl','rut','db'].reduce((s,k)=>s+[...P[k].values()].filter(r=>r.donHangId===o.id).length,0);
     if(!nO) out.gaps.push({orderId:o.id, code:'NO_LEDGER_LINK',
-      text:'Chưa có dòng nào ở 3 sổ liên kết với đơn này bằng ID đơn. Có thể dòng chưa gắn đơn, hoặc đã bị tự động dọn (sổ >32 ngày) — đối chiếu file Excel đã xuất.'});
+      text:'Chưa có dòng nào ở 3 sổ liên kết với đơn này bằng ID đơn. Có thể dòng chưa gắn đơn, hoặc đã được Admin dọn thủ công — đối chiếu file Excel đã xuất.'});
     if(!src.qr.some(p=>p && p.orderId===o.id)) out.gaps.push({orderId:o.id, code:'NO_QR', text:'Đơn chưa có mã QR / thành phẩm nào.'});
     if(!(src.qc||[]).some(q=>q && q.orderId===o.id)) out.gaps.push({orderId:o.id, code:'NO_QC', text:'Chưa có phiếu QC nào gắn với đơn này bằng ID đơn hàng.'});
   });
