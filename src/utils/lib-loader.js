@@ -11,12 +11,19 @@ function ensureExcelJs(){
     s.id = 'exceljs-cdn';
     s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
     s.onload = ()=>resolve();
-    s.onerror = ()=>reject(new Error('load-fail'));
+    s.onerror = ()=>{ _exceljsPromise = null; s.remove(); reject(new Error('load-fail')); }; // cho phép thử lại khi có mạng
     document.head.appendChild(s);
   });
   return _exceljsPromise;
 }
-ensureExcelJs();
+// Bước 4 (tốc độ): trước đây tải ExcelJS (~900KB, CDN) ngay khi mở app, chặn băng thông lúc khởi động.
+// Mọi hàm xuất Excel đều tự `await ensureExcelJs()` nên chỉ cần nạp sẵn lúc máy rảnh (sau khi app hiện xong);
+// vẫn có thư viện sẵn trước khi người dùng bấm "Xuất Excel" trong hầu hết trường hợp.
+(function prewarmExcelJs(){
+  const go = ()=>{ ensureExcelJs().catch(()=>{}); };
+  const later = ()=>{ if('requestIdleCallback' in window) requestIdleCallback(go, {timeout:8000}); else setTimeout(go, 4000); };
+  if(document.readyState==='complete') setTimeout(later, 3000); else window.addEventListener('load', ()=>setTimeout(later, 3000), {once:true});
+})();
 // Lưu ý: việc chống trùng chỉ dựa trên dữ liệu đã đồng bộ về máy hiện tại.
 // Nếu 2 thiết bị cùng tạo mã đồng thời khi đang mất mạng, có xác suất rất
 // nhỏ bị trùng số thứ tự — hệ thống sẽ tự phát hiện & báo "QR bị trùng"

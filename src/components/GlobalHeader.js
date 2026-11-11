@@ -83,11 +83,14 @@ function tickSyncAgo(){
 }
 function setSyncDot(state){
   const d=$('syncDot'); if(!d) return;
-  d.className='topbar-sync'+(state==='error'?' error':state==='saving'?' offline':'');
-  d.title = state==='ok'?'Đã đồng bộ':state==='saving'?'Đang lưu...':'Lỗi kết nối';
-  const mh=$('mhSyncDot'); if(mh){ mh.className='topbar-mh-sync'+(state==='error'?' error':state==='saving'?' offline':''); mh.title=d.title; }
+  // 4 trạng thái: ok (Đồng bộ) · saving (Đang lưu) · error (Lỗi đồng bộ) · offline (Ngoại tuyến, mất mạng)
+  const _cls = state==='error'?' error':state==='saving'?' offline':state==='offline'?' net-off':'';
+  const _ttl = state==='ok'?'Đã đồng bộ':state==='saving'?'Đang lưu...':state==='offline'?'Ngoại tuyến — thay đổi chưa được xác nhận lưu lên máy chủ':'Lỗi đồng bộ';
+  d.className='topbar-sync'+_cls;
+  d.title = _ttl;
+  const mh=$('mhSyncDot'); if(mh){ mh.className='topbar-mh-sync'+_cls; mh.title=_ttl; }
   const lbl = $('syncLabel');
-  if(lbl) lbl.textContent = state==='ok'?'Đồng bộ':state==='saving'?'Đang lưu...':'Mất kết nối';
+  if(lbl) lbl.textContent = state==='ok'?'Đồng bộ':state==='saving'?'Đang lưu...':state==='offline'?'Ngoại tuyến':'Lỗi đồng bộ';
   if(state==='ok'){
     _lastSyncOkAt = Date.now();
     tickSyncAgo();

@@ -18,23 +18,23 @@ document.write(`  <!-- Sidebar Overlay -->
       </div>
     </div>
     <div class="sb-nav">
-      <div class="sb-section" data-g="dieuHanh">Điều hành</div>
+      <div class="sb-section" data-g="dieuHanh">Tổng quan</div>
       <button class="sb-item" title="Tổng quan" data-g="dieuHanh" id="sbi-dashboard" onclick="goTab('dashboard')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Tổng quan
-      </button>
-      <button class="sb-item" title="Điều hành SX" data-g="dieuHanh" id="sbi-dieuHanh" onclick="goTab('dieuHanh')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Điều hành SX
       </button>
       <button class="sb-item" title="Báo cáo" data-g="dieuHanh" id="sbi-baoCao" onclick="goTab('baoCao')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Báo cáo
       </button>
-      <div class="sb-section" data-g="kinhDoanh">Kinh doanh</div>
+      <div class="sb-section" data-g="kinhDoanh">Đơn hàng</div>
       <button class="sb-item" title="Đơn Hàng 0" data-g="kinhDoanh" id="sbi-dorDang" onclick="goTab('dorDang')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         Đơn Hàng <span class="sb-badge" id="sbBadge" style="display:none">0</span>
+      </button>
+      <button class="sb-item" title="Đơn hoàn thành" data-g="kinhDoanh" id="sbi-hoanThanh" onclick="goTab('hoanThanh')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Đơn hoàn thành
       </button>
       <button class="sb-item" title="Khách hàng 0" data-g="kinhDoanh" id="sbi-khachHang" onclick="goTab('khachHang')" style="display:none">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-3.5a3.5 3.5 0 00-2.5-3.36M16 3.6a3.5 3.5 0 010 6.8"/></svg>
@@ -45,14 +45,14 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         Kế hoạch SX
       </button>
-      <button class="sb-item" title="Đơn hoàn thành" data-g="sanXuat" id="sbi-hoanThanh" onclick="goTab('hoanThanh')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Đơn hoàn thành
+      <button class="sb-item" title="Điều hành SX" data-g="sanXuat" id="sbi-dieuHanh" onclick="goTab('dieuHanh')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Điều hành SX
       </button>
-      <div class="sb-section" data-g="kho">Kho và nguyên liệu</div>
-      <button class="sb-item" title="Số liệu: Sổ nguyên liệu, Sổ máy rút, Sổ máy đánh bóng" data-g="kho" id="sbi-soLieu" onclick="goTab('soLieu')">
+      <div class="sb-section" data-g="kho">Số liệu và kho</div>
+      <button class="sb-item" title="Số liệu: Sổ máy đùn, Sổ máy rút, Sổ máy đánh bóng" data-g="kho" id="sbi-soLieu" onclick="goTab('soLieu')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3v18h18" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 15l4-4 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Sổ nguyên liệu &amp; máy
+        Sổ máy đùn &amp; máy
       </button>
       <div class="sb-section" data-g="chatLuong">Chất lượng</div>
       <button class="sb-item" title="Truy xuất &amp; Khiếu nại" data-g="chatLuong" id="sbi-truyXuat" onclick="goTab('truyXuat')">
@@ -67,11 +67,7 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
         Quản lý mã QR
       </button>
-      <div class="sb-section" data-g="nhaMay">Quản trị</div>
-      <button class="sb-item" title="Bảo trì máy 0" data-g="nhaMay" id="sbi-baoTriMay" onclick="goTab('baoTriMay')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-        Bảo trì máy <span class="sb-badge" id="sbBtmBadge" style="display:none">0</span>
-      </button>
+      <div class="sb-section" data-g="nhaMay">Khuôn, thiết bị và bảo trì</div>
       <button class="sb-item" title="Quản lý Khuôn 0" data-g="nhaMay" id="sbi-khuon" onclick="goTab('khuon')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Quản lý Khuôn <span class="sb-badge" id="sbKhuonBadge" style="display:none">0</span>
@@ -80,23 +76,29 @@ document.write(`  <!-- Sidebar Overlay -->
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v4M16 3v4M3 9h18" stroke-linecap="round"/><path d="M8 13l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Check Sheet Thiết bị
       </button>
-      <button class="sb-item" title="Quản lý nhân sự" data-g="nhaMay" id="sbi-nhanSu" onclick="goTab('nhanSu')">
+      <button class="sb-item" title="Bảo trì máy 0" data-g="nhaMay" id="sbi-baoTriMay" onclick="goTab('baoTriMay')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Bảo trì máy <span class="sb-badge" id="sbBtmBadge" style="display:none">0</span>
+      </button>
+      <div class="sb-section" data-g="nhanSu">Nhân sự</div>
+      <button class="sb-item" title="Quản lý nhân sự" data-g="nhanSu" id="sbi-nhanSu" onclick="goTab('nhanSu')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Quản lý nhân sự
       </button>
-      <button class="sb-item" title="Lịch làm việc" data-g="nhaMay" id="sbi-lichLamViec" onclick="goTab('lichLamViec')">
+      <button class="sb-item" title="Lịch làm việc" data-g="nhanSu" id="sbi-lichLamViec" onclick="goTab('lichLamViec')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Lịch làm việc
       </button>
-      <button class="sb-item" title="Chấm công" data-g="nhaMay" id="sbi-chamCong" onclick="goTab('chamCong')">
+      <button class="sb-item" title="Chấm công" data-g="nhanSu" id="sbi-chamCong" onclick="goTab('chamCong')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/><path d="M9 16l1.5 1.5L15 13" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Chấm công
       </button>
-      <button class="sb-item" title="Nhật ký thao tác (Audit) !" data-g="nhaMay" id="sbi-nhatKy" onclick="goTab('nhatKy')">
+      <div class="sb-section" data-g="heThong">Quản trị hệ thống</div>
+      <button class="sb-item" title="Nhật ký thao tác (Audit) !" data-g="heThong" id="sbi-nhatKy" onclick="goTab('nhatKy')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Nhật ký thao tác <span class="sb-badge" id="sbLogBadge" style="display:none">!</span>
       </button>
-      <button class="sb-item" title="Cài đặt 🆕" data-g="nhaMay" id="sbi-settings" onclick="goTab('settings')">
+      <button class="sb-item" title="Cài đặt 🆕" data-g="heThong" id="sbi-settings" onclick="goTab('settings')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Cài đặt <span class="sb-badge" id="sbVerBadge" style="display:none;background:var(--brand2)" title="Có bản cập nhật mới">🆕</span>
       </button>

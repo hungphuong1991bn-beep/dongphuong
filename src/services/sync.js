@@ -320,7 +320,7 @@ async function initAndStartSync(){
   // hiểu lầm "cứ Auto Cleanup chạy là mất dữ liệu". Trễ thêm vài giây và tự
   // kiểm tra lại _pendingSaves/dirty ngay trong autoCleanupDoneOrders() để
   // chắc chắn đồng bộ đã thực sự ổn định trước khi đụng tới dữ liệu.
-  setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); }, 5000);
+  setTimeout(()=>{ /* Tự xoá ĐÃ TẮT — Admin dọn thủ công (modules/admin/manual-cleanup.js) */ }, 5000);
   renderTab(currentTab);
   updateBadges();
   // Chức năng sao lưu tự động đã được TẮT theo yêu cầu (xem ghi chú ở khối
@@ -341,13 +341,13 @@ document.addEventListener('visibilitychange', ()=>{
     // Auto Cleanup 30 ngày / 32 ngày: thử lại khi app được mở lại (VD để qua
     // đêm ở nền rồi mở lại) — cả 2 hàm tự bỏ qua nếu chưa tới hạn 24h, chưa
     // đồng bộ xong hoặc đang có ghi dở dang, nên gọi lại đây an toàn.
-    setTimeout(()=>{ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); }, 3000);
+    setTimeout(()=>{ /* Tự xoá ĐÃ TẮT — Admin dọn thủ công (modules/admin/manual-cleanup.js) */ }, 3000);
   }
 });
 // Auto Cleanup 30 ngày (Đơn hoàn thành) / 32 ngày (tab Số liệu): kiểm tra
 // định kỳ mỗi giờ cho các phiên mở app kéo dài nhiều ngày liên tục không
 // tải lại trang — bản thân từng hàm tự bỏ qua nếu chưa tới hạn 24h/thiết
 // bị hoặc đồng bộ chưa ổn định (xem canRunAutoClean()/canRunSlAutoClean()).
-setInterval(()=>{ if(currentUser && fbOk()){ autoCleanupDoneOrders(); autoCleanupSoLieu(); slRemindExportIfNeeded(); } }, 60*60*1000);
+setInterval(()=>{ if(currentUser && fbOk()){ /* Tự xoá ĐÃ TẮT — Admin dọn thủ công (modules/admin/manual-cleanup.js) */ } }, 60*60*1000);
 window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); doPoll(); updateOnline(); } });
-window.addEventListener('offline', ()=>{ setSyncDot('error'); });
+window.addEventListener('offline', ()=>{ setSyncDot('offline'); });

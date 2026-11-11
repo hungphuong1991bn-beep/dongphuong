@@ -82,6 +82,15 @@ async function refreshOnlineListOnly(){
   }catch(e){ console.warn('[refreshOnlineListOnly] lỗi:', e); }
 }
 
+// Bước 4 (tốc độ): gộp các lần gọi trùng. Lần ghi heartbeat gần nhất được nhớ lại để
+// (1) bỏ qua tiếng vọng SSE của chính lần ghi đó, (2) cho phép các luồng vẽ lại dữ liệu
+// dồn dập gọi bản "có giãn cách" thay vì ghi + đọc /presence lại mỗi lần.
+let _lastHeartbeatAt = 0;
+function updateOnlineThrottled(minGapMs){
+  if(Date.now() - _lastHeartbeatAt < (minGapMs||5000)) return;
+  return updateOnline();
+}
+
 async function updateOnline(){
   if(!currentUser) return;
   if(!fbOk()){
@@ -99,6 +108,7 @@ async function updateOnline(){
       body: JSON.stringify({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type})
     });
     if(!wRes.ok) throw new Error('HTTP '+wRes.status+' khi ghi presence');
+    _lastHeartbeatAt = Date.now();
     const srvDate = wRes.headers.get('date');
     if(srvDate){ const t=Date.parse(srvDate); if(!isNaN(t)) _clockOffset = t - Date.now(); }
     const p = await fbRead('/presence');

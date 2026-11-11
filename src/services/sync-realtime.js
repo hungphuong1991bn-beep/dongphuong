@@ -27,7 +27,7 @@ function scheduleUIRefresh(showSyncToast){
   // xem có máy nào vừa trống ra (do thao tác từ 1 thiết bị khác) để tự đẩy
   // đơn đầu hàng đợi lên RUNNING, không cần F5. Tự no-op nếu không có gì để
   // đẩy nên gọi vô điều kiện ở đây là an toàn, không tốn thêm round-trip.
-  const run = ()=>{ _uiRefreshScheduled=false; dhAutoDispatchSweepAll(); renderTab(currentTab); updateBadges(); updateOnline(); };
+  const run = ()=>{ _uiRefreshScheduled=false; dhAutoDispatchSweepAll(); renderTab(currentTab); updateBadges(); updateOnlineThrottled(5000); };
   if(typeof requestAnimationFrame==='function') requestAnimationFrame(run); else setTimeout(run,16);
 }
 
@@ -260,6 +260,9 @@ function handleRealtimeChange(path, val){
     return;
   }
   if(path.indexOf('/presence')===0){
+    // Tiếng vọng SSE của chính lần ghi heartbeat của thiết bị này: updateOnline() đã đọc lại
+    // và vẽ danh sách ngay sau khi ghi → không cần đọc /presence thêm một lần nữa.
+    if(path==='/presence/'+_devId) return;
     // Có người khác vừa online/offline → làm mới danh sách ngay (không ghi lại
     // heartbeat của chính mình, chỉ đọc lại để hiển thị đúng thực tế)
     refreshOnlineListOnly();

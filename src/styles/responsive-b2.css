@@ -1,0 +1,29 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   BƯỚC 2 — Responsive toàn ứng dụng (chỉ CSS, không đổi DOM/id/onclick/logic)
+   Đo bằng bộ kiểm thử: 320/360/375/390/430/768/1024/1366/1440/1920px × 19 tab.
+   Gỡ lớp này = bỏ dòng <link> responsive-b2.css (index.html) + dòng trong sw.js.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* 1) Tab Đơn hàng (bảng 13 cột, table-layout:fixed theo %): ở 761–1023px mỗi cột
+      chỉ còn 28–38px nên "0 thanh", ngày giao bị cắt chữ. Cho bảng một bề rộng
+      tối thiểu, phần khung .dd-table-wrap (đã overflow:auto) tự cuộn ngang. */
+@media (min-width:761px) and (max-width:1023px){
+  #ddTable{min-width:1000px}
+}
+
+/* 2) Vùng chạm tối thiểu ~36px trên màn hình cảm ứng / ≤1024px
+      (trước đây nhiều nút 17–30px, dễ bấm nhầm khi đeo găng ở xưởng). */
+@media (max-width:1024px), (pointer:coarse){
+  .chip, .khc-chip, .khm-chip, .khc-sort-select, .set-btn, .kh-abtn, .htm-pager-btn,
+  .notif-bar button, button[onclick="clearLog()"]{min-height:36px}
+  .kh-util-icon, .moc-del, .dd-act-btn.icon-only{min-width:36px;min-height:36px}
+  .htm-pager-btn{min-width:36px}
+  .dh4-act button{min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center}
+  .ov-see-all{display:inline-flex;align-items:center;min-height:36px;padding-inline:6px}
+}
+
+/* 3) Lịch làm việc (Admin sửa trực tiếp trong bảng): ô nhập 22–25px quá thấp để chạm.
+      Chỉ áp dụng trên thiết bị cảm ứng, không ảnh hưởng ảnh chụp/in/xuất file. */
+@media (pointer:coarse){
+  [id^="llvTable_"] input, [id^="llvTable_"] select{min-height:34px}
+}
