@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v12'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v16'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -80,6 +80,8 @@ const ASSETS = [
   './src/modules/account/account-menu.js',
   './src/services/presence.js',
   './src/components/shared/Modal.js',
+  './src/components/shared/dp-ui.js',
+  './src/components/shared/dp-table.js',
   './src/modules/auth/password.js',
   './src/modules/auth/login.js',
   './src/core/app.js',
@@ -135,6 +137,7 @@ const ASSETS = [
   './src/modules/planning/planning-insight.js',
   './src/modules/inventory/inventory-insight.js',
   './src/modules/trace/trace-export.js',
+  './src/modules/admin/manual-cleanup.js',
   './src/modules/tv-mode/tv-wakelock.js',
   './src/modules/checklist/checklist-view.js',
   './src/modules/checklist/checklist-export.js',
@@ -191,6 +194,7 @@ const ASSETS = [
   './src/styles/announce.css',
   './src/modules/ai/ai.css',
   './src/styles/components-empty.css',
+  './src/styles/dp-ui.css',
   './src/modules/reports/reports-charts.css',
   './src/styles/responsive.css',
   './src/styles/layout-redesign.css',
@@ -203,6 +207,7 @@ const ASSETS = [
   './src/modules/dashboard/dashboard-factory.css',
   './src/styles/modules-insight.css',
   './src/styles/header-erp.css',
+  './src/styles/responsive-b2.css',
   './src/modules/production/production-dh4.css'
 ];
 
