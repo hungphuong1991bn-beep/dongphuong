@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## [Chưa phát hành] Giai đoạn A (ERP/MES–QMS) — Tự xoá → dọn thủ công (Admin); Sổ nguyên liệu → Sổ máy đùn
+Theo quyết định của chủ hệ thống (thay quyết định cũ "tự xoá 30/32 ngày"):
+- **Tắt hoàn toàn tự xoá**: `src/services/sync.js` không còn gọi `autoCleanupDoneOrders()`, `autoCleanupSoLieu()`, `slRemindExportIfNeeded()` (3 điểm: sau đồng bộ, khi app hiện lại, mỗi giờ). Các hàm cũ vẫn nằm trong mã nhưng không còn nơi nào gọi.
+- **Dọn thủ công, chỉ Admin**: file mới `src/modules/admin/manual-cleanup.js`. Nút "🗑 Dọn N … (Admin)" hiện ở tab Số liệu và tab Đơn hoàn thành (chỉ Admin thấy, chỉ khi có dòng/đơn quá hạn). Có hộp thoại xác nhận nêu số lượng; kiểm lại quyền Admin và trạng thái đồng bộ ngay trước khi xoá; ghi Nhật ký thao tác `deletedBy:'MANUAL_ADMIN'`. Quy tắc chọn dòng giữ như cũ (đơn done quá 30 ngày; dòng sổ có Ngày quá 32 ngày; dòng thiếu Ngày không xoá).
+- Đổi chữ: bỏ banner/thông báo "sẽ tự động bị xoá"; đơn quá hạn nay hiện nhãn "Quá hạn lưu — chờ Admin dọn" (`htIsExpiringSoon` gồm cả đơn đã quá hạn vì không còn bị xoá nên không còn "biến mất").
+- **Sổ nguyên liệu đổi tên hiển thị thành "Sổ máy đùn"** (nhãn, tiêu đề form, Sidebar, màn Truy xuất, xuất CSV, nhật ký). **Giữ nguyên** khoá dữ liệu `nguyenLieuLog` và mọi trường (heatLot, phế, phoi…) nên không cần migration. Chưa đổi form sang trường đùn (nhiệt độ/tốc độ/quy cách vào-ra) — chờ danh mục thông số được duyệt.
+- Cache SW v16; thêm `tests/static/manual-cleanup.test.js` (12 ca). Kiểm: verify-sw, trace-engine (31), phase3-insight (14), dp-ui (23), dp-step3 (24) đạt. **Chưa chạy** e2e Playwright và chưa thử trên thiết bị thật / Firebase thật.
+- Lưu ý vận hành: dữ liệu giờ tăng dần (không còn tự dọn) → cần theo dõi dung lượng Firebase và hiệu năng (chưa có phân trang).
+
+## [Chưa phát hành] Bước 4 — Tối ưu tốc độ tải và chuyển tab
+Phương pháp: đo trước/sau bằng `tests/e2e/perf-b4.js` (Chromium, Firebase giả lập chạy máy cục bộ nên **không có độ trễ mạng thật**): thời gian mở app, chuyển 19 tab × 4 vòng, số request Firebase mỗi lần chuyển tab, số SSE, listener/timer/DOM/bộ nhớ sau mỗi vòng. Chạy: `CHROMIUM_PATH=<nếu cần> node tests/e2e/perf-b4.js <thư-mục-gốc> [kết-quả.json]`.
+- **Không phát hiện rò rỉ**: sau 4 vòng × 19 tab, listener trên window/document ổn định (62), timer ổn định (9), 0 listener trùng, DOM không tăng, bộ nhớ JS 5,8 → 6,1MB (giữ nguyên sau vòng 1), chỉ 1 kết nối SSE cho cả phiên. Tab cũ không rò sang tab mới (0 lỗi JS).
+- **Sửa gọi Firebase thừa mỗi lần chuyển tab**: trước 3 request (1 ghi + 2 đọc cùng `/presence`), nay 2. Nguyên nhân: lần ghi heartbeat của chính thiết bị dội lại qua SSE và kích hoạt thêm một lần đọc `/presence` giống hệt. `sync-realtime.js` bỏ qua tiếng vọng của chính `_devId`; thay đổi từ thiết bị khác vẫn làm mới danh sách (đã kiểm: thiết bị thứ hai vào → thiết bị thứ nhất thấy "Đang truy cập (2)").
+- **Giãn cách heartbeat khi dữ liệu đổi dồn dập**: mỗi lần vẽ lại do đồng bộ trước đây ghi + đọc presence; nay tối thiểu cách 5 giây (`updateOnlineThrottled`, `presence.js`). Chuyển tab và vòng heartbeat 20 giây giữ nguyên (hạn presence 30 giây).
+- **ExcelJS (~900KB, CDN) không còn tải ngay lúc mở app**: nạp lúc máy rảnh sau khi trang tải xong (đo: yêu cầu lúc 982ms → 4018ms). Mọi hàm xuất Excel vẫn tự `await ensureExcelJs()`. Sửa kèm: nếu tải lỗi (mất mạng) trước đây lời hứa lỗi bị giữ mãi nên bấm lại cũng không thử lại; nay tự thử lại ở lần bấm sau.
+- File sửa: `src/services/presence.js`, `src/services/sync-realtime.js`, `src/utils/lib-loader.js`; thêm `tests/e2e/perf-b4.js`.
+- Kiểm thử: `functional.js` trùng khít bản trước khi sửa; `sync-stress.js` 40/40 vòng, 0 lỗi; `verify-sw`, `dp-ui` (23 nhóm), `dp-step3` (24 nhóm) đạt.
+- **Chưa làm / chưa kiểm**: 142 thẻ `<script>` nạp đồng bộ (1,8MB JS) giữ nguyên — đổi sang `defer`/nạp theo module cần thử riêng vì kiến trúc dùng hàm toàn cục và `onclick` trong HTML; chưa đo bằng mạng chậm/điện thoại thật; chưa có phân trang cho dữ liệu lớn; số liệu thời gian là trên máy cục bộ, chỉ dùng so sánh trước/sau.
+
+## [Chưa phát hành] Bước 2 — Responsive toàn ứng dụng (chỉ CSS)
+Phương pháp: đo trước/sau bằng `tests/e2e/ui-audit-b2.js` (tràn ngang, 19 tab × 10 cỡ: 320/360/375/390/430/768/1024/1366/1440/1920px) và `tests/e2e/ui-audit-b2-extra.js` (chữ bị cắt âm thầm, bảng tràn khung, nút chạm < 32px, modal vượt khung; 19 tab × 6 cỡ). Chạy: `CHROMIUM_PATH=<đường dẫn Chromium nếu cần> node tests/e2e/ui-audit-b2.js <thư-mục-gốc>`.
+- **Sửa tràn ngang 320px — Đơn hoàn thành**: lưới 2 ô thống kê dùng `1fr` nên ô có chữ `nowrap` đẩy rộng 355px > 320px. Đổi sang `minmax(0,1fr)` + `min-width:0` (`src/modules/quality/quality.css`). Trước: 1 vi phạm; sau: 0 ở cả 10 cỡ.
+- **Sửa chữ bị cắt — Đơn hàng 761–1023px**: bảng 13 cột `table-layout:fixed` theo % làm cột Số lượng/Ngày giao chỉ còn 28–38px ("0 thanh", ngày bị cắt). Đặt `min-width:1000px` cho `#ddTable` ở dải này, khung `.dd-table-wrap` tự cuộn ngang. Trước: 5 ô/hàng bị cắt; sau: 0.
+- **Vùng chạm ≥ 34–36px** trên ≤1024px hoặc màn cảm ứng: chip lọc, nút trang, nút thao tác dòng (Điều hành SX trước đây 17–21px), nút ⋮, xoá, "Bật" thông báo, "Xem tất cả", "Xoá log", ô chọn sắp xếp Khách hàng; ô nhập trong bảng Lịch làm việc (chỉ thiết bị cảm ứng). Số nút < 32px ở 320–768px: 35 nhóm tab/cỡ → 0 (trừ ô nhập Lịch làm việc, chỉ tính khi giả lập cảm ứng — đã đo riêng: 0).
+- File: thêm `src/styles/responsive-b2.css` (đăng ký trong `index.html` và `sw.js`, cache `sx-thanh-cai-v15`), sửa `quality.css`. Gỡ lớp mới = bỏ dòng `<link>` responsive-b2.css.
+- Không đổi DOM, id, onclick, dữ liệu, Firebase, phân quyền. `functional.js` bản mới trùng khít bản trước khi sửa; `dp-ui.test.js` (23 nhóm) và `dp-step3.test.js` (24 nhóm) đạt.
+- **Chưa kiểm**: TV Mode ở Full HD/4K (không đổi trong bước này), iPhone/Android thật (chỉ giả lập Chromium), 430px chỉ đo tràn ngang. Nút nổi (robot, ＋) vẫn nằm đè lên cuối danh sách trên mobile — chưa xử lý.
+
 ## [Chưa phát hành] Nâng cấp ERP/MES — rà soát giao diện toàn hệ thống (Header, Sidebar, laptop 1180px)
 Phương pháp: đo trước/sau bằng `tests/e2e/ui-audit.js` (19 tab × 5 kích thước: 1440, 1180, 820, 390, 360px) trên Firebase giả lập. Trước: 3 tab tràn ngang ở laptop 1180px; sau: 0.
 - **Global Header (≥1024px)**: đổi thứ tự hiển thị thành Tên tab → Ngày → Giờ → Đồng bộ → Tìm kiếm (+ nút lọc) → Thông báo → Tài khoản bằng CSS `order` (không đổi DOM, id, onclick). Thông báo + Tài khoản dạt phải ở màn rộng. Dưới 1024px giữ nguyên bố cục tablet/mobile cũ. File: `src/styles/header-erp.css`.
@@ -122,3 +150,6 @@ Không đổi tính năng, giao diện, dữ liệu, schema Firebase.
 
 ### Xoá
 Không xoá tính năng nào. Các khối `<style>/<script>` inline gốc được thay bằng file tương ứng trong `src/`.
+
+## Nâng cấp UI/UX – Bước 2
+Thêm `dp-ui.js`/`dp-ui.css` (thông báo 4 loại + chống trùng + lịch sử, trạng thái Loading/Empty/Error/Offline, chặn đóng nhầm modal), trạng thái đồng bộ "Ngoại tuyến" ở Header. Chi tiết: `UPGRADE-BUOC-2.md`.

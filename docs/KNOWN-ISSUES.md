@@ -18,3 +18,8 @@
 
 ## Chưa kiểm
 - Build Android/Windows; Firebase thật (xem TEST-REPORT.md §4).
+
+## Mở sau Giai đoạn A (ERP/MES–QMS)
+- Chờ chủ hệ thống: bảng AQL chính thức (ISO 2859-1 / khách), danh sách mác đồng & tiêu chuẩn vật liệu, mẫu PPAP/Audit, Firebase Rules, 6 vai trò & người phê duyệt, danh mục máy (tên hiển thị, số máy đánh bóng).
+- Nhật ký thao tác vẫn giữ 300 dòng & ghi đè (chưa có `auditTrail` bất biến).
+- Dữ liệu không còn tự dọn → theo dõi dung lượng; cần phân trang trước khi dữ liệu lớn.
