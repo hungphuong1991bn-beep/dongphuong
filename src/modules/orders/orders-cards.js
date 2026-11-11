@@ -77,7 +77,7 @@ function renderStageTracker(o, clickable){
         const state = i<activeIdx ? 'st-done' : (i===activeIdx&&s!=='done' ? 'st-active' : 'st-todo');
         const canClick = clickable && s!=='done';
         return `${i>0?`<div class="stage-line${i<=activeIdx?' done':''}"></div>`:''}
-        <div class="stage-step ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="event.stopPropagation();setStage('${o.id}','${st.key}')"`:''} title="${st.label}">
+        <div class="stage-step ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="event.stopPropagation();requestSetStage('${o.id}','${st.key}')"`:''} title="${st.label}">
           <div class="stage-dot">${state==='st-done'?'✓':st.icon}</div>
           <div class="stage-name">${st.label}</div>
         </div>`;
@@ -87,6 +87,28 @@ function renderStageTracker(o, clickable){
 }
 
 // Badge gọn hiển thị công đoạn hiện tại (dùng ở mini-card dashboard)
+
+// Bấm vào bước công đoạn → HỎI XÁC NHẬN trước khi đổi. Trước đây 1 lần chạm
+// nhầm trên màn hình cảm ứng ở xưởng đã nhảy thẳng sang công đoạn khác và
+// NHẢ (xoá) máy đã gán của các công đoạn trước — người dùng thấy Đùn/Rút
+// quay về "— Chưa gán —" mà không hiểu vì sao.
+function requestSetStage(id, stage){
+  if(guardViewer()) return;
+  const o = DB.orders.find(x=>x.id===id); if(!o || !isStaff()) return;
+  const cur = o.stage || 'dun';
+  if(cur===stage) return;
+  const ci = assignStageIndex(cur), ni = assignStageIndex(stage);
+  const rel = [];
+  if(ni>0) ASSIGN_STAGES.slice(0,ni).forEach(s=>{
+    const mid = o.machineAssign && o.machineAssign[s.key];
+    if(mid) rel.push(`${s.label}: ${machineById(mid)?.name||mid}`);
+  });
+  let msg = `Chuyển đơn "${o.customer||''}" từ ${STAGE_LABEL[cur]||cur} sang ${STAGE_LABEL[stage]||stage}?`;
+  if(ni-ci>1) msg += ` Đơn sẽ BỎ QUA ${ni-ci-1} công đoạn ở giữa.`;
+  if(ni<ci) msg += ' Đây là quay LẠI công đoạn trước.';
+  if(rel.length && ni>ci) msg += ` Máy các công đoạn đã qua sẽ được nhả (vẫn lưu lịch sử): ${rel.join(', ')}.`;
+  confirm2('Chuyển công đoạn?', msg, ()=>setStage(id, stage));
+}
 
 function setStage(id, stage){if(guardViewer())return;
   withPlanLock(id, ()=>{

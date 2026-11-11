@@ -24,7 +24,10 @@
 .kh-machine-dot{flex:0 0 auto;font-size:13px}
 /* Ghi chú "đang xếp hàng chờ máy X" khi phân công trước cho đơn chưa chạy */
 .kh-machine-queue-note{flex:0 0 100%;margin-left:100px;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-l);border:1px solid var(--amber-m);border-radius:8px;padding:5px 9px;line-height:1.4}
-@media (max-width:480px){.kh-machine-queue-note{margin-left:0}}
+.kh-machine-stage-note{flex:0 0 100%;margin-left:100px;font-size:11px;font-weight:700;border-radius:8px;padding:5px 9px;line-height:1.4}
+.kh-machine-stage-note.done{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0}
+.kh-machine-stage-note.warn{color:var(--amber);background:var(--amber-l);border:1px solid var(--amber-m)}
+@media (max-width:480px){.kh-machine-queue-note,.kh-machine-stage-note{margin-left:0}}
 
 /* ── 🏭 Bảng Điều hành sản xuất — MES/Smart Factory hiện đại, tối ưu TV ── */
 .dh-wrap{--dh-bg1:#0a1a3d;--dh-bg2:#123a7d;--dh-bg3:#1e56b8;--dh-card:#16234a;--dh-card2:#0f1c3c;--dh-border:#2f4a86;--dh-text:#eef3ff;--dh-text2:#9db3e0;

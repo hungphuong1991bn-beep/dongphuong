@@ -99,12 +99,27 @@ function khMachineAssignHTML(o){
       const pos = queue.findIndex(x=>x.id===o.id);
       queueNote = `<div class="kh-machine-queue-note">🕐 Đang xếp hàng chờ <b>${curMachine.name}</b> — sẽ chạy tiếp theo sau đơn <b>${ddCode(curStatus.order)}</b>${pos>0?` (vị trí #${pos+1})`:''}</div>`;
     }
+    // Ghi chú trạng thái công đoạn: đã qua (có lịch sử máy) / đang chạy mà chưa gán máy
+    let stageNote = '';
+    if(o.status==='running'){
+      const aIdx = assignStageIndex(orderActiveAssignStage(o).key), sIdx = assignStageIndex(st.key);
+      const hist = o.machineHistory && o.machineHistory[st.key];
+      if(!cur && sIdx<aIdx){
+        const hm = hist && machineById(hist.machineId);
+        stageNote = hm
+          ? `<div class="kh-machine-stage-note done">✓ Đã qua công đoạn này — đã chạy trên <b>${hm.name}</b>${hist.endAt?` · ${fmtDateTime(hist.endAt)}`:''}</div>`
+          : `<div class="kh-machine-stage-note warn">ℹ️ Đã qua công đoạn này nhưng chưa ghi nhận máy nào</div>`;
+      } else if(!cur && sIdx===aIdx){
+        stageNote = `<div class="kh-machine-stage-note warn">⚠️ Đơn đang ở công đoạn này nhưng CHƯA gán máy</div>`;
+      }
+    }
     return `<div class="kh-machine-row">
       <div class="kh-machine-lbl">${st.icon} ${st.label}</div>
       <select class="field-inp kh-machine-sel" ${canAssign?'':'disabled'} onchange="assignMachine('${o.id}','${st.key}',this.value)">${optionsHTML}</select>
       ${curStatus?`<span class="kh-machine-dot" title="${curStatus.label}">${curStatus.dot}</span>`:''}
       ${queueNote}
+      ${stageNote}
     </div>`;
   }).join('');
-  return `<div class="kh-machine-assign">${rows}</div>`;
+  return `<div class="kh-machine-assign" data-dp-nodirty="1">${rows}</div>`;
 }

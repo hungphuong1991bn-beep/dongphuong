@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v16'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v19'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -138,6 +138,10 @@ const ASSETS = [
   './src/modules/inventory/inventory-insight.js',
   './src/modules/trace/trace-export.js',
   './src/modules/admin/manual-cleanup.js',
+  './src/services/dp-store.js',
+  './src/modules/materials/materials-core.js',
+  './src/modules/materials/prodlots-core.js',
+  './src/modules/materials/materials-view.js',
   './src/modules/tv-mode/tv-wakelock.js',
   './src/modules/checklist/checklist-view.js',
   './src/modules/checklist/checklist-export.js',

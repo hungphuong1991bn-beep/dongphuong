@@ -14,8 +14,12 @@ echo "== 5. Giai đoạn 3-4: logic dải thông tin, CSV, thông báo, wake loc
 node tests/static/trace-engine.test.js
 node tests/static/phase3-insight.test.js
 node tests/static/manual-cleanup.test.js
+node tests/static/materials-core.test.js
+node tests/static/materials-view.test.js
+node tests/static/prodlots-core.test.js
 timeout 120 node tests/static/phase4-notif-tv.test.js
 echo "== 6. Bước 2: dp-ui (thông báo, trạng thái, chặn đóng modal, trạng thái đồng bộ Header) – jsdom =="
 node tests/static/dp-ui.test.js
 echo "== 7. Bước 3: Sidebar nhóm lại + DataTable dùng chung – jsdom =="
 node tests/static/dp-step3.test.js
+node tests/static/machine-assign.test.js

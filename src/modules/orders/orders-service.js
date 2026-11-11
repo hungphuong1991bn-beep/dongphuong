@@ -621,11 +621,11 @@ function setStatus(id, newStatus){if(guardViewer())return;
   // Máy đang thực sự giữ đơn này (nếu có) ngay TRƯỚC khi đổi trạng thái —
   // dùng để tự động đẩy đơn kế tiếp trong hàng đợi lên RUNNING ngay khi máy
   // này được giải phóng bởi đơn hoàn thành (mục 3 + mục 11: AUTO DISPATCH).
-  const freedMachineId = (()=>{
-    if(newStatus!=='done' || o.status!=='running') return null;
-    const active = orderActiveAssignStage(o);
-    return active ? (orderMachineAssign(o)[active.key] || null) : null;
-  })();
+  // SỬA LỖI: trước đây chỉ nhả máy của công đoạn HIỆN TẠI; các máy khác đơn
+  // còn giữ (chạy song song Rút+Đánh bóng...) không được đẩy đơn chờ lên, và
+  // đưa đơn về Chờ sản xuất cũng không nhả máy nào. Nay nhả TẤT CẢ máy đơn giữ.
+  const freedMachineIds = (o.status==='running' && (newStatus==='done' || newStatus==='pending'))
+    ? Array.from(new Set(Object.values(orderMachineAssign(o)).filter(Boolean))) : [];
 
   const before=o.status;
   o.status=newStatus;
@@ -668,7 +668,7 @@ function setStatus(id, newStatus){if(guardViewer())return;
   // AUTO DISPATCH (mục 3 + 11): đơn A vừa hoàn thành → máy vừa giải phóng ra
   // → tự động lấy đơn đầu hàng đợi (VD "B") đẩy sang RUNNING ngay, KHÔNG
   // cần thao tác thủ công/gán lại máy (đúng lỗi báo cáo gốc).
-  if(freedMachineId) promoteQueuedOrderToRunning(freedMachineId);
+  freedMachineIds.forEach(mid=>promoteQueuedOrderToRunning(mid));
 
   if(newStatus==='done'){
     pushNotif('✅ Hoàn thành!',`${o.customer} đã xong`);

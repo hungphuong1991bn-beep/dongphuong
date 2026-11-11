@@ -6,7 +6,7 @@ document.write(`<!-- Panel chi tiết Kế hoạch sản xuất (Drawer bên ph�
   <div class="modal-box">
     <div class="modal-handle"></div>
     <div class="modal-title" id="khDetailTitle">Chi tiết kế hoạch sản xuất</div>
-    <div id="khDetailBody" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
+    <div id="khDetailBody" data-dp-nodirty="1" style="font-size:13px;color:var(--text2);line-height:1.6"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('khDetailModal')">Đóng</button>
       <button class="btn" style="background:#0C7A54;color:#fff" id="khDetailProgressBtn" onclick="">📊 Tiến độ</button>
