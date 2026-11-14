@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v19'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v21'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -62,6 +62,7 @@ const ASSETS = [
   './src/services/notification.js',
   './src/services/firebase.js',
   './src/services/storage.js',
+  './src/modules/attendance/attendance-core.js',
   './src/modules/attendance/attendance-service.js',
   './src/modules/checklist/checklist-service.js',
   './src/modules/inventory/inventory-service.js',
@@ -123,7 +124,11 @@ const ASSETS = [
   './src/modules/hr/hr-view.js',
   './src/modules/hr/hr-leave-discipline.js',
   './src/modules/attendance/attendance-export.js',
+  './src/modules/attendance/attendance-bulk.js',
   './src/modules/attendance/attendance-schedule.js',
+  './src/modules/attendance/schedule-core.js',
+  './src/modules/attendance/schedule-service.js',
+  './src/modules/attendance/schedule-view.js',
   './src/modules/maintenance/maintenance-view.js',
   './src/modules/molds/molds-view.js',
   './src/modules/molds/molds-export.js',
@@ -138,10 +143,6 @@ const ASSETS = [
   './src/modules/inventory/inventory-insight.js',
   './src/modules/trace/trace-export.js',
   './src/modules/admin/manual-cleanup.js',
-  './src/services/dp-store.js',
-  './src/modules/materials/materials-core.js',
-  './src/modules/materials/prodlots-core.js',
-  './src/modules/materials/materials-view.js',
   './src/modules/tv-mode/tv-wakelock.js',
   './src/modules/checklist/checklist-view.js',
   './src/modules/checklist/checklist-export.js',
@@ -212,6 +213,8 @@ const ASSETS = [
   './src/styles/modules-insight.css',
   './src/styles/header-erp.css',
   './src/styles/responsive-b2.css',
+  './src/styles/attendance.css',
+  './src/styles/schedule.css',
   './src/modules/production/production-dh4.css'
 ];
 

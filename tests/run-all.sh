@@ -23,3 +23,8 @@ node tests/static/dp-ui.test.js
 echo "== 7. Bước 3: Sidebar nhóm lại + DataTable dùng chung – jsdom =="
 node tests/static/dp-step3.test.js
 node tests/static/machine-assign.test.js
+node tests/static/attendance-data.test.js   # GĐ1: dữ liệu chấm công (Firebase giả lập, 2 thiết bị, mất mạng, khoá kỳ)
+node tests/static/attendance-view.test.js   # GĐ1: giao diện chấm công
+node tests/static/hr-delete-sync.test.js    # GĐ1: xoá nhân viên giữ lịch sử + lỗi xoá sống lại
+node tests/static/schedule-data.test.js     # GĐ2: dữ liệu lịch theo ngày (ca, nhân lực, hàng loạt, 2 thiết bị, mất mạng)
+node tests/static/schedule-view.test.js     # GĐ2: giao diện lịch ngày/tuần/tháng/ca
