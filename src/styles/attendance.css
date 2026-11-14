@@ -69,7 +69,7 @@
 .att2-table thead th{position:sticky;top:0;z-index:3;background:#f1f4fa;padding:5px 4px;font-weight:700;color:var(--text2)}
 .att2-c-stt{position:sticky;left:0;z-index:2;width:34px;min-width:34px;padding:0 4px!important}
 .att2-c-code{position:sticky;left:34px;z-index:2;width:64px;min-width:64px;padding:0 4px!important;font-size:11px;color:var(--text3)}
-.att2-c-name{position:sticky;left:98px;z-index:2;min-width:150px;max-width:190px;text-align:left!important;padding:0 8px!important;box-shadow:2px 0 3px -1px rgba(16,24,40,.12)}
+.att2-c-name{position:sticky;left:34px;z-index:2;min-width:150px;max-width:190px;text-align:left!important;padding:0 8px!important;box-shadow:2px 0 3px -1px rgba(16,24,40,.12)}
 .att2-c-name span{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-weight:700;font-size:12px;color:var(--text)}
 .att2-c-name em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--text3);background:var(--slate-l);padding:1px 5px;border-radius:5px;margin-left:5px;vertical-align:middle}
 .att2-table thead .att2-c-stt,.att2-table thead .att2-c-code,.att2-table thead .att2-c-name{z-index:5}
@@ -134,3 +134,12 @@ td.is-miss{background:repeating-linear-gradient(135deg,#fff 0 4px,#fff3c4 4px 8p
   .att2-dh{min-width:32px}.att2-cell{width:31px;height:34px;font-size:12px}
   .att2-title{font-size:17px}.att2-menu-b{min-width:250px}
 }
+
+/* v2.8.1 — Sửa menu "Xuất / In" bị bảng chấm công che/cắt: .card mặc định overflow:hidden nên menu thả xuống bị cắt.
+   Thanh công cụ phải overflow:visible và nằm TRÊN thẻ bảng (bảng có ô sticky z-index tới 5). */
+.att2 .att2-tools{overflow:visible;position:relative;z-index:40}
+.att2 .att2-tablecard{position:relative;z-index:1}
+.att2-menu[open]{z-index:60}
+.att2-menu-b{z-index:60;max-height:70vh;overflow:auto}
+.att2-menu-b button{white-space:normal}
+@media (max-width:600px){.att2-menu-b{position:fixed;left:8px;right:8px;top:auto;min-width:0;max-width:none}}

@@ -195,7 +195,6 @@ function llvRenderSheets(){
       <input class="field-inp" value="${(sheet.warning||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','warning',this.value)" style="margin:4px 0 0">
       </div>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:${admin?12:0}px">
-        ${admin?`<button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="llvAddRow('${sheet.id}')">➕ Thêm nhân viên</button>`:''}
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A4')">🖨️ In A4</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvPrint('${sheet.id}','A3')">🖨️ In A3</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="llvCapture('${sheet.id}')">📷 Chụp ảnh gửi nhóm</button>
@@ -259,7 +258,7 @@ function llvRenderSheets(){
               ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="llvDeleteRow('${sheet.id}',${i})" style="font-size:12px"${r.wid?' title="Nhân viên lấy từ Quản lý nhân sự — xoá/cho nghỉ việc ở đó"':''}>${r.wid?'🔗':'🗑'}</button></td>`:''}
             </tr>`;}).join('')}
           `).join('')}
-          ${sheet.rows.length===0?`<tr><td colspan="${admin?8:7}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
+          ${sheet.rows.length===0?`<tr><td colspan="${admin?8:7}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch · nhân viên được tự đồng bộ từ Quản lý nhân sự</td></tr>`:''}
         </tbody>
       </table>
       </div>
@@ -305,7 +304,7 @@ function llvDeleteSheet(sheetId){if(guardViewer())return;
   });
 }
 
-function llvAddRow(sheetId){if(guardViewer())return;
+function llvAddRow(sheetId){if(guardViewer())return; showToast('ℹ️ Nhân viên được tự đồng bộ từ Quản lý nhân sự — hãy thêm ở đó'); return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   s.rows.push({stt:s.rows.length+1,name:'',gender:'',time:'',leave:'',note:''});
   saveLichLamViec();

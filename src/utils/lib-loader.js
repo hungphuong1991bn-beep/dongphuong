@@ -6,14 +6,25 @@ let _exceljsPromise = null;
 function ensureExcelJs(){
   if(window.ExcelJS) return Promise.resolve();
   if(_exceljsPromise) return _exceljsPromise;
-  _exceljsPromise = new Promise((resolve, reject)=>{
+  // Thử lần lượt nhiều CDN: jsDelivr → cdnjs → unpkg (một CDN bị chặn/chậm vẫn xuất được)
+  const urls = [
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
+    'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
+  ];
+  const load = (i)=>new Promise((resolve, reject)=>{
     const s = document.createElement('script');
     s.id = 'exceljs-cdn';
-    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
-    s.onload = ()=>resolve();
-    s.onerror = ()=>{ _exceljsPromise = null; s.remove(); reject(new Error('load-fail')); }; // cho phép thử lại khi có mạng
+    s.src = urls[i];
+    s.onload = ()=> window.ExcelJS ? resolve() : (s.remove(), reject(new Error('no-global')));
+    s.onerror = ()=>{ s.remove(); reject(new Error('load-fail')); };
     document.head.appendChild(s);
   });
+  _exceljsPromise = (async()=>{
+    for(let i=0;i<urls.length;i++){ try{ await load(i); return; }catch(e){} }
+    _exceljsPromise = null; // cho phép thử lại khi có mạng
+    throw new Error('load-fail');
+  })();
   return _exceljsPromise;
 }
 // Bước 4 (tốc độ): trước đây tải ExcelJS (~900KB, CDN) ngay khi mở app, chặn băng thông lúc khởi động.

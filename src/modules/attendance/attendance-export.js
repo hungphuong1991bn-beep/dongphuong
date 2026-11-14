@@ -194,12 +194,12 @@ function printAttendance(size){
   size = (size==='A3') ? 'A3' : 'A4';
   const model = attBuildModel(); if(!model.rows.length){ showToast('⚠️ Không có dữ liệu để in (kiểm tra bộ lọc)', true); return; }
   const {y, m, n, ym} = model, dayCols = Array.from({length:n},(_,i)=>i+1);
-  const head = `<thead><tr><th style="width:22px">STT</th><th style="width:44px">Mã NV</th><th style="width:118px">Họ và tên</th><th style="width:62px">Bộ phận</th>
+  const head = `<thead><tr><th style="width:22px">STT</th><th style="width:130px">Họ và tên</th><th style="width:70px">Bộ phận</th><th style="width:70px">Chức vụ</th>
     ${dayCols.map(d=>{ const ds=attDateStr(ym,d); return `<th class="${attIsSunday(ym,d)?'sun':model.hol[ds]?'hol':''}">${d}<span class="wd">${weekdayVN(y,m,d)}</span></th>`; }).join('')}
-    <th style="width:34px">Tổng công</th><th style="width:28px">Giờ TC</th><th style="width:26px">Nghỉ</th></tr></thead>`;
-  const tr = (r,i)=>`<tr><td>${i+1}</td><td>${attEsc(r.w.maNV||'')}</td><td class="l">${attEsc(r.w.name||'')}</td><td>${attEsc(r.w.boPhan||'')}</td>
+    <th style="width:36px">Tổng công</th><th style="width:30px">Giờ TC</th></tr></thead>`;
+  const tr = (r,i)=>`<tr><td>${i+1}</td><td class="l">${attEsc(r.w.name||'')}</td><td>${attEsc(r.w.boPhan||'')}</td><td>${attEsc(r.w.chucVu||'')}</td>
     ${dayCols.map(d=>{ const ds=attDateStr(ym,d); return `<td class="${attIsSunday(ym,d)?'sunc':model.hol[ds]?'holc':''}">${attEsc(r.row[d]!==undefined?r.row[d]:'')}</td>`; }).join('')}
-    <td class="tot">${attEsc(r.stats.congStr)}</td><td>${r.stats.otRaw||''}</td><td>${r.stats.offDays||''}</td></tr>`;
+    <td class="tot">${attEsc(r.stats.congStr)}</td><td>${r.stats.otRaw||''}</td></tr>`;
   const groups = {}; model.rows.forEach(r=>{ const k=(r.w.boPhan||'').trim()||'(Chưa có bộ phận)'; (groups[k]=groups[k]||[]).push(r); });
   const keys = Object.keys(groups).sort(), multi = _attFilter.dept==='all' && keys.length>1;
   const body = multi ? keys.map((k,gi)=>`<div class="${gi?'page-b':''}"><div class="sub"><b>Bộ phận: ${attEsc(k)}</b></div><table>${head}<tbody>${groups[k].map(tr).join('')}</tbody></table>${gi===keys.length-1?'':attSignBlock()}</div>`).join('')
@@ -208,7 +208,7 @@ function printAttendance(size){
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bảng chấm công ${m}/${y}</title><style>${attPrintCss(size,true)}</style></head><body>
     <div class="hd"><div class="co">ĐÔNG PHƯƠNG<small>Bảng chấm công</small></div><div style="font-size:10px;text-align:right">${model.locked?'Kỳ đã chốt lúc '+attEsc(vnDateTimeShort(model.locked.at)):'Kỳ chưa chốt'}<br>In lúc ${attEsc(vnDateTimeShort(new Date()))}</div></div>
     <h1>Bảng chấm công tháng ${m} năm ${y}</h1>
-    <div class="sub">${_attFilter.dept!=='all'?('Bộ phận: <b>'+attEsc(_attFilter.dept)+'</b> · '):''}${a.workers} nhân viên · Tổng công: <b>${a.congUnits}</b> · Giờ tăng ca: <b>${a.otRaw}h</b> · Ngày nghỉ: <b>${a.offDays}</b></div>
+    <div class="sub">${_attFilter.dept!=='all'?('Bộ phận: <b>'+attEsc(_attFilter.dept)+'</b> · '):''}${a.workers} nhân viên · Tổng công: <b>${a.congUnits}</b> · Giờ tăng ca: <b>${a.otRaw}h</b> </div>
     ${body}
     <div class="legend"><b>Ghi chú:</b> Đủ công = 1 · Nửa công = 0.5 · Nghỉ = 0 · Tăng ca ghi sau dấu chấm (1.2 = 1 công + 2 giờ) · Đủ 8 giờ tăng ca quy đổi 1 công. Nền hồng = Chủ nhật, nền vàng = ngày lễ.</div>
     ${attSignBlock()}</body></html>`;
@@ -222,7 +222,7 @@ function printWorkerAttendance(wid, ym){
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bảng công ${attEsc(w.name||'')} ${model.m}/${model.y}</title><style>${attPrintCss('A4',false)} table{font-size:11px} td{padding:3px 5px}</style></head><body>
     <div class="hd"><div class="co">ĐÔNG PHƯƠNG<small>Bảng công cá nhân</small></div><div style="font-size:10px;text-align:right">In lúc ${attEsc(vnDateTimeShort(new Date()))}</div></div>
     <h1>Bảng công tháng ${model.m} năm ${model.y}</h1>
-    <div class="sub">Họ và tên: <b>${attEsc(w.name||'')}</b> · Mã NV: <b>${attEsc(w.maNV||'')}</b> · Bộ phận: <b>${attEsc(w.boPhan||'')}</b> · Chức vụ: <b>${attEsc(w.chucVu||'')}</b></div>
+    <div class="sub">Họ và tên: <b>${attEsc(w.name||'')}</b> · Bộ phận: <b>${attEsc(w.boPhan||'')}</b> · Chức vụ: <b>${attEsc(w.chucVu||'')}</b></div>
     <table><thead><tr><th>Ngày</th><th>Thứ</th><th>Giá trị chấm</th><th>Số công</th><th>Giờ TC</th><th>Ghi chú</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="foot">Tổng công (quy ước): <b>${attEsc(st.congStr)}</b> · Số công đã quy đổi: <b>${st.congUnits}</b> · Giờ tăng ca: <b>${st.otRaw}h</b> · Ngày nghỉ: <b>${st.offDays}</b></div>
     ${attSignBlock()}</body></html>`;
@@ -232,5 +232,6 @@ function attOpenPrint(html){
   const w = window.open('', '_blank');
   if(!w){ showToast('❌ Trình duyệt chặn cửa sổ in, vui lòng cho phép popup', true); return; }
   w.document.open(); w.document.write(html); w.document.close();
-  w.onload = ()=>{ w.focus(); w.print(); };
+  let done = false; const go = ()=>{ if(done) return; done = true; try{ w.focus(); w.print(); }catch(e){ console.error(e); } };
+  w.onload = go; setTimeout(go, 600);
 }

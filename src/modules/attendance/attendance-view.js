@@ -187,15 +187,12 @@ function attRowHtml(r, model, canEdit, idx){
   const note = attNoteOf(ym, w.id);
   return `<tr data-w="${w.id}" class="${inactive?'is-inactive':''}">
     <td class="att2-c-stt">${idx+1}</td>
-    <td class="att2-c-code">${attEsc(w.maNV||'')}</td>
     <td class="att2-c-name" title="${attEsc(w.name||'')}"><span>${attEsc(w.name||'(chưa đặt tên)')}</span>${inactive?`<em>${attEsc(w.trangThai)}</em>`:''}</td>
     <td class="att2-c-dept">${typeof llvDeptBadgeHtml==='function'?llvDeptBadgeHtml(w.boPhan, attEsc):attEsc(w.boPhan||'')}</td>
     <td class="att2-c-pos">${attEsc(w.chucVu||'—')}</td>
     ${tds}
     <td class="att2-sum att2-tot" id="wkTotal_${w.id}">${s.congStr}</td>
     <td class="att2-sum" id="attOt_${w.id}">${s.otRaw>0?s.otRaw+'h':'—'}</td>
-    <td class="att2-sum" id="attOff_${w.id}">${s.offDays||'—'}</td>
-    <td class="att2-c-note"><input class="att2-note" data-w="${w.id}" value="${attEsc(note)}" maxlength="300" placeholder="${canEdit?'Ghi chú…':''}" ${canEdit?'':'readonly'} onchange="attNoteChange(this)"></td>
   </tr>`;
 }
 
@@ -295,14 +292,14 @@ function attTableHtml(model){
   if(!rows.length){
     const filtered = _attFilter.dept!=='all'||_attFilter.shift!=='all'||_attFilter.status!=='all'||_attFilter.q;
     return `<div class="att2-empty"><div class="att2-empty-i">🗓️</div><div class="att2-empty-t">${model.allWorkers?'Không có nhân viên phù hợp bộ lọc':'Chưa có hồ sơ nhân viên'}</div>
-      <div class="att2-empty-d">${model.allWorkers?'Thử đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.':'Danh sách chấm công lấy từ <b>Quản lý nhân sự</b> — thêm nhân viên ở đó (hoặc bấm “Thêm nhân viên” nếu bạn là Admin).'}</div>
+      <div class="att2-empty-d">${model.allWorkers?'Thử đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.':'Danh sách chấm công lấy từ <b>Quản lý nhân sự</b> — hãy thêm nhân viên ở đó, bảng chấm công sẽ tự đồng bộ.'}</div>
       ${filtered?`<button class="set-btn att2-btn" onclick="attResetFilter()">✕ Xoá bộ lọc</button>`:`<button class="set-btn att2-btn" onclick="goTab('nhanSu')">👥 Mở Quản lý nhân sự</button>`}</div>`;
   }
   return `<div class="att2-scroll"><table id="attTable" class="att2-table">
     <thead><tr>
-      <th class="att2-c-stt">STT</th><th class="att2-c-code">Mã NV</th><th class="att2-c-name">Họ và tên</th><th class="att2-c-dept">Bộ phận</th><th class="att2-c-pos">Chức vụ</th>
+      <th class="att2-c-stt">STT</th><th class="att2-c-name">Họ và tên</th><th class="att2-c-dept">Bộ phận</th><th class="att2-c-pos">Chức vụ</th>
       ${dayHeads}
-      <th class="att2-sum att2-tot" title="Quy ước: 8 giờ tăng ca = 1 công">Tổng công</th><th class="att2-sum" title="Tổng giờ tăng ca ghi nhận (trước quy đổi)">Giờ TC</th><th class="att2-sum">Ngày nghỉ</th><th class="att2-c-note">Ghi chú</th>
+      <th class="att2-sum att2-tot" title="Quy ước: 8 giờ tăng ca = 1 công">Tổng công</th><th class="att2-sum" title="Tổng giờ tăng ca ghi nhận (trước quy đổi)">Giờ TC</th>
     </tr></thead>
     <tbody>${rows.map((r,i)=>attRowHtml(r, model, canEdit, i)).join('')}</tbody>
   </table></div>`;
@@ -368,7 +365,6 @@ function renderChamCong(){
         ${viewer?'<div class="att2-empty-s">Tài khoản Xem không xuất/in được.</div>':''}
       </div></details>
       ${admin?btn('','attOpenHolidays()','🎌 Ngày lễ'):''}
-      ${admin?btn('','addWorker()','➕ Thêm nhân viên'):''}
     </div>
 
     <div class="card att2-tablecard"><div id="attCaptureArea">
