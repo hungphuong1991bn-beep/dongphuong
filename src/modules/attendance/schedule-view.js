@@ -36,6 +36,7 @@ function schModeBar(){
 
 // ── Điểm vào: giữ tên renderLichLamViec (router & mã cũ vẫn gọi) ──
 function renderLichLamViec(){
+  try{ if(typeof hrLinkSyncSchedule === 'function') hrLinkSyncSchedule(); }catch(e){ console.error('hrLinkSync', e); }
   if(_sch.mode==='sheet'){ llvRenderSheets(); $('mc').insertAdjacentHTML('afterbegin', schModeBar()); return; }
   let body = '';
   if(_sch.mode==='day') body = schDayHtml(); else if(_sch.mode==='week') body = schWeekHtml(); else if(_sch.mode==='month') body = schMonthHtml(); else body = schShiftsHtml();

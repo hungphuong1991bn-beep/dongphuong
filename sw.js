@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v21'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v23'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -126,6 +126,7 @@ const ASSETS = [
   './src/modules/attendance/attendance-export.js',
   './src/modules/attendance/attendance-bulk.js',
   './src/modules/attendance/attendance-schedule.js',
+  './src/modules/hr/hr-link.js',
   './src/modules/attendance/schedule-core.js',
   './src/modules/attendance/schedule-service.js',
   './src/modules/attendance/schedule-view.js',

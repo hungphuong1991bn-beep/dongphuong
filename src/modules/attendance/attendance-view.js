@@ -29,7 +29,7 @@ function shiftAttMonth(delta){
 function attShiftMap(){
   const m = {};
   (DB.lichLamViec||[]).forEach(s=>(s.rows||[]).forEach(r=>{
-    const nm = (r.name||'').trim().toLowerCase(); if(!nm || m[nm]) return;
+    const nm = r.wid ? 'id:'+r.wid : (r.name||'').trim().toLowerCase(); if(!nm || m[nm]) return;
     m[nm] = (typeof llvShiftKey==='function') ? llvShiftKey(r.time) : 'khac';
   }));
   return m;
@@ -40,7 +40,7 @@ function attShiftLabel(k){ return (typeof LLV_SHIFT_SHORT!=='undefined' && LLV_S
 function attBuildModel(ym, filter){
   ym = ym || curYM(); filter = filter || _attFilter;
   const sm = attShiftMap();
-  const shiftOf = w => sm[(w.name||'').trim().toLowerCase()] || 'khac';
+  const shiftOf = w => sm['id:'+w.id] || sm[(w.name||'').trim().toLowerCase()] || 'khac';
   const monthRows = DB.attendance[ym] || {};
   const workers = attFilterWorkers(DB.workers||[], filter, monthRows, shiftOf);
   const ctx = {ym, today: todayStr(), holidays: attHolidays(), nghiPhep: DB.nghiPhep||[]};
@@ -357,10 +357,6 @@ function renderChamCong(){
 
     <div class="card att2-tools">
       ${viewer?'':btn('att2-btn--pri','attSaveNow()','💾 Lưu &amp; đồng bộ','title="Dữ liệu đã tự lưu khi sửa từng ô; nút này chờ máy chủ xác nhận"')}
-      ${(viewer||locked)?'':btn('','attOpenBulk(\'fill\')','⚡ Chấm hàng loạt')}
-      ${(viewer||locked)?'':btn('','attOpenBulk(\'copyday\')','📋 Sao chép từ ngày')}
-      ${(viewer||locked)?'':btn('','attOpenBulk(\'byshift\')','🕒 Điền theo ca')}
-      ${(viewer||locked)?'':btn('att2-btn--lock','attOpenLock()','🔒 Chốt kỳ')}
       ${btn('','attOpenAudit()','📜 Lịch sử sửa')}
       <details class="att2-menu"><summary class="set-btn att2-btn">⬇️ Xuất / In ▾</summary><div class="att2-menu-b">
         ${viewer?'':`<button onclick="exportAttendanceExcel()">📗 Excel bảng công (theo bộ lọc)</button>

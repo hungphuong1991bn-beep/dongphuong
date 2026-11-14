@@ -168,6 +168,7 @@ function llvFormatBytes(bytes){
 // schedule-view.js: thêm thanh chọn chế độ (Theo bộ phận / Ngày / Tuần / Tháng / Ca làm việc) rồi gọi lại hàm này.
 function llvRenderSheets(){
   llvSeedIfEmpty();
+  try{ if(typeof hrLinkSyncSchedule === 'function') hrLinkSyncSchedule(); }catch(e){ console.error('hrLinkSync', e); }
   const admin = isAdmin();
   const list = DB.lichLamViec||[];
   if(!_llvActive || !list.find(s=>s.id===_llvActive)) _llvActive = list.length?list[0].id:null;
@@ -184,6 +185,7 @@ function llvRenderSheets(){
     </div>
     ${sheet?`
     <div class="card" style="padding:12px 14px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">🔗 Danh sách nhân viên <b>tự đồng bộ từ Quản lý nhân sự</b> (theo Bộ phận) — ở đây chỉ chọn ca${(typeof hrLinkNoDeptCount==='function'&&hrLinkNoDeptCount())?` · <span style="color:#b45309">⚠️ ${hrLinkNoDeptCount()} nhân viên chưa có Bộ phận nên chưa lên lịch</span>`:''}.</div>
       ${admin?`<div id="llvMetaAdmin">
       <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Tên bộ phận</label>
       <input class="field-inp" value="${(sheet.name||'').replace(/"/g,'&quot;')}" ${admin?'':'readonly'} onchange="llvSetMeta('${sheet.id}','name',this.value)" style="margin:4px 0 10px">
@@ -233,13 +235,13 @@ function llvRenderSheets(){
               return `<tr>
               <td style="border:1px solid var(--border);padding:4px;text-align:center">${gi+1}</td>
               <td style="border:1px solid var(--border);padding:2px">
-                <input value="${(r.name||'').replace(/"/g,'&quot;')}" placeholder="Họ và tên" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'name',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)">
+                <input value="${(r.name||'').replace(/"/g,'&quot;')}" placeholder="Họ và tên" ${(admin&&!r.wid)?'':'readonly'} ${r.wid?'title="🔗 Lấy từ Quản lý nhân sự — sửa tên ở đó"':''} onchange="llvSetCell('${sheet.id}',${i},'name',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)">
               </td>
               <td style="border:1px solid var(--border);padding:2px">
-                <input value="${(r.gender||'').replace(/"/g,'&quot;')}" placeholder="Nam/Nữ" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'gender',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);text-align:center">
+                <input value="${(r.gender||'').replace(/"/g,'&quot;')}" placeholder="Nam/Nữ" ${(admin&&!r.wid)?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'gender',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);text-align:center">
               </td>
               <td style="border:1px solid var(--border);padding:4px;text-align:center">
-                ${llvDeptBadgeHtml(llvWorkerDept(r.name))}
+                ${llvDeptBadgeHtml(typeof hrLinkDeptOfRow==='function'?hrLinkDeptOfRow(r):llvWorkerDept(r.name))}
               </td>
               <td style="border:1px solid var(--border);padding:2px">
                 <select ${admin?'':'disabled'} onchange="llvSetCell2('${sheet.id}',${i},'time',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text);cursor:${admin?'pointer':'default'};-webkit-appearance:menulist">
@@ -254,7 +256,7 @@ function llvRenderSheets(){
               <td style="border:1px solid var(--border);padding:2px">
                 <input value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="" ${admin?'':'readonly'} onchange="llvSetCell('${sheet.id}',${i},'note',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text3)">
               </td>
-              ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="llvDeleteRow('${sheet.id}',${i})" style="font-size:12px">🗑</button></td>`:''}
+              ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="llvDeleteRow('${sheet.id}',${i})" style="font-size:12px"${r.wid?' title="Nhân viên lấy từ Quản lý nhân sự — xoá/cho nghỉ việc ở đó"':''}>${r.wid?'🔗':'🗑'}</button></td>`:''}
             </tr>`;}).join('')}
           `).join('')}
           ${sheet.rows.length===0?`<tr><td colspan="${admin?8:7}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có nhân viên nào trong lịch${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</td></tr>`:''}
@@ -330,6 +332,7 @@ function llvSetCell2(sheetId, idx, field, value){if(guardViewer())return;
 function llvDeleteRow(sheetId, idx){if(guardViewer())return;
   const s = DB.lichLamViec.find(x=>x.id===sheetId); if(!s) return;
   const row = s.rows[idx]; if(!row) return;
+  if(row.wid){ showToast('🔗 Nhân viên này lấy từ Quản lý nhân sự — muốn bỏ khỏi lịch hãy chuyển "Đã nghỉ việc" hoặc xoá ở tab Quản lý nhân sự', true); return; }
   confirm2('Xóa khỏi lịch', `Xóa "${row.name||'(chưa có tên)'}" khỏi lịch làm việc?`, ()=>{
     s.rows.splice(idx,1);
     saveLichLamViec();

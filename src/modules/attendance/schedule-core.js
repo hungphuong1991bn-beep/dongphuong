@@ -82,7 +82,7 @@ function schValidateShift(def, existing){
 function schLegacyMap(){
   var m = {}, dup = {};
   (DB.lichLamViec || []).forEach(function(sheet){ (sheet.rows || []).forEach(function(r){
-    var nm = (r.name || '').trim().toLowerCase(); if(!nm) return;
+    var nm = r.wid ? 'id:' + r.wid : (r.name || '').trim().toLowerCase(); if(!nm || nm === 'id:') return;
     var k = (typeof llvShiftKey === 'function') ? llvShiftKey(r.time) : 'khac';
     if(k === 'khac') return;
     if(m[nm] && m[nm] !== k){ dup[nm] = true; }
@@ -110,7 +110,7 @@ function schEffective(ctx, w, ds){
   var a = schAssigned(w, ds);
   if(a) return {id:a, src:'assigned'};
   if(schIsSunday(ds) || ctx.hol[ds]) return {id:'', src:''};
-  var d = ctx.legacy[(w.name || '').trim().toLowerCase()];
+  var d = ctx.legacy['id:' + w.id] || ctx.legacy[(w.name || '').trim().toLowerCase()];
   return d ? {id:d, src:'default'} : {id:'', src:''};
 }
 function schOtReg(w, ds){
@@ -140,7 +140,7 @@ function schDayRoster(ds, dept, ctx){
     var eff = schEffective(ctx, w, ds), lv = schLeaveOn(ctx, w, ds);
     var reg = schOtReg(w, ds), act = schOtActual(w, ds);
     if(reg > 0 || act > 0) ot.push({w:w, reg:reg, actual:act});
-    var nm = (w.name || '').trim().toLowerCase();
+    var nm = ctx.dup['id:' + w.id] ? 'id:' + w.id : (w.name || '').trim().toLowerCase();
     if(eff.src === 'default' && ctx.dup[nm]) conflicts.push({w:w, code:'dup', text:'Xuất hiện ở nhiều bảng lịch bộ phận với ca khác nhau'});
     if(lv){ leave.push({w:w, type:lv}); var sh0 = ctx.cat[eff.id]; if(eff.src === 'assigned' && sh0 && sh0.kind !== 'off') conflicts.push({w:w, code:'leave', text:'Được xếp ' + sh0.name + ' nhưng có đơn nghỉ phép đã duyệt (' + lv + ')'}); return; }
     var sh = ctx.cat[eff.id];

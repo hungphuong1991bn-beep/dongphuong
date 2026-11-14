@@ -10,6 +10,8 @@
 // sang dùng chung cơ chế merge-theo-id (mergeAndSaveArrField) như các nhánh
 // còn lại để nhất quán và an toàn khi nhiều người cùng thao tác.
 function saveWorkers(){if(guardViewer())return;
+  // v2.8.0: HR là nguồn duy nhất → tự đồng bộ sang Lịch làm việc (Chấm công đọc thẳng DB.workers)
+  try{ if(typeof hrLinkSyncSchedule === 'function') hrLinkSyncSchedule({prune:true}); }catch(e){ console.error('hrLinkSync', e); }
   lsSave();
   syncArrFieldToServer('workers', '/data/workers');
 }
