@@ -46,13 +46,37 @@ function renameWorker(id, name){if(guardViewer())return;
   saveWorkers();
   log('Sửa tên người lao động', `${old||'(chưa có tên)'} → ${name||'(chưa có tên)'}`, '', {name:old}, {name});
 }
+// Đếm dữ liệu lịch sử gắn với 1 nhân viên (công, nghỉ phép, kỷ luật) — theo workerId.
+function workerHistoryCount(id){
+  let att = 0;
+  Object.keys(DB.attendance||{}).forEach(ym=>{ const r = (DB.attendance[ym]||{})[id]; if(r) att += Object.keys(r).filter(d=>r[d]!==''&&r[d]!=null).length; });
+  const leave = (DB.nghiPhep||[]).filter(k=>k.workerId===id).length;
+  const disc  = (DB.kyLuat||[]).filter(k=>k.workerId===id).length;
+  return {att, leave, disc, total: att+leave+disc};
+}
+// [GĐ1 v2.6.0] LỖI GỐC: trước đây xóa nhân viên còn XÓA LUÔN toàn bộ công đã chấm của người đó ở mọi tháng
+// → mất lịch sử không khôi phục được. NAY: nhân viên đã có lịch sử (công / nghỉ phép / kỷ luật) KHÔNG bị xóa;
+// chỉ chuyển sang "Đã nghỉ việc" (giữ nguyên mọi dữ liệu, vẫn xem/xuất được). Chỉ hồ sơ trống (thêm nhầm,
+// chưa có lịch sử) mới được xóa hẳn. Chỉ Admin.
 function deleteWorker(id){if(guardViewer())return;
+  if(!isAdmin()){ showToast('🔒 Chỉ Admin được xóa/cho nghỉ việc nhân viên', true); return; }
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
-  confirm2('Xóa người lao động', `Xóa "${w.name||'(chưa có tên)'}" khỏi hệ thống? (Dữ liệu công đã chấm của người này cũng sẽ bị xóa)`, ()=>{
+  const h = workerHistoryCount(id);
+  if(h.total>0){
+    if((w.trangThai||'Đang làm')==='Đã nghỉ việc'){ showToast('ℹ️ '+(w.name||'Nhân viên')+' đã ở trạng thái Đã nghỉ việc — dữ liệu lịch sử được giữ nguyên'); return; }
+    confirm2('Cho nghỉ việc (giữ lịch sử)',
+      `"${w.name||'(chưa có tên)'}" đã có ${h.att} ô công, ${h.leave} đơn nghỉ phép, ${h.disc} bản ghi kỷ luật nên KHÔNG thể xóa. Chuyển sang trạng thái "Đã nghỉ việc"? Toàn bộ lịch sử vẫn được giữ nguyên.`, ()=>{
+      w.trangThai = 'Đã nghỉ việc'; w.ngayNghiViec = w.ngayNghiViec || todayStr();
+      saveWorkers();
+      log('Cho nghỉ việc', `${w.name||'(chưa có tên)'} · giữ nguyên ${h.att} ô công, ${h.leave} đơn nghỉ phép, ${h.disc} kỷ luật`, '', {trangThai:'Đang làm'}, {trangThai:'Đã nghỉ việc'});
+      refreshWorkerViews(); showToast('✅ Đã chuyển sang Đã nghỉ việc — lịch sử được giữ nguyên');
+    });
+    return;
+  }
+  confirm2('Xóa hồ sơ trống', `Xóa "${w.name||'(chưa có tên)'}" khỏi hệ thống? Hồ sơ này chưa có công, nghỉ phép hay kỷ luật nào.`, ()=>{
     DB.workers = DB.workers.filter(x=>x.id!==id);
-    Object.keys(DB.attendance).forEach(ym=>{ if(DB.attendance[ym]) delete DB.attendance[ym][id]; });
-    saveWorkers(); saveAttendance();
-    log('Xóa người lao động', `${w.name||'(chưa có tên)'} · đã xóa toàn bộ dữ liệu công của người này`, '', {workerId:id,name:w.name}, null);
+    saveWorkers();
+    log('Xóa người lao động', `${w.name||'(chưa có tên)'} · hồ sơ trống (chưa có lịch sử)`, '', {workerId:id,name:w.name}, null);
     refreshWorkerViews();
     showToast('Đã xóa');
   });

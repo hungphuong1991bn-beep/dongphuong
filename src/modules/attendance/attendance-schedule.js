@@ -71,7 +71,12 @@ function llvLeaveBadgeHtml(rec){
   return `<span title="${esc(rec.lydo||'')}" style="display:inline-block;padding:2px 8px;border-radius:10px;background:#cffafe;color:#0e7490;font-weight:700;font-size:11px;white-space:nowrap">🏖️ ${esc(rec.loai||'Đang nghỉ')}${till}</span>`;
 }
 
+// [GĐ1 v2.6.0] VÔ HIỆU HOÁ: hàm này tự nạp sẵn danh sách tên nhân viên cố định vào Lịch làm việc khi mảng đang
+// rỗng (kể cả lúc dữ liệu Firebase chưa kịp tải về). Dữ liệu đó có thể bị ghi lên Firebase ở lần lưu kế tiếp
+// và đè/lẫn với dữ liệu thật — trái nguyên tắc "không tạo dữ liệu nhân viên giả". Lịch rỗng nay hiển thị
+// trạng thái trống để Admin tự tạo. (Dữ liệu mẫu cũ giữ lại bên dưới, không còn được gọi.)
 function llvSeedIfEmpty(){
+  return;
   if(DB.lichLamViec && DB.lichLamViec.length) return;
   const ca1 = [
     ['Lò Văn Mạnh','Nam'],['Hà Văn Tú','Nam'],['Lò Thanh Tú','Nam'],['Hà Quốc Bình','Nam'],['Ngần Văn Lai','Nam'],
@@ -159,7 +164,9 @@ function llvFormatBytes(bytes){
   return (bytes/1024/1024).toFixed(1)+' MB';
 }
 
-function renderLichLamViec(){
+// [GĐ2 v2.7.0] Hàm vẽ bảng theo bộ phận GỐC được đổi tên (nội dung KHÔNG đổi). renderLichLamViec() nay nằm ở
+// schedule-view.js: thêm thanh chọn chế độ (Theo bộ phận / Ngày / Tuần / Tháng / Ca làm việc) rồi gọi lại hàm này.
+function llvRenderSheets(){
   llvSeedIfEmpty();
   const admin = isAdmin();
   const list = DB.lichLamViec||[];

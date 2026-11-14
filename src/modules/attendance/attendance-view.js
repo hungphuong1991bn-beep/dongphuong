@@ -1,40 +1,52 @@
-// src/modules/attendance/attendance-view.js  — tách nguyên văn từ index.html gốc (v2.5.141), KHÔNG đổi logic
-// ───────────── (hết phần mô tả — bên dưới là mã GỐC, chuyển nguyên văn) ─────────────
-
-
+// src/modules/attendance/attendance-view.js  — GIAI ĐOẠN 1 (v2.6.0)
 // ════════════════════════════════════════════════════════════
-// CHẤM CÔNG & NHÂN SỰ
-// Bảng chấm công tay theo ngày (giống bảng giấy/Excel) — không
-// gắn với tài khoản đăng nhập. Tích/ghi điểm công thủ công,
-// quản lý danh sách người lao động tự do, xuất Excel & in A4.
+// CHẤM CÔNG — giao diện ERP: dashboard, bộ lọc, bảng cố định cột tên/tiêu đề ngày,
+// phân biệt CN/lễ/ngày nghỉ, cảnh báo bất thường, khoá kỳ, nhật ký, trạng thái đồng bộ.
+// Khối công thức parseCongValue / computeCongTotalStr / computeTotal GIỮ NGUYÊN VĂN từ bản gốc.
+// Dữ liệu: DB.attendance[YYYY-MM][workerId][ngày] (không đổi) — ghi qua attendance-service.js.
 // ════════════════════════════════════════════════════════════
 let _attYM = null;
+let _attAutoFollow = true;
 
-function changeAttMonth(ym){ _attYM = ym; _attAutoFollow = (ym===todayStr().slice(0,7)); renderChamCong(); }
+// Bộ lọc giữ lại trong phiên (chuyển tab/tháng không mất); không lưu lâu dài.
+let _attFilter = (function(){ try{ return Object.assign({dept:'all', shift:'all', status:'all', q:''}, JSON.parse(sessionStorage.getItem('sx_att_filter')||'{}')); }catch(e){ return {dept:'all', shift:'all', status:'all', q:''}; } })();
+function attSaveFilter(){ try{ sessionStorage.setItem('sx_att_filter', JSON.stringify(_attFilter)); }catch(e){} }
+let _attIssuesOpen = false;
+
+function attEsc(s){ return s==null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function changeAttMonth(ym){
+  if(!attValidYM(ym)) return;             // ô chọn tháng bị xoá trống → bỏ qua, không làm hỏng bảng
+  _attYM = ym; _attAutoFollow = (ym===todayStr().slice(0,7)); renderChamCong();
+}
 function shiftAttMonth(delta){
-  const [y,m] = curYM().split('-').map(Number);
-  const d = new Date(y, m-1+delta, 1);
-  _attYM = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  _attYM = attShiftYM(curYM(), delta);     // đúng khi qua năm (12→01) và tháng 2
   _attAutoFollow = (_attYM===todayStr().slice(0,7));
   renderChamCong();
 }
 
-function setCell(workerId, day, value){if(guardViewer())return;
-  const ym = curYM();
-  if(!DB.attendance[ym]) DB.attendance[ym] = {};
-  if(!DB.attendance[ym][workerId]) DB.attendance[ym][workerId] = {};
-  value = value.trim();
-  const old = DB.attendance[ym][workerId][day]!==undefined ? DB.attendance[ym][workerId][day] : '';
-  if(old===value) return;
-  if(value==='') delete DB.attendance[ym][workerId][day];
-  else DB.attendance[ym][workerId][day] = value;
-  saveAttendance();
-  const wName = DB.workers.find(w=>w.id===workerId)?.name || '(chưa có tên)';
-  log('Chấm công', `${wName} · Ngày ${day}/${ym.split('-')[1]}/${ym.split('-')[0]}`, '',
-    {công: old||'—'}, {công: value||'—'});
-  // Cập nhật tổng công của dòng này không cần render lại cả bảng (giữ focus)
-  const totalEl = document.getElementById('wkTotal_'+workerId);
-  if(totalEl) totalEl.textContent = computeTotal(workerId);
+// Ca hiện tại của nhân viên = ca ghi trong Lịch làm việc (khớp theo tên, như llvWorkerDept). Không suy diễn nếu không có.
+function attShiftMap(){
+  const m = {};
+  (DB.lichLamViec||[]).forEach(s=>(s.rows||[]).forEach(r=>{
+    const nm = (r.name||'').trim().toLowerCase(); if(!nm || m[nm]) return;
+    m[nm] = (typeof llvShiftKey==='function') ? llvShiftKey(r.time) : 'khac';
+  }));
+  return m;
+}
+function attShiftLabel(k){ return (typeof LLV_SHIFT_SHORT!=='undefined' && LLV_SHIFT_SHORT[k]) || k; }
+
+// Mô hình dữ liệu của bảng: dùng chung cho giao diện, xuất Excel, in ấn.
+function attBuildModel(ym, filter){
+  ym = ym || curYM(); filter = filter || _attFilter;
+  const sm = attShiftMap();
+  const shiftOf = w => sm[(w.name||'').trim().toLowerCase()] || 'khac';
+  const monthRows = DB.attendance[ym] || {};
+  const workers = attFilterWorkers(DB.workers||[], filter, monthRows, shiftOf);
+  const ctx = {ym, today: todayStr(), holidays: attHolidays(), nghiPhep: DB.nghiPhep||[]};
+  const rows = workers.map(w=>({w, row: monthRows[w.id]||{}, shift: shiftOf(w), stats: attWorkerMonthStats(w, monthRows[w.id], ctx)}));
+  return {ym, y:+ym.slice(0,4), m:+ym.slice(5,7), n:attDaysIn(ym), rows, ctx, agg: attAggregate(rows), hol: ctx.holidays,
+          locked: attLockInfo(ym), allWorkers: (DB.workers||[]).length};
 }
 
 // Chuyển 1 ô nhập công thành {cong, otHours}.
@@ -102,22 +114,16 @@ function computeTotal(workerId){
   return computeCongTotalStr(rowData);
 }
 
-// Tự động theo dõi tháng hiện tại theo thời gian thực: khi hết tháng (sang
-// tháng mới, kể cả lúc đang mở app qua đêm) hệ thống sẽ:
-//  1) Tự lưu/chốt lại toàn bộ bảng công của tháng vừa kết thúc.
-//  2) Tự chuyển sang tháng mới với bảng công TRỐNG (chưa có ai chấm công)
-//     để chấm lại từ đầu, không bị dính dữ liệu của tháng cũ.
-let _attAutoFollow = true;
+
+// ───────────────────────────────────────────────────────────
+// Tự chuyển sang tháng mới khi qua nửa đêm (nếu đang theo dõi tháng hiện tại).
+// KHÔNG còn đọc lại toàn bộ ô từ DOM để ghi (lỗi gốc): mọi ô đã được ghi ngay khi sửa (attSetCell),
+// việc chuyển tháng chỉ đẩy nốt hàng đợi rồi đổi tháng. Tháng mới KHÔNG bị tạo dữ liệu rỗng giả.
+// ───────────────────────────────────────────────────────────
 function maintainAttMonth(){
   const realYM = todayStr().slice(0,7);
-  if(_attAutoFollow && _attYM!==realYM){
-    const oldYM = _attYM;
-    // Chốt sổ tháng cũ trước khi chuyển sang tháng mới
-    if(oldYM && currentTab==='chamCong') saveAllAttendance(oldYM, true);
-    else if(oldYM) saveAttendance();
-    // Tháng mới luôn bắt đầu trống — chỉ tạo nếu chưa có để không đè dữ liệu
-    // đã được chấm trước cho tháng đó (nếu có)
-    if(!DB.attendance[realYM]) DB.attendance[realYM] = {};
+  if(_attAutoFollow && _attYM && _attYM!==realYM){
+    if(attPendingCount()) attFlush();
     _attYM = realYM;
     if(currentTab==='chamCong') renderChamCong();
     else if(currentTab==='nhanSu') renderNhanSu();
@@ -125,115 +131,270 @@ function maintainAttMonth(){
 }
 setInterval(maintainAttMonth, 30000);
 
-// Lưu TOÀN BỘ bảng chấm công cùng lúc bằng 1 nút duy nhất: đọc lại mọi ô
-// đang hiển thị trên màn hình rồi ghi vào DB + đồng bộ Firebase 1 lần,
-// tránh phải bấm lưu riêng cho từng người và tránh sót dữ liệu khi mất
-// focus ô nhập (onchange) lúc mạng chập chờn.
-// silent=true: dùng khi hệ thống tự lưu lúc chuyển tháng, không hiện toast.
-function saveAllAttendance(ymParam, silent){if(guardViewer())return;
-  const ym = ymParam || curYM();
-  if(!DB.attendance[ym]) DB.attendance[ym] = {};
-  const nDays = daysInMonth(ym);
-  DB.workers.forEach(w=>{
-    if(!DB.attendance[ym][w.id]) DB.attendance[ym][w.id] = {};
-    for(let day=1; day<=nDays; day++){
-      const el = document.getElementById('cell_'+w.id+'_'+day);
-      if(!el) return;
-      const value = el.value.trim();
-      if(value==='') delete DB.attendance[ym][w.id][day];
-      else DB.attendance[ym][w.id][day] = value;
-    }
-    const totalEl = document.getElementById('wkTotal_'+w.id);
-    if(totalEl) totalEl.textContent = computeTotal(w.id);
-  });
-  saveAttendance();
-  if(!silent) showToast('✅ Đã lưu toàn bộ bảng chấm công tháng '+ym.split('-')[1]+'/'+ym.split('-')[0]);
-  log(silent?'Tự chốt sổ chấm công':'Lưu chấm công', `Tháng ${ym.split('-')[1]}/${ym.split('-')[0]} · ${DB.workers.length} người lao động`, '');
+// Giữ tên cũ (mã khác có thể gọi). Nay: đẩy hàng đợi và CHỈ báo thành công khi Firebase đã xác nhận.
+async function saveAllAttendance(ymParam, silent){
+  if(guardViewer()) return;
+  const r = await attFlush();
+  if(silent) return r;
+  if(r.ok) showToast('✅ Đã đồng bộ toàn bộ bảng chấm công lên máy chủ');
+  else showToast('⚠️ Chưa gửi được ' + r.pending + ' thay đổi — đã lưu trên máy, sẽ tự gửi lại khi có mạng', true);
+  return r;
 }
 
-// ─── state cho sub-tab nhân sự ───
+// ─── Trạng thái đồng bộ (huy hiệu trên đầu bảng) ───
+function attSyncBadgeHtml(info){
+  info = info || attSyncInfo();
+  if(info.state==='offline') return `<span class="att2-sync att2-sync--warn">📴 Mất kết nối · ${info.pending} thay đổi sẽ tự gửi lại</span>`;
+  if(info.state==='error')   return `<span class="att2-sync att2-sync--err">⚠️ Lỗi gửi · ${info.pending} thay đổi đang thử lại</span>`;
+  if(info.state==='sending' || info.pending>0) return `<span class="att2-sync att2-sync--wait">⏳ Đang gửi${info.pending?(' · '+info.pending+' thay đổi'):''}…</span>`;
+  return `<span class="att2-sync att2-sync--ok">✅ Đã đồng bộ</span>`;
+}
+if(typeof attOnSyncChange==='function') attOnSyncChange(function(info){ const el=document.getElementById('attSyncBadge'); if(el) el.innerHTML = attSyncBadgeHtml(info); });
+
+// ─── Ô chấm công ───
+function attCellClass(raw, extra){
+  const i = attCellInfo(raw);
+  let c = 'att2-cell';
+  if(i.state==='invalid') c += ' is-bad';
+  else if(i.state==='ok'){ c += ' k-'+i.kind; if(i.warn.length) c += ' is-warn'; }
+  return c + (extra||'');
+}
+function attCellTitle(raw){
+  const i = attCellInfo(raw); if(i.state==='empty') return '';
+  const t = i.warn.map(c=>ATT_WARN_TEXT[c]).filter(Boolean);
+  if(i.state==='ok' && i.kind==='ot') t.unshift('1 công + ' + i.ot + ' giờ tăng ca');
+  return t.join(' · ');
+}
+function attDayHead(model, d){
+  const ds = attDateStr(model.ym, d), sun = attIsSunday(model.ym, d), hol = model.hol[ds];
+  const isToday = ds === todayStr();
+  const cls = 'att2-dh' + (sun?' is-sun':'') + (hol?' is-hol':'') + (isToday?' is-today':'');
+  return `<th class="${cls}" title="${hol?attEsc(hol):''}"><div>${d}</div><div class="att2-wd">${weekdayVN(model.y, model.m, d)}</div></th>`;
+}
+function attRowHtml(r, model, canEdit, idx){
+  const w = r.w, s = r.stats, ym = model.ym;
+  const inactive = (w.trangThai||'Đang làm') !== 'Đang làm';
+  const miss = {}; s.missingDays.forEach(d=>miss[d]=1);
+  const issueDays = {}; s.issues.forEach(i=>{ if(i.day) issueDays[i.day]=1; });
+  let tds = '';
+  for(let d=1; d<=model.n; d++){
+    const v = r.row[d]!==undefined ? r.row[d] : '';
+    const ds = attDateStr(ym,d), sun = attIsSunday(ym,d), hol = model.hol[ds];
+    const tdc = (sun?'is-sun ':'') + (hol?'is-hol ':'') + (miss[d]?'is-miss':'');
+    const extra = issueDays[d] && attCellInfo(v).state==='ok' && !attCellInfo(v).warn.length ? ' is-warn' : '';
+    tds += `<td class="${tdc}"><input class="${attCellClass(v, extra)}" id="cell_${w.id}_${d}" data-w="${w.id}" data-d="${d}" data-v="${attEsc(v)}" value="${attEsc(v)}" inputmode="decimal" autocomplete="off" title="${attEsc(attCellTitle(v))}" ${canEdit?'':'readonly'} onfocus="this.select()" onchange="attCellChange(this)"></td>`;
+  }
+  const note = attNoteOf(ym, w.id);
+  return `<tr data-w="${w.id}" class="${inactive?'is-inactive':''}">
+    <td class="att2-c-stt">${idx+1}</td>
+    <td class="att2-c-code">${attEsc(w.maNV||'')}</td>
+    <td class="att2-c-name" title="${attEsc(w.name||'')}"><span>${attEsc(w.name||'(chưa đặt tên)')}</span>${inactive?`<em>${attEsc(w.trangThai)}</em>`:''}</td>
+    <td class="att2-c-dept">${typeof llvDeptBadgeHtml==='function'?llvDeptBadgeHtml(w.boPhan, attEsc):attEsc(w.boPhan||'')}</td>
+    <td class="att2-c-pos">${attEsc(w.chucVu||'—')}</td>
+    ${tds}
+    <td class="att2-sum att2-tot" id="wkTotal_${w.id}">${s.congStr}</td>
+    <td class="att2-sum" id="attOt_${w.id}">${s.otRaw>0?s.otRaw+'h':'—'}</td>
+    <td class="att2-sum" id="attOff_${w.id}">${s.offDays||'—'}</td>
+    <td class="att2-c-note"><input class="att2-note" data-w="${w.id}" value="${attEsc(note)}" maxlength="300" placeholder="${canEdit?'Ghi chú…':''}" ${canEdit?'':'readonly'} onchange="attNoteChange(this)"></td>
+  </tr>`;
+}
+
+// ─── Dashboard ───
+function attDashHtml(model){
+  const a = model.agg, workers = a.workers;
+  const comp = a.completion;
+  const tone = comp>=95?'ok':comp>=70?'warn':'bad';
+  const congTxt = a.congUnits.toFixed(1).replace(/\.0$/,'') + (a.otRest>0 ? ` <small>+${a.otRest}h</small>` : '');
+  const card = (lbl, val, cls, sub, click) => `<div class="att2-card ${cls||''}" ${click?`onclick="${click}" style="cursor:pointer"`:''}><div class="att2-card-v">${val}</div><div class="att2-card-l">${lbl}</div>${sub?`<div class="att2-card-s">${sub}</div>`:''}</div>`;
+  return `
+    ${card('Tổng nhân viên', workers, '', 'đang hiển thị / '+model.allWorkers+' hồ sơ')}
+    ${card('Đã có dữ liệu', a.withData, 'ok', 'trong tháng')}
+    ${card('Chưa có dữ liệu', a.noData, a.noData?'warn':'', 'chưa chấm ngày nào')}
+    ${card('Tổng công tháng', congTxt, 'ok', 'đã quy đổi 8h tăng ca = 1 công')}
+    ${card('Giờ tăng ca', a.otRaw + 'h', '', 'ghi nhận trước quy đổi')}
+    ${card('Ngày nghỉ', a.offDays, '', 'ô chấm 0')}
+    ${card('Thiếu dữ liệu', a.missingCells, a.missingCells?'bad':'ok', a.missingCells?'ô cần bổ sung · bấm để xem':'không có ô thiếu', 'attToggleIssues()')}
+    <div class="att2-card att2-card--prog ${tone}"><div class="att2-card-v">${comp}%</div><div class="att2-card-l">Hoàn thành chấm công</div>
+      <div class="att2-bar"><i style="width:${Math.min(100,comp)}%"></i></div><div class="att2-card-s">${a.expectedCells-a.missingCells}/${a.expectedCells} ô cần chấm</div></div>`;
+}
+function attIssuesHtml(model){
+  const items = [];
+  model.rows.forEach(r=>{
+    const nm = attEsc(r.w.name||'(chưa đặt tên)');
+    if(r.stats.missingDays.length) items.push({w:r.w.id, sev:'miss', txt:`<b>${nm}</b> · thiếu dữ liệu ngày ${r.stats.missingDays.slice(0,12).join(', ')}${r.stats.missingDays.length>12?'…':''} (${r.stats.missingDays.length} ngày)`, d:r.stats.missingDays[0]});
+    r.stats.issues.forEach(i=>items.push({w:r.w.id, sev:i.sev, d:i.day, txt:`<b>${nm}</b> · ${i.day?('ngày '+i.day):'cả tháng'}: ${attEsc(ATT_WARN_TEXT[i.code]||i.code)}${i.code==='format'||i.code==='ot>month'?` (“${attEsc(i.value)}”)`:` (“${attEsc(i.value)}”)`}`}));
+  });
+  if(!items.length) return `<div class="att2-empty-s">✅ Không có ô thiếu hoặc bất thường trong phạm vi đang lọc.</div>`;
+  return `<div class="att2-issue-hd">Cảnh báo (${items.length}) — bấm một dòng để tới ô tương ứng</div>` + items.slice(0,150).map(i=>`<button class="att2-issue att2-issue--${i.sev}" onclick="attGoCell('${i.w}',${i.d||1})">${i.txt}</button>`).join('') + (items.length>150?`<div class="att2-empty-s">… còn ${items.length-150} cảnh báo khác (xem trong bảng/Excel)</div>`:'');
+}
+function attToggleIssues(){ _attIssuesOpen = !_attIssuesOpen; const el = document.getElementById('attIssues'); if(el){ el.style.display = _attIssuesOpen?'block':'none'; if(_attIssuesOpen) el.scrollIntoView({behavior:'smooth',block:'nearest'}); } }
+function attGoCell(wid, d){
+  const el = document.getElementById('cell_'+wid+'_'+d); if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center', inline:'center'}); setTimeout(()=>{ el.focus(); }, 250);
+}
+// Cập nhật nhẹ dashboard + tổng của 1 dòng sau khi sửa ô (không vẽ lại cả bảng → giữ focus).
+function attRefreshLive(wid){
+  const model = attBuildModel();
+  const dash = document.getElementById('attDash'); if(dash) dash.innerHTML = attDashHtml(model);
+  const iss = document.getElementById('attIssues'); if(iss && _attIssuesOpen) iss.innerHTML = attIssuesHtml(model);
+  const r = model.rows.find(x=>x.w.id===wid);
+  if(r){
+    const t = document.getElementById('wkTotal_'+wid); if(t) t.textContent = r.stats.congStr;
+    const o = document.getElementById('attOt_'+wid); if(o) o.textContent = r.stats.otRaw>0 ? r.stats.otRaw+'h' : '—';
+    const f = document.getElementById('attOff_'+wid); if(f) f.textContent = r.stats.offDays || '—';
+  }
+}
+function attCellChange(el){
+  if(guardViewer()){ el.value = el.dataset.v||''; return; }
+  const ym = curYM(), wid = el.dataset.w, d = +el.dataset.d;
+  const res = attSetCell(ym, wid, d, el.value);
+  if(!res.ok){
+    const prev = el.dataset.v||'';
+    if(res.reason==='invalid') showToast('⚠️ “'+el.value.trim()+'” sai định dạng — chỉ nhập số: 1, 0.5, 0, 1.2 (1 công + 2 giờ)…', true);
+    else if(res.reason==='locked') showToast('🔒 Kỳ chấm công đã chốt — Admin cần mở khoá mới sửa được', true);
+    else showToast('⚠️ Không lưu được ô này', true);
+    el.value = prev; return;
+  }
+  const v = el.value.trim(); el.value = v; el.dataset.v = v;
+  el.className = attCellClass(v); el.title = attCellTitle(v);
+  const td = el.parentElement; if(td) td.classList.remove('is-miss');
+  attRefreshLive(wid);
+}
+function attNoteChange(el){
+  if(guardViewer()){ return; }
+  const r = attSetNote(curYM(), el.dataset.w, el.value);
+  if(!r.ok && r.reason==='locked'){ showToast('🔒 Kỳ đã chốt — không sửa được ghi chú', true); el.value = attNoteOf(curYM(), el.dataset.w); }
+}
+// Bàn phím: Enter/↓ xuống dòng dưới, ↑ lên dòng trên (cùng ngày) — nhập nhanh theo cột như bảng giấy.
+document.addEventListener('keydown', function(e){
+  const t = e.target; if(!t || !t.classList || !t.classList.contains('att2-cell')) return;
+  let dr = 0, dc = 0;
+  if(e.key==='Enter' || e.key==='ArrowDown') dr = 1; else if(e.key==='ArrowUp') dr = -1;
+  else if(e.key==='ArrowRight' && t.selectionStart===t.value.length) dc = 1; else if(e.key==='ArrowLeft' && t.selectionStart===0) dc = -1; else return;
+  e.preventDefault();
+  const tr = t.closest('tr'); let target = null;
+  if(dr){ let row = dr>0 ? tr.nextElementSibling : tr.previousElementSibling; while(row && !row.querySelector('.att2-cell')) row = dr>0?row.nextElementSibling:row.previousElementSibling; if(row) target = row.querySelector('.att2-cell[data-d="'+t.dataset.d+'"]'); }
+  else target = tr.querySelector('.att2-cell[data-d="'+(+t.dataset.d+dc)+'"]');
+  if(target){ t.blur(); target.focus(); }
+});
+
+// ─── Bộ lọc (chỉ vẽ lại phần bảng, giữ nguyên ô tìm kiếm đang gõ) ───
+function attSetFilter(key, val){
+  _attFilter[key] = val; attSaveFilter();
+  const model = attBuildModel();
+  const wrap = document.getElementById('attTableWrap'); if(wrap) wrap.innerHTML = attTableHtml(model);
+  const dash = document.getElementById('attDash'); if(dash) dash.innerHTML = attDashHtml(model);
+  const iss = document.getElementById('attIssues'); if(iss) iss.innerHTML = attIssuesHtml(model);
+}
+function attResetFilter(){ _attFilter = {dept:'all', shift:'all', status:'all', q:''}; attSaveFilter(); renderChamCong(); }
+
+function attTableHtml(model){
+  const canEdit = !isViewer() && !model.locked;
+  const {rows} = model;
+  const dayHeads = Array.from({length:model.n}, (_,i)=>attDayHead(model, i+1)).join('');
+  if(!rows.length){
+    const filtered = _attFilter.dept!=='all'||_attFilter.shift!=='all'||_attFilter.status!=='all'||_attFilter.q;
+    return `<div class="att2-empty"><div class="att2-empty-i">🗓️</div><div class="att2-empty-t">${model.allWorkers?'Không có nhân viên phù hợp bộ lọc':'Chưa có hồ sơ nhân viên'}</div>
+      <div class="att2-empty-d">${model.allWorkers?'Thử đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.':'Danh sách chấm công lấy từ <b>Quản lý nhân sự</b> — thêm nhân viên ở đó (hoặc bấm “Thêm nhân viên” nếu bạn là Admin).'}</div>
+      ${filtered?`<button class="set-btn att2-btn" onclick="attResetFilter()">✕ Xoá bộ lọc</button>`:`<button class="set-btn att2-btn" onclick="goTab('nhanSu')">👥 Mở Quản lý nhân sự</button>`}</div>`;
+  }
+  return `<div class="att2-scroll"><table id="attTable" class="att2-table">
+    <thead><tr>
+      <th class="att2-c-stt">STT</th><th class="att2-c-code">Mã NV</th><th class="att2-c-name">Họ và tên</th><th class="att2-c-dept">Bộ phận</th><th class="att2-c-pos">Chức vụ</th>
+      ${dayHeads}
+      <th class="att2-sum att2-tot" title="Quy ước: 8 giờ tăng ca = 1 công">Tổng công</th><th class="att2-sum" title="Tổng giờ tăng ca ghi nhận (trước quy đổi)">Giờ TC</th><th class="att2-sum">Ngày nghỉ</th><th class="att2-c-note">Ghi chú</th>
+    </tr></thead>
+    <tbody>${rows.map((r,i)=>attRowHtml(r, model, canEdit, i)).join('')}</tbody>
+  </table></div>`;
+}
+
+let _attRenderPending = false;
 function renderChamCong(){
-  const ym = curYM();
-  const [y,m] = ym.split('-').map(Number);
-  const nDays = daysInMonth(ym);
-  const admin = isAdmin();
-  const viewer = isViewer();
-  const monthData = DB.attendance[ym] || {};
-  const dayCols = Array.from({length:nDays}, (_,i)=>i+1);
-  const workers = DB.workers;
-  const totalCong = workers.reduce((s,w)=>s + parseCongValNum(computeTotal(w.id)), 0);
+  // Không vẽ lại khi người dùng đang gõ dở ở một ô (cập nhật realtime từ máy khác sẽ làm mất nội dung đang nhập).
+  const ae = document.activeElement;
+  if(ae && ae.classList && ((ae.classList.contains('att2-cell') && ae.value !== ae.dataset.v) || (ae.classList.contains('att2-note') && ae.value !== attNoteOf(curYM(), ae.dataset.w)))){ _attRenderPending = true; return; }
+  _attRenderPending = false;
+  const keepId = ae && ae.id === 'attSearch' ? 'attSearch' : null, keepPos = keepId ? ae.selectionStart : 0;
+  const scEl = document.querySelector('#attTableWrap .att2-scroll'); const scTop = scEl ? scEl.scrollTop : 0, scLeft = scEl ? scEl.scrollLeft : 0;
+
+  const model = attBuildModel(), ym = model.ym, {y, m} = model;
+  const admin = isAdmin(), viewer = isViewer(), locked = model.locked;
+  const depts = Array.from(new Set((DB.workers||[]).map(w=>(w.boPhan||'').trim()).filter(Boolean))).sort();
+  const sel = (cur, v) => cur===v ? ' selected' : '';
+  const btn = (cls, on, txt, extra) => `<button class="set-btn att2-btn ${cls||''}" onclick="${on}" ${extra||''}>${txt}</button>`;
+  const lockBanner = locked ? `<div class="att2-lock">🔒 <b>Kỳ chấm công tháng ${m}/${y} đã chốt</b> bởi ${attEsc(locked.by||'?')} lúc ${attEsc(vnDateTimeShort(locked.at))}. Dữ liệu chỉ xem; ${admin?'bạn là Admin nên có thể mở khoá.':'chỉ Admin được mở khoá.'}
+      ${admin?btn('att2-btn--sm','attOpenUnlock()','🔓 Mở khoá kỳ'):''}</div>` : (() => { const mm = _attMetaMonth(ym,false); const lu = mm && mm.lastUnlock; return lu ? `<div class="att2-info">🔓 Kỳ này đã được ${attEsc(lu.by)} mở khoá lúc ${attEsc(vnDateTimeShort(lu.at))} — lý do: ${attEsc(lu.reason)}</div>` : ''; })();
 
   $('mc').innerHTML = `
-    <!-- ── HEADER + THÁNG ── -->
-    <div class="card" style="padding:12px 14px;margin-bottom:0">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+  <div class="att2">
+    <div class="card att2-head">
+      <div class="att2-head-row">
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Bảng chấm công tháng ${m}/${y}</div>
-          <div style="font-size:20px;font-weight:800;color:var(--green);margin-top:2px">${totalCong.toFixed(1)} <span style="font-size:12px;font-weight:600;color:var(--text3)">tổng công · ${workers.length} người lao động</span></div>
+          <div class="att2-kicker">Bảng chấm công</div>
+          <div class="att2-title">Tháng ${m}/${y} ${locked?'<span class="att2-pill att2-pill--lock">🔒 Đã chốt</span>':'<span class="att2-pill">Đang mở</span>'}</div>
         </div>
-        <button class="chip" style="font-size:11.5px;padding:6px 12px;font-weight:700" onclick="goTab('nhanSu')" title="Xem hồ sơ, nghỉ phép, kỷ luật...">👥 Quản lý nhân sự →</button>
+        <div class="att2-head-r"><span id="attSyncBadge">${attSyncBadgeHtml()}</span>
+          <button class="chip" onclick="goTab('nhanSu')" title="Hồ sơ, hợp đồng, nghỉ phép, kỷ luật">👥 Quản lý nhân sự →</button></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px">
-        <button class="chip" onclick="shiftAttMonth(-1)">←</button>
-        <input type="month" class="field-inp" style="width:auto;flex:1;min-width:130px" value="${ym}" onchange="changeAttMonth(this.value)">
-        <button class="chip" onclick="shiftAttMonth(1)">→</button>
+      <div class="att2-nav">
+        <button class="chip" onclick="shiftAttMonth(-1)" aria-label="Tháng trước">←</button>
+        <input type="month" class="field-inp att2-month" value="${ym}" onchange="changeAttMonth(this.value)">
+        <button class="chip" onclick="shiftAttMonth(1)" aria-label="Tháng sau">→</button>
         <button class="chip" onclick="changeAttMonth(todayStr().slice(0,7))">Tháng này</button>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${viewer?'':`
-        <button class="set-btn" style="width:auto;padding:9px 16px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="saveAllAttendance()">💾 Lưu chấm công</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A4')">🖨️ In A4</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="printAttendance('A3')">🖨️ In A3</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="exportAttendanceExcel()">⬇️ Xuất Excel</button>
-        <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;background:var(--brand);color:#fff;font-weight:700" onclick="openCcllvQrModal()">🏷 Tạo mã QR xem Chấm công &amp; Lịch làm việc</button>
-        ${admin?`<button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px" onclick="addWorker()">➕ Thêm người lao động</button>`:''}
-        `}
-      </div>
     </div>
-    <div class="card" style="padding:8px;overflow-x:auto;margin-top:8px">
-      <div id="attCaptureArea" style="background:#fff;padding:6px">
-      <div style="text-align:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:uppercase">Bảng chấm công tháng ${m}/${y}</div>
-      <table id="attTable" style="border-collapse:collapse;font-size:11.5px;white-space:nowrap">
-        <thead>
-          <tr>
-            <th style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;min-width:24px">STT</th>
-            <th style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:5px 8px;min-width:140px;text-align:left">Họ và tên</th>
-            <th style="border:1px solid var(--border);padding:5px 6px;min-width:90px">Bộ phận</th>
-            ${dayCols.map(day=>`<th style="border:1px solid var(--border);padding:4px 2px;min-width:32px;text-align:center">
-              <div style="font-size:12px;font-weight:700">${day}</div>
-              <div style="font-weight:700;color:${weekdayVN(y,m,day)==='CN'?'var(--red-m)':'var(--brand2)'};font-size:9.5px;margin-top:1px">${weekdayVN(y,m,day)}</div>
-            </th>`).join('')}
-            <th style="border:1px solid var(--border);padding:5px 6px;min-width:50px;background:var(--green-l);color:var(--green)">Tổng công</th>
-            ${admin?'<th style="border:1px solid var(--border);padding:5px 6px;min-width:30px"></th>':''}
-          </tr>
-        </thead>
-        <tbody>
-          ${workers.map((w,i)=>{
-            const rowData = monthData[w.id] || {};
-            return `<tr>
-              <td style="position:sticky;left:0;background:var(--card);border:1px solid var(--border);padding:5px 6px;text-align:center">${i+1}</td>
-              <td style="position:sticky;left:24px;background:var(--card);border:1px solid var(--border);padding:2px 4px">
-                <input id="wkName_${w.id}" value="${w.name||''}" placeholder="Tên người lao động" ${admin?'':'readonly'} onchange="renameWorker('${w.id}', this.value)" style="width:130px;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px 2px;outline:none;color:var(--text)">
-              </td>
-              <td style="border:1px solid var(--border);padding:5px 6px;text-align:center">${llvDeptBadgeHtml(w.boPhan)}</td>
-              ${dayCols.map(day=>{
-                const v = rowData[day]!==undefined ? rowData[day] : '';
-                return `<td style="border:1px solid var(--border);padding:0">
-                  <input id="cell_${w.id}_${day}" value="${v}" inputmode="decimal" ${viewer?'readonly':''} onchange="setCell('${w.id}', ${day}, this.value)" style="width:30px;height:30px;border:none;background:transparent;text-align:center;font-size:11.5px;font-family:inherit;outline:none;color:var(--text)${viewer?';cursor:default':''}">
-                </td>`;
-              }).join('')}
-              <td id="wkTotal_${w.id}" style="border:1px solid var(--border);padding:5px 6px;text-align:center;font-weight:700;background:var(--green-l);color:var(--green)">${computeTotal(w.id)}</td>
-              ${admin?`<td style="border:1px solid var(--border);padding:2px;text-align:center"><button class="icon-btn del" onclick="deleteWorker('${w.id}')" style="font-size:12px">🗑</button></td>`:''}
-            </tr>`;
-          }).join('')}
-          ${workers.length===0?`<tr><td colspan="${4+nDays}" style="padding:16px;text-align:center;color:var(--text4);border:1px solid var(--border)">Chưa có người lao động nào${admin?' · bấm "➕ Thêm người lao động" để bắt đầu':''}</td></tr>`:''}
-        </tbody>
-      </table>
-      </div>
+    ${lockBanner}
+    <div class="att2-dash" id="attDash">${attDashHtml(model)}</div>
+    <div class="card att2-issues" id="attIssues" style="display:${_attIssuesOpen?'block':'none'}">${attIssuesHtml(model)}</div>
+
+    <div class="card att2-filters">
+      <input id="attSearch" class="field-inp att2-search" placeholder="🔍 Tìm theo tên hoặc mã nhân viên…" value="${attEsc(_attFilter.q)}" oninput="attSetFilter('q', this.value)">
+      <select class="field-inp" onchange="attSetFilter('dept', this.value)" aria-label="Bộ phận"><option value="all">Tất cả bộ phận</option>${depts.map(d=>`<option value="${attEsc(d)}"${sel(_attFilter.dept,d)}>${attEsc(d)}</option>`).join('')}</select>
+      <select class="field-inp" onchange="attSetFilter('shift', this.value)" aria-label="Ca làm việc"><option value="all">Tất cả ca</option>${['ca1','ca2','ca3','hc','tangca','nghi','khac'].map(k=>`<option value="${k}"${sel(_attFilter.shift,k)}>${attShiftLabel(k)}</option>`).join('')}</select>
+      <select class="field-inp" onchange="attSetFilter('status', this.value)" aria-label="Trạng thái"><option value="all">Trạng thái: mặc định</option>${['Đang làm','Tạm nghỉ','Đã nghỉ việc'].map(k=>`<option value="${k}"${sel(_attFilter.status,k)}>${k}</option>`).join('')}</select>
+      ${(_attFilter.dept!=='all'||_attFilter.shift!=='all'||_attFilter.status!=='all'||_attFilter.q)?btn('att2-btn--ghost','attResetFilter()','✕ Xoá lọc'):''}
     </div>
-    <div class="card" style="padding:12px 14px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6">
-      <b>Ghi chú cách chấm:</b> Đủ ngày công = <b>1</b> · Nửa ngày công = <b>0.5</b> · Không công = <b>0</b> · Làm thêm giờ ví dụ 2 tiếng ghi <b>1.2</b> (1 công 8h, .2 là 2h thêm). Đủ 8 giờ thêm giờ = +1 công.
+
+    <div class="card att2-tools">
+      ${viewer?'':btn('att2-btn--pri','attSaveNow()','💾 Lưu &amp; đồng bộ','title="Dữ liệu đã tự lưu khi sửa từng ô; nút này chờ máy chủ xác nhận"')}
+      ${(viewer||locked)?'':btn('','attOpenBulk(\'fill\')','⚡ Chấm hàng loạt')}
+      ${(viewer||locked)?'':btn('','attOpenBulk(\'copyday\')','📋 Sao chép từ ngày')}
+      ${(viewer||locked)?'':btn('','attOpenBulk(\'byshift\')','🕒 Điền theo ca')}
+      ${(viewer||locked)?'':btn('att2-btn--lock','attOpenLock()','🔒 Chốt kỳ')}
+      ${btn('','attOpenAudit()','📜 Lịch sử sửa')}
+      <details class="att2-menu"><summary class="set-btn att2-btn">⬇️ Xuất / In ▾</summary><div class="att2-menu-b">
+        ${viewer?'':`<button onclick="exportAttendanceExcel()">📗 Excel bảng công (theo bộ lọc)</button>
+        <button onclick="exportAttendanceByDept()">📗 Excel tách theo bộ phận</button>
+        <button onclick="exportAttendanceReports()">📊 Excel báo cáo tổng hợp (công · tăng ca · nghỉ · thiếu · số liệu lương)</button>
+        <button onclick="printAttendance('A4')">🖨️ In A4 (ngang)</button><button onclick="printAttendance('A3')">🖨️ In A3</button>
+        <button onclick="captureAttendance()">📷 Chụp ảnh gửi nhóm</button>
+        <button onclick="openCcllvQrModal()">🏷 Mã QR xem Chấm công &amp; Lịch làm việc</button>`}
+        ${viewer?'<div class="att2-empty-s">Tài khoản Xem không xuất/in được.</div>':''}
+      </div></details>
+      ${admin?btn('','attOpenHolidays()','🎌 Ngày lễ'):''}
+      ${admin?btn('','addWorker()','➕ Thêm nhân viên'):''}
     </div>
-  `;
+
+    <div class="card att2-tablecard"><div id="attCaptureArea">
+      <div class="att2-captitle">Bảng chấm công tháng ${m}/${y}</div>
+      <div id="attTableWrap">${attTableHtml(model)}</div>
+    </div></div>
+    <div class="card att2-legend">
+      <b>Cách chấm:</b> đủ công <b>1</b> · nửa công <b>0.5</b> · nghỉ <b>0</b> · tăng ca: <b>1.2</b> = 1 công + 2 giờ, <b>1.25</b> = 1 công + 2,5 giờ · đủ 8 giờ tăng ca = +1 công.
+      <span class="att2-key"><i class="k-full"></i>Đủ công</span><span class="att2-key"><i class="k-half"></i>Nửa công</span><span class="att2-key"><i class="k-off"></i>Nghỉ</span><span class="att2-key"><i class="k-ot"></i>Tăng ca</span><span class="att2-key"><i class="k-bad"></i>Lỗi/bất thường</span><span class="att2-key"><i class="k-sun"></i>Chủ nhật</span><span class="att2-key"><i class="k-hol"></i>Ngày lễ</span><span class="att2-key"><i class="k-miss"></i>Thiếu dữ liệu</span>
+    </div>
+  </div>`;
+  const sc = document.querySelector('#attTableWrap .att2-scroll'); if(sc){ sc.scrollTop = scTop; sc.scrollLeft = scLeft; }
+  if(keepId){ const el = document.getElementById(keepId); if(el){ el.focus(); try{ el.setSelectionRange(keepPos, keepPos); }catch(e){} } }
+}
+// Khi rời ô sau khi có cập nhật bị hoãn → vẽ lại.
+document.addEventListener('focusout', function(){ if(_attRenderPending) setTimeout(function(){ if(_attRenderPending && currentTab==='chamCong') renderChamCong(); }, 60); });
+
+// Nút "Lưu & đồng bộ": chỉ báo thành công khi Firebase đã xác nhận.
+async function attSaveNow(){
+  if(guardViewer()) return;
+  const badge = document.getElementById('attSyncBadge'); if(badge) badge.innerHTML = attSyncBadgeHtml({state:'sending', pending:attPendingCount()});
+  const r = await attFlush();
+  if(r.ok) showToast('✅ Đã đồng bộ lên máy chủ — mọi thiết bị sẽ thấy dữ liệu này');
+  else showToast('⚠️ Chưa gửi được ' + r.pending + ' thay đổi (' + (r.error||'lỗi mạng') + '). Dữ liệu đã lưu trên máy và sẽ tự gửi lại.', true);
 }
