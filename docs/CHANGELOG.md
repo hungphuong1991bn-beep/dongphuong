@@ -1,5 +1,49 @@
 # CHANGELOG
 
+## [2.7.0] Giai đoạn 2 — Lịch làm việc theo ngày (14/11/2026)
+Nâng cấp tab Lịch làm việc. Bảng "theo bộ phận" cũ và toàn bộ hàm `llv*` được GIỮ NGUYÊN (dashboard, QR công khai, điều hành sản xuất vẫn đọc như cũ). Hàm vẽ cũ đổi tên `llvRenderSheets()`; `renderLichLamViec()` nay ở `schedule-view.js` và thêm thanh chọn chế độ.
+
+### Mô hình dữ liệu MỚI (nhánh riêng, tương thích, không đổi dữ liệu cũ)
+`/data/shiftCatalog/{id}` (danh mục ca) · `/data/shiftAssign/{YYYY-MM}/{workerId}/{ngày}` (phân ca theo ngày) · `/data/otReg/{YYYY-MM}/{workerId}/{ngày}` (đăng ký tăng ca). Ghi từng ô qua cùng cơ chế an toàn của chấm công (hàng đợi bền + PATCH + áp lại khi tải lại; chỉ báo OK khi Firebase xác nhận). Phân ca là dữ liệu riêng, **không ghi vào bảng công** → đổi ca không làm sai công đã chốt. Nhân viên lấy từ Quản lý nhân sự (chỉ "Đang làm"); ngày chưa phân riêng dùng ca mặc định suy từ bảng bộ phận cũ (hiển thị in nghiêng, không áp cho Chủ nhật/ngày lễ).
+
+### Chức năng
+- **3 chế độ xem:** Ngày (dashboard nhân lực: cần/thực tế/thiếu/nghỉ/tăng ca/chưa phân ca/tỷ lệ đáp ứng; cột từng ca có thanh tiến độ và cảnh báo đỏ khi thiếu), Tuần (T2→CN theo từng nhân viên, màu theo ca, hàng tổng nhân lực), Tháng (số người từng ca mỗi ngày, nghỉ, tăng ca, cảnh báo thiếu; bấm ngày → lịch ngày).
+- **Quản lý ca (Admin):** giữ Ca 1/2/3, Hành chính, Tăng ca, Nghỉ; tạo ca mới, sửa giờ bắt đầu/kết thúc (ca qua nửa đêm tính đúng), nghỉ giữa ca, quân số tối thiểu, loại cố định/luân phiên, ngừng/dùng lại ca.
+- **Phân ca:** đổi ca 1 người, phân hàng loạt, sao chép từ tuần trước / tháng trước, luân phiên theo tuần, đổi ca 2 nhân viên — đều có xem trước và bắt buộc xác nhận khi ghi đè.
+- **Nghỉ phép & tăng ca:** tự nhận diện đơn **đã duyệt** (đơn chờ duyệt không tính); cảnh báo xếp ca trùng nghỉ phép; cảnh báo cùng người ở nhiều bảng lịch với ca khác nhau; đăng ký tăng ca theo ngày + thống kê tháng đối chiếu giờ đã chấm công.
+- **Lịch sử điều chỉnh** (người, thời gian, trước→sau) tại `/attAudit`, tách khỏi lịch sử công.
+- **Phân quyền giữ nguyên như bản cũ:** chỉ Admin sửa; nhân viên/Viewer chỉ xem (chặn ở tầng xử lý).
+
+---
+## [2.6.0] Giai đoạn 1 — Ổn định dữ liệu & nâng cấp tab Chấm công (14/11/2026)
+Phạm vi: Chấm công. Lịch làm việc và Quản lý nhân sự mới sửa các lỗi an toàn dữ liệu (mục "Lỗi đã khắc phục"); nâng cấp giao diện/nghiệp vụ hai phân hệ này thuộc GĐ2, GĐ3 (xem `docs/HANDOVER-GD1.md`).
+
+### Lỗi đã khắc phục (đều có test đối chứng chạy trên BẢN GỐC để tái hiện lỗi)
+1. **Mất công khi 2 thiết bị cùng sửa 1 người** — bản gốc ghi đè cả dòng công người-tháng và PUT cả nhánh `/data/attendance`. Nay chỉ `PATCH` từng ô vừa đổi.
+2. **Mất công sửa lúc mất mạng rồi tải lại trang** — "ảnh chụp đã đồng bộ" dựng lại từ cache nên bản server cũ ghi đè. Nay có hàng đợi bền (`sx_att_outbox_v2`), tự gửi lại khi có mạng/`online`, luôn áp lại lên dữ liệu server tải về.
+3. **Báo "đã lưu" khi Firebase chưa xác nhận** — nay chỉ báo sau khi Firebase trả OK; huy hiệu trạng thái: Đã đồng bộ / Đang gửi / Mất kết nối / Lỗi.
+4. **Xóa bản ghi "sống lại"** — `_lastSyncedArrSnap` của workers/lichLamViec/kyLuat/nghiPhep… không được khởi tạo sau lần tải đầu nên thao tác xóa đầu tiên trong phiên mới bị server ghi lại. Nay `initArrSnapshots()`.
+5. **Xóa nhân viên làm mất toàn bộ công lịch sử** — `deleteWorker` nay chỉ xóa hồ sơ trống; người đã có công/nghỉ phép/kỷ luật được chuyển "Đã nghỉ việc" và giữ nguyên lịch sử. Chỉ Admin.
+6. **Firebase trả mảng cho khoá ngày liên tiếp** làm so sánh dữ liệu sai/vẽ lại liên tục — nay chuẩn hoá về object; mảng `workers/kyLuat/nghiPhep/lichLamViec/baoTri` luôn được đưa về mảng.
+7. **`saveAllAttendance` bỏ sót người** (`return` trong `forEach`) và đọc lại ô từ DOM khi chuyển tháng — nay không còn đọc DOM; chuyển tháng chỉ đẩy hàng đợi.
+8. **Mỗi ô sửa PUT cả nhật ký 300 dòng** — nay gộp 1 dòng tóm tắt mỗi đợt.
+9. **`sw.js` liệt kê 4 file không tồn tại** (`dp-store.js`, `materials-*.js`, `prodlots-core.js`) → `cache.addAll` thất bại, cache offline PWA không dựng được; `verify-sw` đã FAIL từ trước. Đã bỏ 4 mục; verify-sw đạt. ⚠️ Xem mục "cần xác nhận" về 4 file này.
+10. **Lịch làm việc tự nạp danh sách tên cứng khi rỗng** (`llvSeedIfEmpty`) — có thể bị ghi lên Firebase như dữ liệu giả. Đã vô hiệu hoá.
+
+### Chức năng mới (Chấm công)
+- Dashboard 8 chỉ số (tổng NV, đã/chưa có dữ liệu, tổng công, giờ tăng ca, ngày nghỉ, ô thiếu, % hoàn thành) — cộng số thật, không cộng chuỗi hiển thị.
+- Bộ lọc tháng/bộ phận/ca (theo Lịch làm việc)/trạng thái/tìm tên-mã; giữ trong phiên.
+- Bảng: cố định tiêu đề ngày + cột STT/Mã/Tên; phân biệt Chủ nhật, ngày lễ, thiếu dữ liệu; cột Tổng công, Giờ TC, Ngày nghỉ, Ghi chú; điều hướng Enter/phím mũi tên; không vẽ lại khi đang gõ.
+- Kiểm tra định dạng từng ô; cảnh báo bất thường (quá 1 công/ngày, tăng ca cao, công vào ngày nghỉ phép đã duyệt, chấm trước ngày vào làm, thiếu dữ liệu).
+- Chấm hàng loạt · sao chép từ ngày · điền theo ca — có xem trước + xác nhận bắt buộc khi ghi đè/xoá.
+- Chốt kỳ (nhân viên/Admin) / mở khoá (chỉ Admin, bắt buộc lý do); chặn ở tầng xử lý.
+- Nhật ký chỉnh sửa (người, thời gian, cũ→mới) tại `/attAudit/{ym}`; ghi chú người-tháng; ngày lễ do Admin khai báo.
+- Xuất Excel (bảng công, theo bộ phận, báo cáo tổng hợp 5 sheet gồm số liệu phục vụ lương — KHÔNG có tiền, bảng công cá nhân) và in A4/A3 có khối chữ ký.
+
+### Tương thích
+Cấu trúc `/data/attendance/{ym}/{wid}/{ngày}` **không đổi** (trang QR công khai, dashboard, điều hành SX vẫn đọc được). Nhánh mới: `/data/attMeta` (khoá kỳ, ghi chú, ngày lễ), `/attAudit` (nhật ký). Chữ ký các hàm `llv*`, `computeCongTotalStr`, `parseCongValue` giữ nguyên. Cache SW v20.
+
+---
 ## [Chưa phát hành] Sửa lỗi Phân công máy (Kế hoạch SX → Panel chi tiết đơn)
 Lỗi báo từ xưởng (ảnh chụp màn hình 11/11/2026): trong Panel chi tiết đơn, Đùn/Rút hiện "— Chưa gán —", chỉ còn máy Đánh bóng; đóng panel thì hiện hộp thoại "Đóng biểu mẫu? Dữ liệu đã nhập chưa được lưu...".
 - **Nguyên nhân 1 — hộp thoại sai**: `dp-ui.js` coi mọi `<select>` trong modal là "biểu mẫu đang nhập"; Panel chi tiết không phải biểu mẫu (phân công máy lưu ngay). Sửa: `data-dp-nodirty` trên `#khDetailBody` + khối phân công máy; `assignMachine()` gọi `dpUI.modal.markClean('khDetailModal')`.
