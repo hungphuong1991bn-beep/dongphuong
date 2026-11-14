@@ -109,6 +109,17 @@ function snapshotArrById(list){
 }
 let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, workers:{}, qrProducts:{}, khuonCatalog:{}, khuonQty:{}, csTemplates:{}, nguyenLieuLog:{}, mayRutLog:{}, mayDanhBongLog:{} };
 
+// [GĐ1 v2.6.0] Khởi tạo "ảnh chụp đã đồng bộ" của các nhánh mảng-theo-id từ trạng thái hiện có.
+// LỖI GỐC: sau lần tải đầu, _lastSyncedArrSnap.workers/lichLamViec/kyLuat/nghiPhep... vẫn là {} cho tới
+// khi có lần LƯU hoặc sự kiện realtime đầu tiên → thao tác XOÁ đầu tiên trong phiên không được tính là
+// "dòng vừa xoá" nên bản server (còn dòng đó) được ghi lại → dòng đã xoá "sống lại" sau khi tải lại.
+function initArrSnapshots(){
+  ['workers','kyLuat','nghiPhep','lichLamViec','baoTri','qrProducts','khuonCatalog','khuonQty','csTemplates'].forEach(function(f){
+    _lastSyncedArrSnap[f] = snapshotArrById(DB[f]);
+  });
+}
+function asArr(v){ return Array.isArray(v) ? v : (v && typeof v==='object' ? Object.values(v) : []); }
+
 async function mergeAndSaveArrField(field, path, onSuccess){
   const localSnap = snapshotArrById(DB[field]);
   const lastSnap = _lastSyncedArrSnap[field] || {};
@@ -154,6 +165,7 @@ function syncArrFieldToServer(field, path){
 async function initAndStartSync(){
   // Load cache trước
   lsLoad(); logLoad();
+  if(typeof attOnBoot==='function') attOnBoot();   // [GĐ1] áp lại ô chấm công chưa gửi từ phiên trước
   if(!DB.khuonCatalog || !DB.khuonCatalog.length) DB.khuonCatalog = KHUON_CATALOG_SEED.map(x=>({...x}));
   if(!DB.khuonQty || !DB.khuonQty.length) DB.khuonQty = KHUON_QTY_SEED.map(x=>({...x}));
   if(!DB.csTemplates || !DB.csTemplates.length) DB.csTemplates = CS_TEMPLATE_SEED.map(x=>JSON.parse(JSON.stringify(x)));
@@ -175,6 +187,7 @@ async function initAndStartSync(){
   _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);
   _lastSyncedCsDataSnapshot = flattenCsData(DB.csData);
   _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
+  initArrSnapshots();
 
   if(fbOk()){
     setSyncDot('saving');
@@ -250,12 +263,12 @@ async function initAndStartSync(){
           // Giữ lại user cache nếu Firebase chưa có
           DB.users = Array.isArray(data.users)?data.users:Object.values(data.users);
         }
-        if(data.attendance){ DB.attendance = data.attendance; }
-        if(data.workers){ DB.workers = data.workers; }
-        if(data.kyLuat){ DB.kyLuat = data.kyLuat; }
-        if(data.nghiPhep){ DB.nghiPhep = data.nghiPhep; }
-        if(data.lichLamViec){ DB.lichLamViec = data.lichLamViec; }
-        if(data.baoTri){ DB.baoTri = data.baoTri; }
+        if(typeof attOnSnapshot==='function') attOnSnapshot(data); else if(data.attendance){ DB.attendance = data.attendance; }   // [GĐ1] chuẩn hoá + áp lại ô chưa gửi
+        if(data.workers){ DB.workers = asArr(data.workers); }
+        if(data.kyLuat){ DB.kyLuat = asArr(data.kyLuat); }
+        if(data.nghiPhep){ DB.nghiPhep = asArr(data.nghiPhep); }
+        if(data.lichLamViec){ DB.lichLamViec = asArr(data.lichLamViec); }
+        if(data.baoTri){ DB.baoTri = asArr(data.baoTri); }
         // SỬA LỖI: trang công khai Tổng hợp Khuôn đọc thẳng
         // /data/khuonCatalog + /data/khuonQty từ Firebase. Trước đây khi
         // Firebase chưa có 2 nhánh này, app chỉ âm thầm dùng dữ liệu mẫu
@@ -292,6 +305,7 @@ async function initAndStartSync(){
         _lastSyncedCsDataSnapshot = flattenCsData(DB.csData);
         _lastSyncedUsersSnapshot = snapshotUsers(DB.users);
         _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash);
+        initArrSnapshots();
         _lastSyncedArrSnap.nguyenLieuLog = snapshotArrById(DB.nguyenLieuLog);
         _lastSyncedArrSnap.mayRutLog = snapshotArrById(DB.mayRutLog);
         _lastSyncedArrSnap.mayDanhBongLog = snapshotArrById(DB.mayDanhBongLog);

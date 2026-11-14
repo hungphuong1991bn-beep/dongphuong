@@ -63,7 +63,10 @@ function applyDataSnapshot(data){
     const freshTrash = Array.isArray(data.ordersTrash)?data.ordersTrash:Object.values(data.ordersTrash);
     if(JSON.stringify(freshTrash)!==JSON.stringify(DB.ordersTrash)){ DB.ordersTrash = freshTrash; _lastSyncedTrashSnapshot = snapshotOrders(DB.ordersTrash); changed = true; }
   }
-  if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
+  // [GĐ1 v2.6.0] Chấm công + attMeta: chuẩn hoá (Firebase trả mảng cho khoá số liên tiếp), so sánh theo TỪNG Ô
+  // và luôn áp lại các ô chưa gửi → bản server cũ không ghi đè được dữ liệu vừa nhập.
+  if(typeof attOnSnapshot==='function'){ if(attOnSnapshot(data)) changed = true; }
+  else if(data.attendance && JSON.stringify(data.attendance)!==JSON.stringify(DB.attendance)){ DB.attendance = data.attendance; _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance); changed = true; }
   // GHI CHÚ: mọi nhánh mảng-theo-id dưới đây (workers/kyLuat/nghiPhep/
   // lichLamViec/baoTri/khuonCatalog/khuonQty/csTemplates) cũng làm mới
   // _lastSyncedArrSnap[field] ngay khi nhận bản mới từ server — cùng lý do
@@ -72,11 +75,11 @@ function applyDataSnapshot(data){
   // trên các thiết bị ít tự lưu, khiến lần XOÁ kế tiếp trên thiết bị đó tính
   // sai dòng cần xoá trên Firebase (dòng đã xoá cục bộ nhưng không hề bị xoá
   // trên server/thiết bị khác).
-  if(data.workers && JSON.stringify(data.workers)!==JSON.stringify(DB.workers)){ DB.workers = data.workers; _lastSyncedArrSnap.workers=snapshotArrById(DB.workers); changed = true; }
-  if(data.kyLuat && JSON.stringify(data.kyLuat)!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = data.kyLuat; _lastSyncedArrSnap.kyLuat=snapshotArrById(DB.kyLuat); changed = true; }
-  if(data.nghiPhep && JSON.stringify(data.nghiPhep)!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = data.nghiPhep; _lastSyncedArrSnap.nghiPhep=snapshotArrById(DB.nghiPhep); changed = true; }
-  if(data.lichLamViec && JSON.stringify(data.lichLamViec)!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = data.lichLamViec; _lastSyncedArrSnap.lichLamViec=snapshotArrById(DB.lichLamViec); changed = true; }
-  if(data.baoTri && JSON.stringify(data.baoTri)!==JSON.stringify(DB.baoTri)){ DB.baoTri = data.baoTri; _lastSyncedArrSnap.baoTri=snapshotArrById(DB.baoTri); changed = true; }
+  if(data.workers && JSON.stringify(asArr(data.workers))!==JSON.stringify(DB.workers)){ DB.workers = asArr(data.workers); _lastSyncedArrSnap.workers=snapshotArrById(DB.workers); changed = true; }
+  if(data.kyLuat && JSON.stringify(asArr(data.kyLuat))!==JSON.stringify(DB.kyLuat)){ DB.kyLuat = asArr(data.kyLuat); _lastSyncedArrSnap.kyLuat=snapshotArrById(DB.kyLuat); changed = true; }
+  if(data.nghiPhep && JSON.stringify(asArr(data.nghiPhep))!==JSON.stringify(DB.nghiPhep)){ DB.nghiPhep = asArr(data.nghiPhep); _lastSyncedArrSnap.nghiPhep=snapshotArrById(DB.nghiPhep); changed = true; }
+  if(data.lichLamViec && JSON.stringify(asArr(data.lichLamViec))!==JSON.stringify(DB.lichLamViec)){ DB.lichLamViec = asArr(data.lichLamViec); _lastSyncedArrSnap.lichLamViec=snapshotArrById(DB.lichLamViec); changed = true; }
+  if(data.baoTri && JSON.stringify(asArr(data.baoTri))!==JSON.stringify(DB.baoTri)){ DB.baoTri = asArr(data.baoTri); _lastSyncedArrSnap.baoTri=snapshotArrById(DB.baoTri); changed = true; }
   if(data.khuonCatalog && JSON.stringify(data.khuonCatalog)!==JSON.stringify(DB.khuonCatalog)){ DB.khuonCatalog = data.khuonCatalog; _lastSyncedArrSnap.khuonCatalog=snapshotArrById(DB.khuonCatalog); changed = true; }
   if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; _lastSyncedArrSnap.khuonQty=snapshotArrById(DB.khuonQty); changed = true; }
   if(data.csTemplates && JSON.stringify(data.csTemplates)!==JSON.stringify(DB.csTemplates)){ DB.csTemplates = data.csTemplates; _lastSyncedArrSnap.csTemplates=snapshotArrById(DB.csTemplates); changed = true; }
@@ -143,6 +146,7 @@ const _FB_FIELD_MAP = {
 
 function applyFieldChange(field, val){
   if(_pendingSaves>0) return; // đang ghi dở dang → bỏ qua bản đọc có thể còn cũ
+  if(field==='attendance' && typeof attOnSnapshot==='function'){ if(attOnSnapshot({attendance:val})){ lsSave(); scheduleUIRefresh(true); } return; }   // [GĐ1]
   if(field==='orders'){
     const fresh = val ? (Array.isArray(val)?val:Object.values(val)) : [];
     const h = hashOrders(fresh);
@@ -251,6 +255,11 @@ function handleRealtimeChange(path, val){
     if(id && id.indexOf('/')===-1){ applySingleSlItemChange('mayDanhBongLog', id, val); setSyncDot('ok'); return; }
   }
   if(path.indexOf('/data/cpRecords')===0){ if(typeof cpOnRealtime==='function') cpOnRealtime(path, val); setSyncDot('ok'); return; }   // ControlPlan
+  // [GĐ1 v2.6.0] Ghi theo từng ô → SSE báo path con /data/attendance/{ym}/{wid}[/{ngày}] và /data/attMeta/...
+  // Áp đúng nhánh con (không phải đọc lại cả /data). attOnRealtime tự áp lại ô chưa gửi.
+  if((path.indexOf('/data/attendance/')===0 || path.indexOf('/data/attMeta')===0 || path.indexOf('/data/shiftAssign')===0 || path.indexOf('/data/otReg')===0 || path.indexOf('/data/shiftCatalog')===0) && typeof attOnRealtime==='function'){
+    if(attOnRealtime(path, val)){ setSyncDot('ok'); return; }
+  }
   const field = _FB_FIELD_MAP[path];
   if(field){ applyFieldChange(field, val); setSyncDot('ok'); return; }
   if(path==='/announce'){ checkAnnounce(); return; }
