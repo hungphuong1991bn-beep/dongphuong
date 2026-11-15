@@ -245,8 +245,9 @@ function buildOvBusbarFlow(orders){
   const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'}];
   const nodes = [{
     key:'nl', icon:'🧪', label:'Nguyên Liệu', active: nlToday.length>0,
-    big: nlToday.length, bigLbl:'lô nhập hôm nay',
-    lines:[['Khối lượng', fmt(nlKg)+' kg']],
+    on:'Đã nhập', off:'Chưa nhập',
+    big: nlToday.length, unit:'lô nhập hôm nay',
+    stats:[['Khối lượng', fmt(nlKg)+' kg']],
     click:"goTab('soLieu')"
   }];
   defs.forEach((d,i)=>{
@@ -257,40 +258,43 @@ function buildOvBusbarFlow(orders){
     const kg = running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
     nodes.push({
       key:d.key, icon:d.icon, label:d.label, active: running.length>0,
-      big: running.length, bigLbl:'đơn đang chạy',
-      lines:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
+      on:'Đang chạy', off:'Đang chờ',
+      big: running.length, unit:'đơn đang chạy',
+      stats:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
       click:`if(typeof dpOpenStageList==='function')dpOpenStageList('${d.key}')`
     });
   });
 
   const html = nodes.map((n,i)=>{
     const node = `
-      <div class="ovp-node ${n.active?'on':'off'}" onclick="${n.click}">
-        <div class="ovp-ring"><span class="ovp-ic">${n.icon}</span></div>
-        <div class="ovp-name">${n.label}</div>
-        <div class="ovp-big">${n.big}</div>
-        <div class="ovp-biglbl">${n.bigLbl}</div>
-        <div class="ovp-lines">${n.lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>
-        <span class="ovp-state">${n.active?'● Đang chạy':'○ Đang chờ'}</span>
-      </div>`;
-    // Đường ống nối sang công đoạn kế tiếp: trạng thái theo công đoạn NGUỒN
-    const pipe = i<nodes.length-1 ? `
-      <div class="ovp-pipe live" aria-hidden="true">
-        <div class="ovp-track">
-          <i class="ovp-p" style="--d:0s"></i><i class="ovp-p" style="--d:.7s"></i>
-          <i class="ovp-p" style="--d:1.4s"></i><i class="ovp-p" style="--d:2.1s"></i>
+      <div class="ovp-node ${n.active?'on':'off'}" style="--i:${i}" onclick="${n.click}">
+        <div class="ovp-top">
+          <span class="ovp-step">0${i+1}</span>
+          <span class="ovp-pill"><i></i>${n.active?n.on:n.off}</span>
         </div>
-        <span class="ovp-head"></span>
+        <div class="ovp-icon"><span>${n.icon}</span></div>
+        <div class="ovp-name">${n.label}</div>
+        <div class="ovp-metric"><b>${n.big}</b><small>${n.unit}</small></div>
+        <div class="ovp-stats">${n.stats.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>
+      </div>`;
+    // Đường ống nối sang công đoạn kế tiếp — hạt sáng luôn chạy đều từ đầu đến cuối
+    const pipe = i<nodes.length-1 ? `
+      <div class="ovp-pipe" aria-hidden="true">
+        <div class="ovp-track">
+          <i class="ovp-p" style="--d:0s"></i><i class="ovp-p" style="--d:.9s"></i><i class="ovp-p" style="--d:1.8s"></i>
+        </div>
       </div>` : '';
     return node + pipe;
   }).join('');
 
   return `<div class="ov-panel ovp-panel">
-    <div class="ov-panel-title">🏭 Quy trình sản xuất Thanh cái <span class="ov-sub2">(hạt sáng = chiều đi của vật liệu qua từng công đoạn)</span></div>
+    <div class="ovp-head">
+      <div class="ovp-title"><span class="ovp-title-ic">🏭</span><div><b>Quy trình sản xuất Thanh cái</b><small>Nguyên liệu → Đùn → Rút → Đánh bóng · bấm vào công đoạn để xem chi tiết</small></div></div>
+      <span class="ovp-live"><i></i>Trực tiếp</span>
+    </div>
     <div class="ovp-flow">${html}</div>
   </div>`;
 }
-
 // Lời chào cá nhân hoá ở đầu tab Tổng quan, tự đổi theo giờ trong ngày
 // (sáng/trưa/chiều/tối) và tên tài khoản đang đăng nhập.
 function ovGreetingPhrase(){

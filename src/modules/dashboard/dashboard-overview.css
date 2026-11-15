@@ -256,53 +256,70 @@
 }
 
 
-/* ── Sơ đồ quy trình Thanh cái: Nguyên liệu → Đùn → Rút → Đánh bóng ── */
-.ovp-panel{margin:12px 0}
-.ovp-flow{display:flex;align-items:stretch;padding:6px 2px 4px}
-.ovp-node{flex:0 0 128px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:12px 10px;border:1px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;transition:box-shadow .2s,border-color .2s,transform .2s}
-.ovp-node:hover{box-shadow:0 6px 18px rgba(40,86,214,.14);border-color:#b7cbf7;transform:translateY(-2px)}
-.ovp-node.on{border-color:#bfe3d0;background:linear-gradient(180deg,#f3fbf7,#fff)}
-.ovp-ring{position:relative;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e2e8f0;margin-bottom:4px}
-.ovp-node.on .ovp-ring{background:linear-gradient(135deg,#16a34a,#34d399);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
-.ovp-node.on .ovp-ring::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(22,163,74,.45);animation:ovpPulse 2s ease-out infinite}
-.ovp-ic{font-size:22px;line-height:1}
-.ovp-name{font-size:13.5px;font-weight:800;color:var(--text)}
-.ovp-big{font-size:26px;font-weight:800;line-height:1.05;color:var(--text)}
-.ovp-node.off .ovp-big{color:var(--text3)}
-.ovp-biglbl{font-size:10.5px;color:var(--text3)}
-.ovp-lines{width:100%;margin-top:6px;font-size:11.5px}
-.ovp-lines>div{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-top:1px dashed #eef1f6}
-.ovp-lines span{color:var(--text3)}
-.ovp-state{margin-top:6px;font-size:10.5px;font-weight:700;color:var(--text4)}
-.ovp-node.on .ovp-state{color:#15803d}
+/* ── Sơ đồ quy trình Thanh cái: Nguyên liệu → Đùn → Rút → Đánh bóng (giao diện v2) ── */
+.ovp-panel{margin:12px 0;padding:0;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f8fafd 100%);border:1px solid #e3e9f4}
+.ovp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #edf1f8;background:linear-gradient(90deg,#f3f7ff,#fff 60%)}
+.ovp-title{display:flex;align-items:center;gap:12px;min-width:0}
+.ovp-title-ic{width:38px;height:38px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:19px;border-radius:11px;background:linear-gradient(135deg,#2856D6,#4f7cf5);box-shadow:0 4px 12px rgba(40,86,214,.28)}
+.ovp-title b{display:block;font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.1px}
+.ovp-title small{display:block;margin-top:2px;font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovp-live{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#1d4ed8;background:#e8efff}
+.ovp-live i{width:7px;height:7px;border-radius:50%;background:#2856D6;animation:ovpBlink 1.6s ease-in-out infinite}
 
-/* Đường ống + hạt sáng */
-.ovp-pipe{position:relative;flex:1 1 90px;min-width:56px;display:flex;align-items:center}
-.ovp-track{position:relative;width:100%;height:6px;border-radius:6px;background:#e2e8f0;overflow:visible}
-.ovp-pipe.live .ovp-track{background:linear-gradient(90deg,#bbf7d0,#86efac);box-shadow:0 0 10px rgba(34,197,94,.35)}
-.ovp-p{position:absolute;top:50%;left:0;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#fff;opacity:0;
-  box-shadow:0 0 6px 2px rgba(255,255,255,.95),0 0 12px 4px rgba(22,163,74,.75);animation:ovpFlowX 2.8s linear infinite;animation-delay:var(--d)}
-.ovp-p::before{content:"";position:absolute;right:50%;top:50%;width:26px;height:4px;margin-top:-2px;border-radius:4px;background:linear-gradient(90deg,transparent,rgba(22,163,74,.55))}
-.ovp-pipe.idle .ovp-p{background:#cbd5e1;box-shadow:0 0 4px rgba(148,163,184,.6);animation-duration:5.6s}
-.ovp-pipe.idle .ovp-p::before{background:linear-gradient(90deg,transparent,rgba(148,163,184,.4))}
-.ovp-head{position:absolute;right:-1px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-top:3px solid #94a3b8;border-right:3px solid #94a3b8;transform:rotate(45deg);border-radius:1px}
-.ovp-pipe.live .ovp-head{border-color:#16a34a}
-@keyframes ovpFlowX{0%{left:0;opacity:0}12%{opacity:1}85%{opacity:1}100%{left:calc(100% - 8px);opacity:0}}
-@keyframes ovpFlowY{0%{top:0;opacity:0}12%{opacity:1}85%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
-@keyframes ovpPulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+.ovp-flow{display:flex;align-items:center;padding:22px 18px 24px}
+.ovp-node{box-sizing:border-box;position:relative;flex:1 1 0;min-width:0;max-width:200px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 14px 14px;border-radius:16px;background:#fff;border:1px solid #e3e9f4;box-shadow:0 1px 2px rgba(16,24,40,.04),0 6px 16px -8px rgba(40,86,214,.18);cursor:pointer;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;animation:ovpIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*90ms)}
+.ovp-node::before{content:"";position:absolute;left:18px;right:18px;top:0;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#2856D6,#6d93ff);opacity:.9}
+.ovp-node:hover{transform:translateY(-4px);border-color:#bcd0fb;box-shadow:0 2px 4px rgba(16,24,40,.05),0 16px 28px -10px rgba(40,86,214,.35)}
+.ovp-top{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ovp-step{font-size:11px;font-weight:800;letter-spacing:.6px;color:#2856D6;background:#eaf0ff;border-radius:6px;padding:2px 7px}
+.ovp-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;color:#64748b;background:#f1f5f9;white-space:nowrap}
+.ovp-pill i{width:6px;height:6px;border-radius:50%;background:#94a3b8}
+.ovp-node.on .ovp-pill{color:#15803d;background:#e6f8ee}
+.ovp-node.on .ovp-pill i{background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.55);animation:ovpDot 1.8s ease-out infinite}
+.ovp-icon{position:relative;width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(145deg,#f1f5ff,#dfe9ff);box-shadow:inset 0 1px 0 #fff,0 6px 14px -6px rgba(40,86,214,.45);margin-bottom:10px}
+.ovp-icon span{font-size:26px;line-height:1;filter:drop-shadow(0 2px 3px rgba(40,86,214,.25))}
+.ovp-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.1px}
+.ovp-metric{margin:8px 0 10px;line-height:1}
+.ovp-metric b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;background:linear-gradient(180deg,#1e3a8a,#2856D6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ovp-node.off .ovp-metric b{background:none;color:#94a3b8}
+.ovp-metric small{display:block;margin-top:4px;font-size:11px;color:var(--text3)}
+.ovp-stats{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}
+.ovp-stats>div{padding:7px 6px;border-radius:10px;background:#f5f8fe;text-align:center}
+.ovp-stats span{display:block;font-size:10px;color:var(--text3);margin-bottom:2px}
+.ovp-stats b{display:block;font-size:12px;font-weight:800;color:var(--text)}
 
-/* Điện thoại: xếp dọc, hạt chạy từ trên xuống */
+/* Đường ống kính mờ + hạt sáng có đuôi, chạy đều từ đầu đến cuối */
+.ovp-pipe{position:relative;flex:0 1 72px;min-width:40px;padding:0 4px}
+.ovp-track{position:relative;height:6px;border-radius:6px;background:linear-gradient(180deg,#dbe6fb,#eaf0ff);box-shadow:inset 0 1px 2px rgba(40,86,214,.18)}
+.ovp-track::before,.ovp-track::after{content:"";position:absolute;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#fff;border:2px solid #2856D6;box-shadow:0 0 0 3px rgba(40,86,214,.12);z-index:2}
+.ovp-track::before{left:-5px}
+.ovp-track::after{right:-5px;background:#2856D6}
+.ovp-p{position:absolute;top:50%;left:0;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;opacity:0;z-index:1;
+  background:radial-gradient(circle,#fff 0 35%,#7aa2ff 70%,#2856D6 100%);
+  box-shadow:0 0 8px 2px rgba(79,124,245,.85),0 0 18px 5px rgba(40,86,214,.4);
+  animation:ovpFlowX 2.7s cubic-bezier(.45,.05,.55,.95) infinite;animation-delay:var(--d)}
+.ovp-p::before{content:"";position:absolute;right:60%;top:50%;width:36px;height:3px;margin-top:-1.5px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(79,124,245,.75))}
+
+@keyframes ovpFlowX{0%{left:2%;opacity:0}14%{opacity:1}86%{opacity:1}100%{left:calc(98% - 9px);opacity:0}}
+@keyframes ovpFlowY{0%{top:2%;opacity:0}14%{opacity:1}86%{opacity:1}100%{top:calc(98% - 9px);opacity:0}}
+@keyframes ovpIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes ovpDot{0%{box-shadow:0 0 0 0 rgba(22,163,74,.55)}100%{box-shadow:0 0 0 7px rgba(22,163,74,0)}}
+@keyframes ovpBlink{0%,100%{opacity:1}50%{opacity:.35}}
+
+@media(max-width:900px){.ovp-flow{padding:18px 12px 20px}.ovp-node{padding:12px 8px}.ovp-title small{display:none}.ovp-pill{font-size:9.5px;padding:3px 6px}}
+/* Điện thoại: xếp dọc, hạt chạy từ trên xuống dưới */
 @media(max-width:700px){
-  .ovp-flow{flex-direction:column;align-items:center}
-  .ovp-node{flex:none;width:100%;max-width:340px}
-  .ovp-pipe{flex:none;width:6px;height:46px;min-width:0;justify-content:center}
+  .ovp-flow{flex-direction:column;align-items:center;padding:16px 14px 18px}
+  .ovp-node{flex:none;width:100%;max-width:340px;padding:14px}
+  .ovp-pipe{flex:none;width:6px;height:60px;min-width:0;padding:6px 0;box-sizing:content-box}
   .ovp-track{width:6px;height:100%}
-  .ovp-p{left:50%;top:0;margin-top:0;margin-left:-5px;animation-name:ovpFlowY}
-  .ovp-p::before{right:auto;left:50%;top:auto;bottom:50%;width:4px;height:22px;margin:0 0 0 -2px;background:linear-gradient(180deg,transparent,rgba(22,163,74,.55))}
-  .ovp-pipe.idle .ovp-p::before{background:linear-gradient(180deg,transparent,rgba(148,163,184,.4))}
-  .ovp-head{right:auto;top:auto;left:50%;bottom:-2px;margin:0 0 0 -4.5px;transform:rotate(135deg)}
+  .ovp-track::before,.ovp-track::after{left:50%;right:auto;margin:0 0 0 -5px}
+  .ovp-track::before{top:-5px}
+  .ovp-track::after{top:auto;bottom:-5px}
+  .ovp-p{left:50%;top:0;margin-top:0;margin-left:-4.5px;animation-name:ovpFlowY}
+  .ovp-p::before{right:auto;left:50%;top:auto;bottom:60%;width:3px;height:36px;margin:0 0 0 -1.5px;background:linear-gradient(180deg,transparent,rgba(79,124,245,.75))}
 }
 @media(prefers-reduced-motion:reduce){
-  .ovp-p,.ovp-node.on .ovp-ring::after{animation:none}
+  .ovp-p,.ovp-node,.ovp-live i,.ovp-node.on .ovp-pill i{animation:none}
   .ovp-p{opacity:.9}
 }
