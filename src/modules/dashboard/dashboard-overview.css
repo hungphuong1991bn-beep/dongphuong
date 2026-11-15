@@ -255,3 +255,54 @@
   .card:hover{transform:none}
 }
 
+
+/* ── Sơ đồ quy trình Thanh cái: Nguyên liệu → Đùn → Rút → Đánh bóng ── */
+.ovp-panel{margin:12px 0}
+.ovp-flow{display:flex;align-items:stretch;padding:6px 2px 4px}
+.ovp-node{flex:0 0 128px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:12px 10px;border:1px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;transition:box-shadow .2s,border-color .2s,transform .2s}
+.ovp-node:hover{box-shadow:0 6px 18px rgba(40,86,214,.14);border-color:#b7cbf7;transform:translateY(-2px)}
+.ovp-node.on{border-color:#bfe3d0;background:linear-gradient(180deg,#f3fbf7,#fff)}
+.ovp-ring{position:relative;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e2e8f0;margin-bottom:4px}
+.ovp-node.on .ovp-ring{background:linear-gradient(135deg,#16a34a,#34d399);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
+.ovp-node.on .ovp-ring::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(22,163,74,.45);animation:ovpPulse 2s ease-out infinite}
+.ovp-ic{font-size:22px;line-height:1}
+.ovp-name{font-size:13.5px;font-weight:800;color:var(--text)}
+.ovp-big{font-size:26px;font-weight:800;line-height:1.05;color:var(--text)}
+.ovp-node.off .ovp-big{color:var(--text3)}
+.ovp-biglbl{font-size:10.5px;color:var(--text3)}
+.ovp-lines{width:100%;margin-top:6px;font-size:11.5px}
+.ovp-lines>div{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-top:1px dashed #eef1f6}
+.ovp-lines span{color:var(--text3)}
+.ovp-state{margin-top:6px;font-size:10.5px;font-weight:700;color:var(--text4)}
+.ovp-node.on .ovp-state{color:#15803d}
+
+/* Đường ống + hạt sáng */
+.ovp-pipe{position:relative;flex:1 1 90px;min-width:56px;display:flex;align-items:center}
+.ovp-track{position:relative;width:100%;height:6px;border-radius:6px;background:#e2e8f0;overflow:visible}
+.ovp-pipe.live .ovp-track{background:linear-gradient(90deg,#bbf7d0,#86efac);box-shadow:0 0 10px rgba(34,197,94,.35)}
+.ovp-p{position:absolute;top:50%;left:0;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#fff;opacity:0;
+  box-shadow:0 0 6px 2px rgba(255,255,255,.95),0 0 12px 4px rgba(22,163,74,.75);animation:ovpFlowX 2.8s linear infinite;animation-delay:var(--d)}
+.ovp-p::before{content:"";position:absolute;right:50%;top:50%;width:26px;height:4px;margin-top:-2px;border-radius:4px;background:linear-gradient(90deg,transparent,rgba(22,163,74,.55))}
+.ovp-pipe.idle .ovp-p{background:#cbd5e1;box-shadow:0 0 4px rgba(148,163,184,.6);animation-duration:5.6s}
+.ovp-pipe.idle .ovp-p::before{background:linear-gradient(90deg,transparent,rgba(148,163,184,.4))}
+.ovp-head{position:absolute;right:-1px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-top:3px solid #94a3b8;border-right:3px solid #94a3b8;transform:rotate(45deg);border-radius:1px}
+.ovp-pipe.live .ovp-head{border-color:#16a34a}
+@keyframes ovpFlowX{0%{left:0;opacity:0}12%{opacity:1}85%{opacity:1}100%{left:calc(100% - 8px);opacity:0}}
+@keyframes ovpFlowY{0%{top:0;opacity:0}12%{opacity:1}85%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
+@keyframes ovpPulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+
+/* Điện thoại: xếp dọc, hạt chạy từ trên xuống */
+@media(max-width:700px){
+  .ovp-flow{flex-direction:column;align-items:center}
+  .ovp-node{flex:none;width:100%;max-width:340px}
+  .ovp-pipe{flex:none;width:6px;height:46px;min-width:0;justify-content:center}
+  .ovp-track{width:6px;height:100%}
+  .ovp-p{left:50%;top:0;margin-top:0;margin-left:-5px;animation-name:ovpFlowY}
+  .ovp-p::before{right:auto;left:50%;top:auto;bottom:50%;width:4px;height:22px;margin:0 0 0 -2px;background:linear-gradient(180deg,transparent,rgba(22,163,74,.55))}
+  .ovp-pipe.idle .ovp-p::before{background:linear-gradient(180deg,transparent,rgba(148,163,184,.4))}
+  .ovp-head{right:auto;top:auto;left:50%;bottom:-2px;margin:0 0 0 -4.5px;transform:rotate(135deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ovp-p,.ovp-node.on .ovp-ring::after{animation:none}
+  .ovp-p{opacity:.9}
+}

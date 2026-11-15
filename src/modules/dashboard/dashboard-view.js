@@ -229,6 +229,68 @@ function buildOvRecentActivity(){
       </div>
     </div>`).join('');
 }
+
+// ── Sơ đồ quy trình Thanh cái: Nguyên liệu → Đùn → Rút → Đánh bóng ─────────
+// Thay cho thẻ "Đang truy cập" cũ (danh sách người online vẫn còn ở Sidebar).
+// Giữa 2 công đoạn là "đường ống" có các hạt sáng chạy từ đầu đến cuối.
+// Hạt sáng LUÔN chạy đều từ công đoạn này sang công đoạn kế tiếp (chỉ để thể hiện
+// hướng đi của quy trình, không phản ánh trạng thái chạy/dừng). Chỉ ĐỌC dữ liệu có sẵn.
+function buildOvBusbarFlow(orders){
+  const today = (typeof todayStr==='function') ? todayStr() : '';
+  const fmt = v => (typeof ovFmtKg==='function') ? ovFmtKg(v) : v;
+  const isRun = o => o.status==='running' || o.status==='cutting';
+  const nlToday = (DB.nguyenLieuLog||[]).filter(r=>r.ngay===today && r.heatLot);
+  const nlKg = nlToday.reduce((t,r)=>t+(parseFloat(r.soLuong)||0),0);
+
+  const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'}];
+  const nodes = [{
+    key:'nl', icon:'🧪', label:'Nguyên Liệu', active: nlToday.length>0,
+    big: nlToday.length, bigLbl:'lô nhập hôm nay',
+    lines:[['Khối lượng', fmt(nlKg)+' kg']],
+    click:"goTab('soLieu')"
+  }];
+  defs.forEach((d,i)=>{
+    const prevKey = i===0 ? null : defs[i-1].key;
+    const running = orders.filter(o=>isRun(o) && (o.stage||'dun')===d.key);
+    const incoming = i===0 ? orders.filter(o=>o.status==='pending')
+                           : orders.filter(o=>isRun(o) && (o.stage||'dun')===prevKey);
+    const kg = running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
+    nodes.push({
+      key:d.key, icon:d.icon, label:d.label, active: running.length>0,
+      big: running.length, bigLbl:'đơn đang chạy',
+      lines:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
+      click:`if(typeof dpOpenStageList==='function')dpOpenStageList('${d.key}')`
+    });
+  });
+
+  const html = nodes.map((n,i)=>{
+    const node = `
+      <div class="ovp-node ${n.active?'on':'off'}" onclick="${n.click}">
+        <div class="ovp-ring"><span class="ovp-ic">${n.icon}</span></div>
+        <div class="ovp-name">${n.label}</div>
+        <div class="ovp-big">${n.big}</div>
+        <div class="ovp-biglbl">${n.bigLbl}</div>
+        <div class="ovp-lines">${n.lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>
+        <span class="ovp-state">${n.active?'● Đang chạy':'○ Đang chờ'}</span>
+      </div>`;
+    // Đường ống nối sang công đoạn kế tiếp: trạng thái theo công đoạn NGUỒN
+    const pipe = i<nodes.length-1 ? `
+      <div class="ovp-pipe live" aria-hidden="true">
+        <div class="ovp-track">
+          <i class="ovp-p" style="--d:0s"></i><i class="ovp-p" style="--d:.7s"></i>
+          <i class="ovp-p" style="--d:1.4s"></i><i class="ovp-p" style="--d:2.1s"></i>
+        </div>
+        <span class="ovp-head"></span>
+      </div>` : '';
+    return node + pipe;
+  }).join('');
+
+  return `<div class="ov-panel ovp-panel">
+    <div class="ov-panel-title">🏭 Quy trình sản xuất Thanh cái <span class="ov-sub2">(hạt sáng = chiều đi của vật liệu qua từng công đoạn)</span></div>
+    <div class="ovp-flow">${html}</div>
+  </div>`;
+}
+
 // Lời chào cá nhân hoá ở đầu tab Tổng quan, tự đổi theo giờ trong ngày
 // (sáng/trưa/chiều/tối) và tên tài khoản đang đăng nhập.
 function ovGreetingPhrase(){
@@ -293,7 +355,7 @@ function renderDashboard(){
     <div class="ov-wrap">
       ${buildOvGreeting()}
       ${notifBanner}
-      <div id="onlineEl"></div>
+      ${dpSafe(buildOvBusbarFlow,orders)}
       ${workerPanel}
 
       ${buildOvKpis(orders)}
@@ -379,7 +441,7 @@ function renderDashboard(){
   // Load online users — dùng chung updateOnline() (ghi heartbeat của chính
   // mình + đọc lại toàn bộ danh sách + vẽ cả sidebar lẫn Dashboard) để tránh
   // 2 nơi có 2 công thức lọc khác nhau, từng là nguồn gây lệch/không hiện.
-  setTimeout(()=>{ if($('onlineEl')) updateOnline(); },300);
+  setTimeout(()=>{ if(typeof updateOnline==='function') updateOnline(); },300);
   // Đồng hồ trên đầu trang cập nhật mỗi giây, khớp với đồng hồ hệ thống
   setTimeout(()=>{ const p=$('ovClockPill'); if(p) p.textContent='🕐 '+vnTimeHM(new Date()); },1000);
 }
