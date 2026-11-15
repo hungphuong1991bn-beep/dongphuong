@@ -196,8 +196,8 @@ function khViewDetail(id){
     </div>
     <div class="kh-detail-sec">
       <div class="kh-detail-sec-title">📊 Tiến độ sản xuất</div>
-      ${renderProgressBar(o)||'<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất</div>'}
-      ${renderStageTracker(o, isStaff())}
+      ${khProgressFx(o)||'<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất</div>'}
+      ${khStageFlow(o, isStaff())}
     </div>
     <div class="kh-detail-sec">
       <div class="kh-detail-sec-title">🏭 Phân công máy</div>

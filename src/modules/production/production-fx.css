@@ -1,0 +1,69 @@
+/* src/modules/production/production-fx.css — "hạt sáng" cho tab Điều hành SX, dùng chung 2 chế độ:
+   thường (.dh-wrap.dh2) và TV Mode (.dh-wrap.dh2.dh-tv — độ dày vệt scale theo dvh). Nạp SAU production-dh4.css. */
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+
+/* ── Vệt sáng chạy dọc viền: thẻ máy · KPI · huy hiệu trạng thái ── */
+.dh-wrap.dh2 .dh-card,.dh-wrap.dh2 .dh3-kpi-card,.dh-wrap.dh2 .dh4-badge{position:relative;--rw:2px;--sp:4s;--ring:#94a3b8;--head:var(--ring)}
+.dh-wrap.dh2 .dh-card::after,.dh-wrap.dh2 .dh3-kpi-card::after,.dh-wrap.dh2 .dh4-badge::after{
+  content:"";display:block;position:absolute;inset:0;border-radius:inherit;padding:var(--rw);pointer-events:none;z-index:3;
+  background:conic-gradient(from var(--ang),transparent 0 60%,color-mix(in srgb,var(--ring) 38%,transparent) 80%,var(--ring) 95%,var(--head) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:dhRing var(--sp) linear infinite}
+.dh-wrap.dh2.dh-tv .dh-card,.dh-wrap.dh2.dh-tv .dh3-kpi-card{--rw:clamp(2px,.3dvh,4px)}
+
+/* Thẻ máy theo trạng thái: Chạy xanh lá nhanh · Sự cố đỏ rất nhanh · Chờ vàng · Sẵn sàng xanh dương · Bảo trì tím */
+.dh-wrap.dh2 .dh-card.st-run{--ring:#16a34a;--sp:2.2s}
+.dh-wrap.dh2 .dh-card.st-fault{--ring:#ef4444;--sp:1s}
+.dh-wrap.dh2 .dh-card.st-wait{--ring:#f5a70b;--sp:3.4s}
+.dh-wrap.dh2 .dh-card.st-ready{--ring:#3b82f6;--sp:5s}
+.dh-wrap.dh2 .dh-card.st-maint{--ring:#7c3aed;--sp:5.5s}
+.dh-wrap.dh2 .dh-card.dh-card-overdue{--ring:#dc2626;--sp:1.3s}
+.dh-wrap.dh2 .dh-card.st-run{animation:dhGlowRun 3s ease-in-out infinite}
+.dh-wrap.dh2 .dh-card.st-fault{animation:dhGlowFault 1.1s ease-in-out infinite}
+
+/* KPI (nền màu đậm → đầu vệt trắng), lệch pha để các ô không chạy đồng loạt */
+.dh-wrap.dh2 .dh3-kpi-card{--ring:rgba(255,255,255,.55);--head:#fff;--sp:6s;animation-delay:0s}
+.dh-wrap.dh2 .dh3-kpi-card::after{animation-delay:calc(var(--k,0)*-.75s)}
+.dh-wrap.dh2 .dh3-kpi-card:nth-child(2){--k:1}.dh-wrap.dh2 .dh3-kpi-card:nth-child(3){--k:2}.dh-wrap.dh2 .dh3-kpi-card:nth-child(4){--k:3}
+.dh-wrap.dh2 .dh3-kpi-card:nth-child(5){--k:4}.dh-wrap.dh2 .dh3-kpi-card:nth-child(6){--k:5}.dh-wrap.dh2 .dh3-kpi-card:nth-child(7){--k:6}.dh-wrap.dh2 .dh3-kpi-card:nth-child(8){--k:7}
+
+/* Huy hiệu trạng thái trong bảng đơn */
+.dh-wrap.dh2 .dh4-badge{--rw:1.5px;--head:#fff}
+.dh-wrap.dh2 .dh4-b-run{--ring:#86efac;--sp:1.8s}
+.dh-wrap.dh2 .dh4-b-late{--ring:#fecaca;--sp:1.1s}
+.dh-wrap.dh2 .dh4-b-soon{--ring:#fde68a;--sp:2.4s}
+.dh-wrap.dh2 .dh4-b-done{--ring:#d9f99d;--sp:3.6s}
+.dh-wrap.dh2 .dh4-b-wait,.dh-wrap.dh2 .dh4-b-ready,.dh-wrap.dh2 .dh4-b-maint{--ring:#e2e8f0;--sp:5s}
+
+/* ── Hàng đơn đang sản xuất: hạt sáng quét ngang qua hàng, đơn trễ quét đỏ nhanh hơn ── */
+.dh-wrap.dh2 .dh4-orow{position:relative;overflow:hidden}
+.dh-wrap.dh2 .dh4-orow::after{content:"";position:absolute;top:0;bottom:0;left:0;width:22%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(125,211,252,.20),rgba(255,255,255,.34),rgba(125,211,252,.20),transparent);
+  transform:translateX(-130%);animation:dhRowSweep 5s ease-in-out infinite}
+.dh-wrap.dh2 .dh4-orow:nth-child(2n)::after{animation-delay:-1.7s}
+.dh-wrap.dh2 .dh4-orow:nth-child(3n)::after{animation-delay:-3.3s}
+.dh-wrap.dh2 .dh4-orow:has(.dh4-b-late)::after{background:linear-gradient(90deg,transparent,rgba(248,113,113,.22),rgba(254,202,202,.38),rgba(248,113,113,.22),transparent);animation-duration:2.6s}
+.dh-wrap.dh2 .dh4-orow:has(.dh4-b-late){border-left-color:#ef4444}
+
+/* ── Thanh tiến độ & vòng % của máy đang chạy ── */
+.dh-wrap.dh2 .dh-card.st-run .dh-prog-wrap{overflow:hidden}
+.dh-wrap.dh2 .dh-card.st-run .dh-prog-bar{position:relative;overflow:hidden;
+  background:repeating-linear-gradient(-45deg,rgba(255,255,255,.3) 0 6px,transparent 6px 12px),#22c55e;background-size:17px 17px,100% 100%;animation:dhStripe .9s linear infinite}
+.dh-wrap.dh2 .dh-card.st-run .dh-prog-bar::after{content:"";position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:dhBarShine 2s ease-in-out infinite}
+.dh-wrap.dh2 .dh-card.st-run .dh-ring{position:relative}
+.dh-wrap.dh2 .dh-card.st-run .dh-ring::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from var(--ang),transparent 0 70%,#fff 100%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));
+  animation:dhRing 1.8s linear infinite}
+
+@keyframes dhRing{to{--ang:360deg}}
+@keyframes dhRowSweep{0%{transform:translateX(-130%)}55%,100%{transform:translateX(560%)}}
+@keyframes dhStripe{to{background-position:17px 0,0 0}}
+@keyframes dhBarShine{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@keyframes dhGlowRun{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 16px 1px rgba(34,197,94,.38)}}
+@keyframes dhGlowFault{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 20px 3px rgba(239,68,68,.55)}}
+
+@media(prefers-reduced-motion:reduce){
+  .dh-wrap.dh2 .dh-card,.dh-wrap.dh2 .dh-card::after,.dh-wrap.dh2 .dh3-kpi-card::after,.dh-wrap.dh2 .dh4-badge::after,
+  .dh-wrap.dh2 .dh4-orow::after,.dh-wrap.dh2 .dh-prog-bar,.dh-wrap.dh2 .dh-prog-bar::after,.dh-wrap.dh2 .dh-ring::after{animation:none!important}
+}

@@ -39,7 +39,7 @@ function khPlanCard(o, seq){
   const seqCls = overdue?'is-overdue':dueSoon?'is-duesoon':`st-${s}`;
   const machChip = khMachineChip(o);
 
-  return `<div class="card kh-plan-card st-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}" data-order-id="${o.id}" onclick="khViewDetail('${o.id}')">
+  return `<div class="card kh-plan-card st-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}" data-order-id="${o.id}" style="--i:${Math.min(seq||0,12)}" onclick="khViewDetail('${o.id}')">
     <div class="card-header kh-hd status-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}">
       <div class="kh2-hd-top">
         ${seq!=null?`<div class="kh-seq-badge ${seqCls}" title="STT ${seq}">${seq}</div>`:''}
@@ -60,9 +60,9 @@ function khPlanCard(o, seq){
     </div>
     ${machChip?`<div class="kh-meta-row">${machChip}</div>`:''}
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
-    ${renderProgressBar(o)}
+    ${khProgressFx(o)}
     ${s!=='pending'?`<div class="kh2-timeinfo ${ti.cls}"><span>${ti.lbl}</span><b${ti.id?` id="${ti.id}"`:''}>${ti.val}</b></div>`:''}
-    ${renderStageTracker(o, canStatus)}
+    ${khStageFlow(o, canStatus)}
     ${renderAIWarn(o)}
     ${canStatus?`<div class="kh-plan-actions" onclick="event.stopPropagation()">
       ${s==='pending'?`<button class="kh-abtn start" id="kh-start-${o.id}" onclick="khPlanAction('${o.id}','running',this,event)" title="Bắt đầu sản xuất">

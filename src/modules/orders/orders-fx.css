@@ -1,0 +1,31 @@
+/* src/modules/orders/orders-fx.css — vệt sáng chạy dọc viền huy hiệu trạng thái (tab Đơn hàng).
+   Mỗi trạng thái 1 màu + nhịp riêng. Chỉ áp cho pill có class .dd-st-fx (không ảnh hưởng tab khác). */
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+.dd-st-fx{position:relative;--ring:#94A3B8;--sp:6s;--glow:transparent}
+.dd-st-fx::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.6px;pointer-events:none;
+  background:conic-gradient(from var(--ang),transparent 0 58%,color-mix(in srgb,var(--ring) 35%,transparent) 78%,var(--ring) 94%,#fff 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:ddRing var(--sp) linear infinite}
+.dd-st-fx{animation:ddGlow var(--sp) ease-in-out infinite}
+
+/* Đang sản xuất: nhanh, vàng cam, quầng sáng thở */
+.dd-st-producing{--ring:#F59E0B;--sp:1.8s;--glow:rgba(245,158,11,.38)}
+/* Đã lập kế hoạch: xanh dương, nhịp vừa */
+.dd-st-planned{--ring:#3B82F6;--sp:3.6s;--glow:rgba(59,130,246,.22)}
+/* Chưa lập kế hoạch: xám, chậm và mờ — chờ được xếp lịch */
+.dd-st-unplanned{--ring:#94A3B8;--sp:7s}
+.dd-st-unplanned::before{opacity:.75}
+/* Hoàn thành / Đã giao: quét 1 vòng rồi nghỉ, không gây rối mắt */
+.dd-st-completed{--ring:#16A34A;--sp:6s}
+.dd-st-delivered{--ring:#8B5CF6;--sp:6s}
+.dd-st-completed::before,.dd-st-delivered::before{animation-name:ddRingOnce}
+.dd-st-completed,.dd-st-delivered{animation:none}
+/* Cảnh báo quá hạn: đỏ, nhanh */
+.dd-st-overdue,tr.is-overdue .dd-st-fx{--ring:#DC2626;--sp:1.3s;--glow:rgba(220,38,38,.35)}
+tr.is-overdue .dd-st-completed::before{animation-name:ddRing}
+
+@keyframes ddRing{to{--ang:360deg}}
+@keyframes ddRingOnce{0%{--ang:0deg;opacity:1}38%{--ang:360deg;opacity:1}46%,100%{--ang:360deg;opacity:0}}
+@keyframes ddGlow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 9px 1px var(--glow)}}
+
+@media(prefers-reduced-motion:reduce){.dd-st-fx,.dd-st-fx::before{animation:none!important}}

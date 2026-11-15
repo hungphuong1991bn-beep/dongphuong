@@ -177,9 +177,9 @@ function ddViewDetail(id){
   $('ddDetailTitle').textContent = `${o.customer||'—'} · ${ddCode(o)}`;
   $('ddDetailBody').innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-      <span class="dd-status-pill" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span>
+      <span class="dd-status-pill dd-st-fx dd-st-${meta.key}" style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span>
       ${ddIsNew(o)?'<span class="dd-new-pill">MỚI</span>':''}
-      ${overdue?'<span class="dd-status-pill" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">⚠️ Quá hạn giao</span>':''}
+      ${overdue?'<span class="dd-status-pill dd-st-fx dd-st-overdue" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5">⚠️ Quá hạn giao</span>':''}
       ${o.priority?`<span class="dd-status-pill" style="background:var(--purple-l);color:var(--purple-m);border-color:transparent">⭐ ${o.priority}</span>`:''}
     </div>
 
@@ -282,7 +282,7 @@ function ddPrintOrder(id, ev){
   td{padding:7px 8px;border-bottom:1px solid #e4e7ee;font-size:13.5px}
   td.lbl{color:#646c7c;width:170px;font-weight:600}</style></head><body>
   <h1>PHIẾU ĐƠN HÀNG — ${ddCode(o)}</h1>
-  <div class="pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</div>
+  <div class="pill dd-st-fx dd-st-${meta.key}" style="background:${meta.bg};color:${meta.color}">${meta.label}</div>
   <table>
     <tr><td class="lbl">Khách hàng</td><td>${o.customer||'—'}</td></tr>
     <tr><td class="lbl">Sản phẩm</td><td>${o.type||'—'}</td></tr>
@@ -339,7 +339,7 @@ function ddRow(o, stt){
     <td><span class="ord-dt-main">${fmtDate(o.createdAt)}</span>${o.createdAt?`<div class="ord-dt-sub">🕐 ${vnTimeHM(new Date(o.createdAt))}</div>`:''}</td>
     <td>${ddDueCellHTML(o)}</td>
     <td><span class="ord-pri"${tAttr(o.priority)} style="background:${pc}1a;color:${pc};border-color:${pc}55">🚩 ${o.priority||'—'}</span></td>
-    <td><span class="dd-status-pill"${tAttr(meta.label)} style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
+    <td><span class="dd-status-pill dd-st-fx dd-st-${meta.key}"${tAttr(meta.label)} style="background:${meta.bg};color:${meta.color};border-color:${meta.border}">${meta.label}</span></td>
     <td onclick="event.stopPropagation()" style="white-space:nowrap">
       <div class="dd-menu-wrap" style="display:inline-block"><button class="dd-act-btn icon-only" title="Thao tác" onclick="ddToggleMenu('${o.id}',event)">⋮</button></div>
     </td>
