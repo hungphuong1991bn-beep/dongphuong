@@ -265,6 +265,20 @@ function buildOvBusbarFlow(orders){
     });
   });
 
+  // Bước 6 — Nhập kho: lấy từ dữ liệu tab "Đơn hoàn thành" (cùng cách đếm với tab đó:
+  // đã nhập = o.whIn; chờ nhập = đơn hoàn thành chưa nhập kho, chưa giao, không hoàn trả)
+  const doneAll = orders.filter(o=>o.status==='done');
+  const whIn   = doneAll.filter(o=>o.whIn);
+  const whWait = doneAll.filter(o=>!o.whIn && !o.delivered && !o.returned);
+  const whKg   = whIn.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
+  nodes.push({
+    key:'kho', icon:'📦', label:'Nhập Kho', active: whIn.length>0,
+    on:'Đã nhập kho', off:'Chưa nhập',
+    big: whIn.length, unit:'đơn đã nhập kho',
+    stats:[['Chờ nhập', whWait.length+' đơn'], ['Khối lượng', fmt(whKg)+' kg']],
+    click:"goTab('hoanThanh');if(typeof htFilterStatus!=='undefined'&&htFilterStatus!=='wh_all'&&typeof htSetFilter==='function')htSetFilter('wh_all')"
+  });
+
   const html = nodes.map((n,i)=>{
     const node = `
       <div class="ovp-node ${n.active?'on':'off'}" style="--i:${i}" onclick="${n.click}">
@@ -289,7 +303,7 @@ function buildOvBusbarFlow(orders){
 
   return `<div class="ov-panel ovp-panel">
     <div class="ovp-head">
-      <div class="ovp-title"><span class="ovp-title-ic">🏭</span><div><b>Quy trình sản xuất Thanh cái</b><small>Nguyên liệu → Đùn → Rút → Đánh bóng → Cắt ngắn · bấm vào công đoạn để xem chi tiết</small></div></div>
+      <div class="ovp-title"><span class="ovp-title-ic">🏭</span><div><b>Quy trình sản xuất Thanh cái</b><small>Nguyên liệu → Đùn → Rút → Đánh bóng → Cắt ngắn → Nhập kho · bấm vào công đoạn để xem chi tiết</small></div></div>
       <span class="ovp-live"><i></i>Trực tiếp</span>
     </div>
     <div class="ovp-flow">${html}</div>
