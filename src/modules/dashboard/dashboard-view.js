@@ -242,7 +242,7 @@ function buildOvBusbarFlow(orders){
   const nlToday = (DB.nguyenLieuLog||[]).filter(r=>r.ngay===today && r.heatLot);
   const nlKg = nlToday.reduce((t,r)=>t+(parseFloat(r.soLuong)||0),0);
 
-  const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'}];
+  const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'},{key:'cat',icon:'✂️',label:'Cắt Ngắn'}];
   const nodes = [{
     key:'nl', icon:'🧪', label:'Nguyên Liệu', active: nlToday.length>0,
     on:'Đã nhập', off:'Chưa nhập',
@@ -289,7 +289,7 @@ function buildOvBusbarFlow(orders){
 
   return `<div class="ov-panel ovp-panel">
     <div class="ovp-head">
-      <div class="ovp-title"><span class="ovp-title-ic">🏭</span><div><b>Quy trình sản xuất Thanh cái</b><small>Nguyên liệu → Đùn → Rút → Đánh bóng · bấm vào công đoạn để xem chi tiết</small></div></div>
+      <div class="ovp-title"><span class="ovp-title-ic">🏭</span><div><b>Quy trình sản xuất Thanh cái</b><small>Nguyên liệu → Đùn → Rút → Đánh bóng → Cắt ngắn · bấm vào công đoạn để xem chi tiết</small></div></div>
       <span class="ovp-live"><i></i>Trực tiếp</span>
     </div>
     <div class="ovp-flow">${html}</div>
