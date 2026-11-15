@@ -192,8 +192,7 @@ function htViewDetail(id){
   $('htDetailTitle').textContent = `${o.customer||'—'} · ${htCode(o)}`;
   $('htDetailBody').innerHTML = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-      <span class="dd-status-pill" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.icon} ${st.label}</span>
-      ${htIsFresh(o)?'<span class="ht-fresh-pill">🆕 Mới hoàn thành</span>':''}
+      ${htStatusChip(o,st,htIsFresh(o))}
       ${o.priority?`<span class="dd-status-pill" style="background:var(--purple-l);color:var(--purple-m);border-color:transparent">⭐ ${o.priority}</span>`:''}
       ${onTimeInfo}
     </div>

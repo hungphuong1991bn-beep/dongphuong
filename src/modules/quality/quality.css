@@ -104,3 +104,19 @@
 .ht-timeline-row{font-size:11px;color:var(--text3)}
 .ht-timeline-row b{color:var(--text2);font-weight:700}
 
+
+/* ── Ô trạng thái hợp nhất của tab "Đơn hoàn thành": [✓ Hoàn thành  MỚI] ── */
+.ht-chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:999px;background:var(--bg);color:var(--c);border:1px solid var(--bd);font-size:11.5px;font-weight:700;letter-spacing:.15px;line-height:1.25;white-space:nowrap;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:box-shadow .25s ease,transform .25s ease}
+.ht-chip.no-new{padding-right:10px}
+.ht-chip-ic{display:inline-flex;align-items:center;justify-content:center;line-height:0;flex-shrink:0}
+.ht-chip-ic svg{display:block}
+.ht-chip-lbl{font-feature-settings:"tnum" 1;text-rendering:optimizeLegibility}
+.ht-chip.is-fresh{border-color:#86efac;box-shadow:0 0 0 3px rgba(22,163,74,.10),0 4px 12px -4px rgba(22,163,74,.45);animation:htChipGlow 2.6s ease-in-out infinite}
+.ht-chip-new{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:4px;padding:2.5px 8px 2.5px 6px;border-radius:999px;font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#15803d 0%,#22c55e 55%,#34d399 100%);box-shadow:0 2px 6px rgba(22,163,74,.45),inset 0 1px 0 rgba(255,255,255,.35)}
+.ht-chip-new i{flex-shrink:0;width:5px;height:5px;border-radius:50%;background:#fff;animation:htNewDot 1.6s ease-out infinite}
+.ht-chip-new::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg);animation:htNewShine 3s ease-in-out infinite}
+@keyframes htNewShine{0%,55%{left:-70%}100%{left:140%}}
+@keyframes htNewDot{0%{box-shadow:0 0 0 0 rgba(255,255,255,.8)}100%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+@keyframes htChipGlow{0%,100%{box-shadow:0 0 0 3px rgba(22,163,74,.10),0 4px 12px -4px rgba(22,163,74,.45)}50%{box-shadow:0 0 0 5px rgba(22,163,74,.04),0 6px 16px -4px rgba(22,163,74,.55)}}
+.htm-top .ht-chip{margin-left:auto;flex-shrink:0;font-size:11px}
+@media(prefers-reduced-motion:reduce){.ht-chip.is-fresh,.ht-chip-new i,.ht-chip-new::after{animation:none}}

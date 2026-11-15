@@ -70,6 +70,13 @@ function htStageIcon(key){
   return icons[key] || '';
 }
 
+// Ô trạng thái hợp nhất: icon + nhãn trạng thái (Hoàn thành / Chờ giao / Đã giao...)
+// và, nếu đơn vừa hoàn thành chưa xem, thẻ "MỚI" nằm NGAY TRONG CÙNG 1 Ô (có hiệu ứng ánh sáng quét).
+function htStatusChip(o, st, fresh, withIcon){
+  const ic = withIcon===false ? '' : `<span class="ht-chip-ic">${htStageIcon(st.key)}</span>`;
+  return `<span class="ht-chip${fresh?' is-fresh':' no-new'}" style="--c:${st.color};--bg:${st.bg};--bd:${st.border}">${ic}<span class="ht-chip-lbl">${st.label}</span>${fresh?'<span class="ht-chip-new"><i></i>MỚI</span>':''}</span>`;
+}
+
 // Dòng phụ ngày/giờ hiển thị ngay dưới badge trạng thái — thay thế thông tin
 // trước đây nằm ở 2 cột riêng "Nhập kho" / "Ngày giao" (nay đã gộp vào đây
 // cho gọn, đỡ phải kéo ngang bảng mà vẫn không mất dữ liệu thời gian).
@@ -181,7 +188,7 @@ function htmCard(o){
     <div class="htm-top">
       <span class="htm-check" style="color:${st.color}">${htStageIcon(st.key)}</span>
       <span class="htm-code">${o.customer||'—'}</span>
-      <span class="htm-badge" style="background:${st.bg};color:${st.color};border-color:${st.border}">${st.label}</span>
+      ${htStatusChip(o,st,htIsFresh(o),false)}
     </div>
     ${expSoon?`<div class="htm-expire-pill" title="Đơn đã gần/quá hạn lưu 30 ngày — chỉ Admin mới dọn được (thủ công, không khôi phục được)">⏳ ${purgeDays<=0?'Quá hạn lưu — chờ Admin dọn':'Còn '+purgeDays+' ngày tới hạn lưu'}</div>`:''}
     <div class="htm-grid">
@@ -219,9 +226,8 @@ function htRow(o, stt){
     <td style="color:var(--brand);font-weight:800">${o.startedAt&&o.doneAt?fmtDuration(o.doneAt-o.startedAt):'—'}</td>
     <td>
       <div class="ht-status-cell">
-        <span class="dd-status-pill ht-status-pill-modern" style="background:${st.bg};color:${st.color};border-color:${st.border}"><span class="ht-status-ic">${htStageIcon(st.key)}</span>${st.label}</span>
+        ${htStatusChip(o,st,fresh)}
         ${htStatusSub(o,st)?`<div class="ht-status-sub">${htStatusSub(o,st)}</div>`:''}
-        ${fresh?'<span class="ht-fresh-pill">Mới</span>':''}
         ${expSoon?`<span class="ht-expire-pill" title="Đơn đã gần/quá hạn lưu 30 ngày — chỉ Admin mới dọn được (thủ công, không khôi phục được)">⏳ ${purgeDays<=0?'Sắp bị':'Còn '+purgeDays+' ngày'} xoá</span>`:''}
       </div>
     </td>
