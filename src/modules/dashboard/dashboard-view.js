@@ -265,18 +265,18 @@ function buildOvBusbarFlow(orders){
     });
   });
 
-  // Bước 6 — Nhập kho: lấy từ dữ liệu tab "Đơn hoàn thành" (cùng cách đếm với tab đó:
-  // đã nhập = o.whIn; chờ nhập = đơn hoàn thành chưa nhập kho, chưa giao, không hoàn trả)
-  const doneAll = orders.filter(o=>o.status==='done');
-  const whIn   = doneAll.filter(o=>o.whIn);
-  const whWait = doneAll.filter(o=>!o.whIn && !o.delivered && !o.returned);
-  const whKg   = whIn.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
+  // Bước 6 — Nhập kho: ĐỒNG BỘ từ tab "Đơn hoàn thành" qua htWarehouseSummary()
+  // (cùng hàm tab đó dùng để đếm các thẻ Chờ nhập kho / Đã nhập kho) → hai nơi
+  // luôn khớp số. Xác nhận nhập kho ở tab Đơn hoàn thành thì Tổng quan tự cập nhật.
+  const wh = (typeof htWarehouseSummary==='function') ? htWarehouseSummary(orders)
+           : {wait:[], inWh:[], inToday:[], kgIn:0};
   nodes.push({
-    key:'kho', icon:'📦', label:'Nhập Kho', active: whIn.length>0,
-    on:'Đã nhập kho', off:'Chưa nhập',
-    big: whIn.length, unit:'đơn đã nhập kho',
-    stats:[['Chờ nhập', whWait.length+' đơn'], ['Khối lượng', fmt(whKg)+' kg']],
-    click:"goTab('hoanThanh');if(typeof htFilterStatus!=='undefined'&&htFilterStatus!=='wh_all'&&typeof htSetFilter==='function')htSetFilter('wh_all')"
+    key:'kho', icon:'📦', label:'Nhập Kho', active: wh.inWh.length>0 || wh.wait.length>0,
+    on: wh.wait.length ? `${wh.wait.length} đơn chờ nhập` : 'Đã nhập kho', off:'Chưa có đơn',
+    big: wh.inWh.length, unit:'đơn đã nhập kho',
+    stats:[['Chờ nhập', wh.wait.length+' đơn'], ['Nhập hôm nay', wh.inToday.length+' đơn'], ['Khối lượng', fmt(wh.kgIn)+' kg']],
+    // bấm → mở tab Đơn hoàn thành, lọc đúng nhóm: có đơn chờ nhập thì xem nhóm chờ, không thì xem đã nhập
+    click:`ovGoWarehouse('${wh.wait.length?'new':'wh_all'}')`
   });
 
   const html = nodes.map((n,i)=>{
@@ -308,6 +308,12 @@ function buildOvBusbarFlow(orders){
     </div>
     <div class="ovp-flow">${html}</div>
   </div>`;
+}
+// Mở tab "Đơn hoàn thành" với bộ lọc nhập kho cố định (không đảo bật/tắt như htSetFilter)
+function ovGoWarehouse(filterKey){
+  if(typeof htFilterStatus!=='undefined') htFilterStatus = filterKey;
+  if(typeof htMobPage!=='undefined') htMobPage = 1;
+  goTab('hoanThanh');
 }
 // Lời chào cá nhân hoá ở đầu tab Tổng quan, tự đổi theo giờ trong ngày
 // (sáng/trưa/chiều/tối) và tên tài khoản đang đăng nhập.

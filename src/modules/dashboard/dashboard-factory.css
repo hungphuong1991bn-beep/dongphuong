@@ -1,16 +1,6 @@
 /* Giai đoạn 2 — widget điều hành nhà máy trên Tổng quan (dùng token của design-system.css) */
 .dp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:12px 0}
 .dp-kpi .ov-kpi-val{font-size:22px}
-.dp-board{margin:12px 0}
-.dp-flow{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:4px 2px 8px}
-.dp-arrow{align-self:center;color:var(--text3);font-size:22px;font-weight:300;flex:0 0 auto}
-.dp-node{flex:1 1 150px;min-width:150px;border:1px solid var(--border);border-top:3px solid var(--ds-muted-bd);border-radius:var(--ds-radius-sm);padding:10px;background:#fff;cursor:pointer;transition:box-shadow var(--ds-dur),border-color var(--ds-dur)}
-.dp-node:hover{box-shadow:var(--ds-shadow-lg);border-color:#b7cbf7}
-.dp-node.nl{border-top-color:#059669}.dp-node.st{border-top-color:#94a3b8}.dp-node.st.run{border-top-color:#16a34a}.dp-node.fin{border-top-color:#1D4ED8}
-.dp-node-h{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:6px}
-.dp-node-l{margin-top:8px;font-size:12px}
-.dp-node-l>div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed #eef1f6}
-.dp-node-l span{color:var(--text3)}
 .dp-note{margin-top:8px;font-size:11.5px;color:var(--text3);line-height:1.5}
 .dp-row2{display:grid;grid-template-columns:1fr;gap:12px;margin:12px 0}
 @media(min-width:900px){.dp-row2{grid-template-columns:1fr 1fr}}

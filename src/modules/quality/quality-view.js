@@ -58,6 +58,24 @@ function htStage(o){
   return {key:'new', label:'Hoàn thành', icon:'🟢', color:'#0C7A54', bg:'#E3F5EE', border:'#86EFAC'};
 }
 
+// NGUỒN SỐ LIỆU DUY NHẤT cho nhập kho thành phẩm — tab "Đơn hoàn thành" và
+// khối "Nhập Kho" ở Tổng quan cùng gọi hàm này nên luôn khớp nhau, không tự
+// đếm riêng. Chỉ ĐỌC dữ liệu (o.whIn / o.whAt từ htMarkWarehouse / htUndoWarehouse).
+//  wait     = đơn hoàn thành CHƯA nhập kho (stage 'new': chưa giao, không hoàn trả)
+//  inWh     = đơn đã nhập kho (o.whIn) — gồm cả đơn đã giao, khớp thẻ "Đã nhập kho"
+//  shipping = đã nhập kho, chờ giao  ·  delivered = đã giao
+function htWarehouseSummary(orders){
+  const all = (orders||DB.orders||[]).filter(o=>o.status==='done');
+  const kg = a => a.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
+  const wait = all.filter(o=>htStage(o).key==='new');
+  const inWh = all.filter(o=>o.whIn);
+  const inToday = inWh.filter(o=>htIsToday(o.whAt));
+  const shipping = all.filter(o=>htStage(o).key==='shipping');
+  const delivered = all.filter(o=>o.delivered);
+  return {all, wait, inWh, inToday, shipping, delivered,
+          kgWait: kg(wait), kgIn: kg(inWh), kgInToday: kg(inToday)};
+}
+
 // Icon SVG hiện đại cho badge trạng thái (thay emoji để hiển thị đồng nhất trên
 // mọi thiết bị/hệ điều hành, tránh lỗi icon hiển thị sai/lệch phông emoji)
 function htStageIcon(key){
@@ -246,10 +264,11 @@ function renderHoanThanh(){
   const allDone = DB.orders.filter(o=>o.status==='done');
   const totalDone   = allDone.length;
   const doneToday   = allDone.filter(o=>htIsToday(o.doneAt)).length;
-  const waitWh      = allDone.filter(o=>htStage(o).key==='new').length;
-  const inWh        = allDone.filter(o=>o.whIn).length;
-  const waitShip    = allDone.filter(o=>htStage(o).key==='shipping').length;
-  const delivered   = allDone.filter(o=>o.delivered).length;
+  const whSum       = htWarehouseSummary(DB.orders); // dùng chung với Tổng quan
+  const waitWh      = whSum.wait.length;
+  const inWh        = whSum.inWh.length;
+  const waitShip    = whSum.shipping.length;
+  const delivered   = whSum.delivered.length;
   const totalKg     = allDone.reduce((s,o)=>s+(Number(o.kg)||0),0);
   const totalCustomers = new Set(allDone.map(o=>o.customer).filter(Boolean)).size;
   const customers = [...new Set(allDone.map(o=>o.customer).filter(Boolean))].sort();

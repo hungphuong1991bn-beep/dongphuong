@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [Chưa phát hành] Tổng quan: bỏ khối công đoạn trùng, Nhập kho đồng bộ từ Đơn hoàn thành (16/11/2026)
+- **Bỏ khối "Tình trạng sản xuất theo công đoạn"** trên tab Tổng quan (trùng với sơ đồ "Quy trình sản xuất Thanh cái" ở đầu trang). Xoá `buildDpStageBoard` + CSS `.dp-board/.dp-flow/.dp-arrow/.dp-node*`. Giữ `dpStageStats()` và `dpOpenStageList()` vì sơ đồ quy trình còn dùng để mở danh sách đơn theo công đoạn.
+- **Bước "Nhập Kho" trong sơ đồ quy trình nay đồng bộ từ tab Đơn hoàn thành** qua hàm dùng chung `htWarehouseSummary()` (quality-view.js). Tab Đơn hoàn thành (thẻ Chờ nhập kho / Đã nhập kho / Chờ giao / Đã giao) cũng đọc hàm này nên hai nơi luôn khớp số, không còn mỗi nơi tự đếm.
+  - Hiển thị: số đơn đã nhập kho · Chờ nhập · Nhập hôm nay (theo `whAt`) · Khối lượng đã nhập. Có đơn chờ nhập thì huy hiệu báo "N đơn chờ nhập".
+  - Bấm vào bước này mở tab Đơn hoàn thành, lọc đúng nhóm (Chờ nhập kho nếu còn đơn chờ, ngược lại Đã nhập kho) — hàm `ovGoWarehouse()` đặt bộ lọc cố định, không đảo bật/tắt như trước.
+  - Chỉ ĐỌC dữ liệu; không đổi cấu trúc `o.whIn/whAt/whBy/whLocation`. Xác nhận / bỏ nhập kho ở tab Đơn hoàn thành vẫn là nơi duy nhất ghi.
+
 ## [2.7.0] Giai đoạn 2 — Lịch làm việc theo ngày (14/11/2026)
 Nâng cấp tab Lịch làm việc. Bảng "theo bộ phận" cũ và toàn bộ hàm `llv*` được GIỮ NGUYÊN (dashboard, QR công khai, điều hành sản xuất vẫn đọc như cũ). Hàm vẽ cũ đổi tên `llvRenderSheets()`; `renderLichLamViec()` nay ở `schedule-view.js` và thêm thanh chọn chế độ.
 

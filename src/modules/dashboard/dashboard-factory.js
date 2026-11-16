@@ -35,7 +35,8 @@ function buildDpExtraKpis(orders){
     </div>`).join('')}</div>`;
 }
 
-// ── B. Tình trạng sản xuất theo công đoạn ────────────────────────────
+// ── B. Số liệu theo công đoạn (chỉ còn phục vụ drawer của sơ đồ "Quy trình sản xuất Thanh cái")
+// Khối "Tình trạng sản xuất theo công đoạn" đã bỏ vì trùng với sơ đồ quy trình ở đầu Tổng quan.
 // Định nghĩa (đọc từ dữ liệu có sẵn):
 //  Đang chạy = đơn chưa xong đang ở công đoạn này (o.stage, status running/cutting)
 //  Chờ vào   = Đùn: đơn chưa chạy (pending) · công đoạn sau: đơn đang ở công đoạn liền trước
@@ -56,36 +57,6 @@ function dpStageStats(orders){
     return {key:s.key, label:s.label, icon:s.icon, running, passed, incoming, hasLedger, ledgerRows:rows.length, thanh, kgRunning: running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0)};
   });
 }
-function buildDpStageBoard(orders){
-  const st = dpStageStats(orders);
-  const today = todayStr();
-  const nlToday = (DB.nguyenLieuLog||[]).filter(r=>r.ngay===today && r.heatLot);
-  const nlKg = nlToday.reduce((t,r)=>t+(parseFloat(r.soLuong)||0),0);
-  const doneN = orders.filter(o=>o.status==='done').length;
-  const node = (cls, icon, title, badge, lines, click) => `
-    <div class="dp-node ${cls}" ${click?`onclick="${click}"`:''}>
-      <div class="dp-node-h"><span>${icon}</span><b>${title}</b></div>
-      ${badge}
-      <div class="dp-node-l">${lines.join('')}</div>
-    </div>`;
-  const ln = (k,v)=>`<div><span>${k}</span><b>${v}</b></div>`;
-  let html = node('nl','🧪','Nguyên liệu',
-      `<span class="ds-badge ${nlToday.length?'ok':''} dot">${nlToday.length?'Có nhập hôm nay':'Chưa nhập hôm nay'}</span>`,
-      [ln('Dòng nhập hôm nay',nlToday.length), ln('Khối lượng (kg)',nlToday.length?ovFmtKg(nlKg):'0')], "goTab('soLieu')");
-  st.forEach(s=>{
-    const lines=[ ln('Chờ vào',s.incoming.length), ln('Đã qua',s.passed.length) ];
-    lines.push(s.hasLedger ? ln('Sổ hôm nay', s.ledgerRows? `${s.ledgerRows} dòng · ${fmtNum(s.thanh)} thanh` : '0') : ln('Sổ máy', '<span class="ds-na">CHƯA CÓ SỔ</span>'));
-    html += '<div class="dp-arrow">›</div>' + node(s.running.length?'st run':'st', s.icon, s.label,
-      `<span class="ds-badge ${s.running.length?'ok':''} dot">${s.running.length?s.running.length+' đơn đang chạy':'Không có đơn chạy'}</span>`, lines, `dpOpenStageList('${s.key}')`);
-  });
-  html += '<div class="dp-arrow">›</div>' + node('fin','📦','Thành phẩm',
-      `<span class="ds-badge info dot">${doneN} đơn hoàn thành</span>`,
-      [ln('Mã QR đã tạo',(DB.qrProducts||[]).length), ln('NG công đoạn','<span class="ds-na">CHƯA GHI</span>')], "goTab('hoanThanh')");
-  return `<div class="ov-panel dp-board"><div class="ov-panel-title">🏭 Tình trạng sản xuất theo công đoạn <span class="ov-sub2">(bấm công đoạn để xem danh sách)</span></div>
-    <div class="dp-flow">${html}</div>
-    <div class="dp-note">Sản lượng lỗi (NG) chưa được ghi theo từng công đoạn trong các sổ → hiển thị CHƯA CÓ DỮ LIỆU; chỉ có kết quả QC trên mã QR thành phẩm.</div></div>`;
-}
-
 // ── C. Tình trạng máy móc ────────────────────────────────────────────
 function dpMachineSnapshot(){
   const list = MACHINES.map(m=>({m, st: machineRuntimeStatus(m.id)}));
@@ -163,6 +134,5 @@ function dpOpenMachineList(code){
 // Ghép các widget vào trang Tổng quan (gọi từ renderDashboard)
 function buildDpFactoryBlock(orders){
   return dpSafe(buildDpExtraKpis,orders)
-    + dpSafe(buildDpStageBoard,orders)
     + `<div class="dp-row2">${dpSafe(buildDpMachinePanel)}${dpSafe(buildDpAlerts,orders)}</div>`;
 }
