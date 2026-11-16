@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [Chưa phát hành] Sửa nhấp nháy bất thường + hiệu ứng không chạy trên máy bật "giảm chuyển động" (16/11/2026)
+- **Triệu chứng (1 máy tính xưởng):** hiệu ứng (hạt sáng đường ống, xung trạng thái...) không chạy; chấm "Đồng bộ" trên thanh trên nhấp nháy rất nhanh. Các máy khác bình thường.
+- **Nguyên nhân:** máy đó bật `prefers-reduced-motion: reduce` của hệ điều hành. Rule toàn cục trong `design-system.css` chỉ đặt `animation-duration:.01ms` mà không đặt `animation-iteration-count` → hiệu ứng lặp vô hạn (vd. `sync-blink`) lặp ~100.000 lần/giây (nhấp nháy), còn hiệu ứng chạy 1 lần thì kết thúc ngay (trông như không hoạt động).
+- **Sửa:** ép `animation-iteration-count:1` cho mọi phần tử khi giảm chuyển động và tắt hẳn hiệu ứng chấm đồng bộ.
+
 ## [Chưa phát hành] Tổng quan: bỏ khối công đoạn trùng, Nhập kho đồng bộ từ Đơn hoàn thành (16/11/2026)
 - **Bỏ khối "Tình trạng sản xuất theo công đoạn"** trên tab Tổng quan (trùng với sơ đồ "Quy trình sản xuất Thanh cái" ở đầu trang). Xoá `buildDpStageBoard` + CSS `.dp-board/.dp-flow/.dp-arrow/.dp-node*`. Giữ `dpStageStats()` và `dpOpenStageList()` vì sơ đồ quy trình còn dùng để mở danh sách đơn theo công đoạn.
 - **Bước "Nhập Kho" trong sơ đồ quy trình nay đồng bộ từ tab Đơn hoàn thành** qua hàm dùng chung `htWarehouseSummary()` (quality-view.js). Tab Đơn hoàn thành (thẻ Chờ nhập kho / Đã nhập kho / Chờ giao / Đã giao) cũng đọc hàm này nên hai nơi luôn khớp số, không còn mỗi nơi tự đếm.

@@ -23,7 +23,13 @@
   --ds-info-bg:#E6EEFD;--ds-info:#1D3FAE;--ds-info-bd:#B7CBF7;
   --ds-muted-bg:#EEF0F3;--ds-muted:#556072;--ds-muted-bd:#D8DCE3;
 }
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Máy bật "giảm chuyển động" của hệ điều hành (Windows: Cài đặt → Trợ năng → Hiệu ứng hình ảnh → tắt
+   "Hiệu ứng hoạt họa"): chỉ rút ngắn thời lượng là SAI vì hiệu ứng lặp vô hạn (sync-blink, xung, hạt sáng...)
+   sẽ lặp ~100.000 lần/giây → nhấp nháy dữ dội. Phải ép chạy đúng 1 lần. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .topbar-sync .sync-dot{animation:none!important}
+}
 
 /* ── Button ── */
 .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 14px;border-radius:var(--ds-radius-sm);border:1px solid var(--border);background:#fff;color:var(--text);font:600 var(--ds-fs-sm)/1 var(--ds-font);cursor:pointer;transition:background var(--ds-dur) var(--ds-ease),border-color var(--ds-dur),box-shadow var(--ds-dur);white-space:nowrap}
