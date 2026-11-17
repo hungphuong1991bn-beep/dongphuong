@@ -20,7 +20,7 @@ let _nsDeptFilter = 'all';
 let _nsPosFilter = 'all';
 let _nsQuick = '';                    // '' | 'thieu' | 'sinhnhat' | 'nghiphep'
 let _nsSort = {key:'', dir:1};        // key: name | boPhan | ngayVaoLam | cong | luong
-let _nsShowSalary = false;            // Admin: mặc định ẨN số lương trên bảng (chống người đứng cạnh nhìn)
+let _nsShowSalary = false;            // Admin: mặc định ẨN CẢ CỘT lương (v2.13.0: ẩn hẳn cột, không chỉ che số); bấm 👁 để hiện. Tài khoản khác: không bao giờ có cột
 const NS_STATUS_COLOR = {'Đang làm':'#16a34a','Tạm nghỉ':'#f59e0b','Đã nghỉ việc':'#6b7280'};
 const NS_STATUS_BG    = {'Đang làm':'#dcfce7','Tạm nghỉ':'#fef3c7','Đã nghỉ việc':'#f1f5f9'};
 
@@ -66,7 +66,8 @@ function renderWorkerTableRows(list){
   const canSal = hrSalaryCan();
   const onLeave = nsOnLeaveTodayIds();
   const ym = curYM();
-  const cols = 11 + (canSal?1:0);
+  const showCol = canSal && _nsShowSalary;   // cột lương chỉ dựng khi là Admin VÀ đang bật hiện
+  const cols = 11 + (showCol?1:0);
   if(!list.length) return `<tr><td colspan="${cols}" style="padding:22px;text-align:center;color:var(--text4);font-size:13px">Không tìm thấy nhân viên phù hợp</td></tr>`;
   return list.map((w,i)=>{
     const klW = (DB.kyLuat||[]).filter(k=>k.workerId===w.id && (k.date||'').startsWith(ym)).length;
@@ -94,7 +95,7 @@ function renderWorkerTableRows(list){
       <td style="font-size:12.5px;white-space:nowrap">${w.sdt?`<a href="tel:${nsEsc(w.sdt)}" style="color:var(--brand);text-decoration:none">${nsEsc(w.sdt)}</a>`:'—'}</td>
       <td style="text-align:center;font-size:12px;white-space:nowrap">${w.ngayVaoLam?nsEsc(fmtDate(w.ngayVaoLam)):'—'}${sen?`<div style="font-size:10.5px;color:var(--text4)">${nsEsc(sen)}</div>`:''}</td>
       <td style="text-align:center"><span class="ns-badge" style="background:${NS_STATUS_BG[st]||'#f1f5f9'};color:${NS_STATUS_COLOR[st]||'#6b7280'}">${nsEsc(st)}</span></td>
-      ${canSal?`<td style="text-align:right;white-space:nowrap;font-weight:600;font-size:12.5px">${sal?(_nsShowSalary?nsEsc(sal.toLocaleString('vi-VN')):'••••••••'):'<span style="color:var(--text4);font-weight:400">—</span>'}${lastRaise?`<div style="font-size:10.5px;font-weight:500;color:#16a34a" title="Lần tăng lương gần nhất">↑ ${nsEsc(fmtDate(lastRaise.date))}</div>`:''}</td>`:''}
+      ${showCol?`<td style="text-align:right;white-space:nowrap;font-weight:600;font-size:12.5px">${sal?nsEsc(sal.toLocaleString('vi-VN')):'<span style="color:var(--text4);font-weight:400">—</span>'}${lastRaise?`<div style="font-size:10.5px;font-weight:500;color:#16a34a" title="Lần tăng lương gần nhất">↑ ${nsEsc(fmtDate(lastRaise.date))}</div>`:''}</td>`:''}
       <td style="text-align:center;font-weight:700;color:var(--green)">${computeTotal(w.id)}</td>
       <td style="text-align:center">${klW>0?`<span class="ns-badge" style="background:#fee2e2;color:#dc2626">${klW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
       <td style="text-align:center">${npW>0?`<span class="ns-badge" style="background:#dbeafe;color:var(--brand)">${npW}</span>`:`<span style="color:var(--text4);font-size:12px">—</span>`}</td>
@@ -147,6 +148,7 @@ function nsToggleSalary(ev){
   if(ev && ev.stopPropagation) ev.stopPropagation();
   if(!hrSalaryCan()) return;
   _nsShowSalary = !_nsShowSalary;
+  if(!_nsShowSalary && _nsSort.key==='luong') _nsSort = {key:'', dir:1};   // cột đã ẩn thì bỏ sắp xếp theo lương
   renderNhanSu();
 }
 // Từ thẻ thống kê → mở tab Nghỉ phép đã lọc "Chờ duyệt"
@@ -253,11 +255,11 @@ function renderNhanSu(){
           <button class="ns-chip${_nsQuick==='sinhnhat'?' active':''}" data-nsquick="sinhnhat" onclick="nsSetQuick('sinhnhat')">🎂 Sinh nhật tháng ${m} (${sinhNhatCount})</button>
           <button class="ns-chip${_nsQuick==='nghiphep'?' active':''}" data-nsquick="nghiphep" onclick="nsSetQuick('nghiphep')">🏖️ Nghỉ phép hôm nay (${onLeaveNow})</button>
           <button class="ns-chip" onclick="nsResetFilters()" title="Xoá mọi bộ lọc và sắp xếp">✕ Xoá lọc</button>
-          ${canSal?`<button class="ns-chip" onclick="nsToggleSalary(event)" style="margin-left:auto" title="🔒 Chỉ Admin thấy cột lương">${_nsShowSalary?'🙈 Ẩn lương':'👁 Hiện lương'}</button>`:''}
+          ${canSal?`<button class="ns-chip" onclick="nsToggleSalary(event)" style="margin-left:auto" title="🔒 Chỉ Admin thấy cột lương">${_nsShowSalary?'🙈 Ẩn cột lương':'👁 Hiện cột lương'}</button>`:''}
         </div>
         ${workers.length===0
           ? `<div style="text-align:center;color:var(--text4);padding:24px;font-size:13px">Chưa có nhân viên nào trong hệ thống${admin?' · bấm "➕ Thêm nhân viên" để bắt đầu':''}</div>`
-          : `<div style="overflow-x:auto"><table class="ns-table" style="min-width:${canSal?1180:1060}px" id="nsWorkerTable">
+          : `<div style="overflow-x:auto"><table class="ns-table" style="min-width:${(canSal&&_nsShowSalary)?1180:1060}px" id="nsWorkerTable">
           <thead><tr>
             <th style="width:36px">STT</th>
             <th data-sort="name" onclick="nsSortBy('name')" class="ns-th-sort" style="min-width:190px">Nhân viên <span class="ns-sort"></span></th>
@@ -266,7 +268,7 @@ function renderNhanSu(){
             <th>SĐT</th>
             <th data-sort="ngayVaoLam" onclick="nsSortBy('ngayVaoLam')" class="ns-th-sort" style="text-align:center">Ngày vào làm <span class="ns-sort"></span></th>
             <th style="text-align:center">Trạng thái</th>
-            ${canSal?`<th data-sort="luong" onclick="nsSortBy('luong')" class="ns-th-sort" style="text-align:right">🔒 Lương / ngày <span class="ns-sort"></span></th>`:''}
+            ${(canSal&&_nsShowSalary)?`<th data-sort="luong" onclick="nsSortBy('luong')" class="ns-th-sort" style="text-align:right">🔒 Lương / ngày <span class="ns-sort"></span></th>`:''}
             <th data-sort="cong" onclick="nsSortBy('cong')" class="ns-th-sort" style="text-align:center">Công tháng ${m}/${y} <span class="ns-sort"></span></th>
             <th style="text-align:center">Kỷ luật</th>
             <th style="text-align:center">Nghỉ phép</th>

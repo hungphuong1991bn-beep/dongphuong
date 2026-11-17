@@ -67,19 +67,27 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
     assert.strictEqual(t.document.getElementById('wpLuongCoBan').value, '', u.role + ': ô lương phải rỗng');
     assert.strictEqual(t.document.getElementById('wpSalaryField').style.display, 'none', u.role + ': ô lương phải ẩn');
     assert(!/6543210|8765432/.test(t.document.body.innerHTML));
+    t.run('nsToggleSalary()'); t.run('_nsShowSalary = true'); t.run('renderNhanSu()');   // cố bật cờ hiện lương ở tài khoản không phải Admin
+    assert(!/data-sort="luong"|Lương \/ ngày|Hiện cột lương|Ẩn cột lương/.test(t.document.getElementById('mc').innerHTML), u.role + ': dù bật cờ vẫn không có cột/nút lương');
   }
   ok('staff / viewer / solieu: DOM (bảng, thẻ, hồ sơ) không có cột/ô/số lương, kể cả khi bộ nhớ lỡ có dữ liệu');
 
-  // 2. Admin: thấy cột + ô lương; mặc định bị che; bấm hiện mới thấy số
+  // 2. Admin: cột lương ẨN HẲN mặc định (không còn tiêu đề, không còn ô); bấm "Hiện cột lương" mới có cột + số; bấm lại → mất cột
   { const t = MAKE(ADMIN); t.run('renderNhanSu()');
     let html = t.document.getElementById('mc').innerHTML;
-    assert(/Lương \/ ngày/.test(html) && /Tổng lương ngày/.test(html) && !/Lương cơ bản/.test(html) && !/Quỹ lương/.test(html), 'nhãn theo NGÀY: Lương / ngày, Tổng lương ngày'); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định số lương bị che');
-    assert(/••••••••/.test(html));
+    assert(!/data-sort="luong"/.test(html) && !/Lương \/ ngày/.test(html), 'mặc định KHÔNG có cột lương'); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định không lộ số');
+    assert(/Hiện cột lương/.test(html) && /Tổng lương ngày/.test(html) && !/Lương cơ bản|Quỹ lương/.test(html), 'có nút Hiện cột lương; thẻ tổng vẫn che số');
+    const colsHidden = t.document.querySelectorAll('#nsWorkerTable thead th').length;
     t.run('nsToggleSalary()'); html = t.document.getElementById('mc').innerHTML;
+    assert(/data-sort="luong"/.test(html) && /Lương \/ ngày/.test(html) && /Ẩn cột lương/.test(html), 'bấm hiện → có cột + nút Ẩn cột lương');
+    assert.strictEqual(t.document.querySelectorAll('#nsWorkerTable thead th').length, colsHidden + 1, 'đúng +1 cột');
+    const rowTd = t.document.querySelector('#nsWorkerTable tbody tr').children.length; assert.strictEqual(rowTd, colsHidden + 1, 'mỗi dòng đủ ô, khớp số cột');
     assert(/6\.543\.210/.test(html) && /8\.765\.432/.test(html), 'bấm hiện → thấy số');
-    assert(/15,3 tr|15\.3 tr/.test(html.replace(/\s/g, '')) || /15,3\s*tr/.test(html), 'tổng lương ngày = 6.543.210+8.765.432 (Đang làm) ≈ 15,3 tr: ' + (html.match(/class="ns-stat-val"[^>]*>[^<]*tr</) || ''));
-    t.run('nsResetPrivacy()'); t.run('renderNhanSu()'); assert(!/6\.543\.210/.test(t.document.getElementById('mc').innerHTML));
-    ok('Admin: có cột + quỹ lương, mặc định che số, bấm 👁 mới hiện, reset khi đăng xuất'); }
+    assert(/15,3 tr|15\.3 tr/.test(html.replace(/\s/g, '')) || /15,3\s*tr/.test(html), 'tổng lương ngày = 6.543.210+8.765.432 (Đang làm) ≈ 15,3 tr');
+    t.run("nsSortBy('luong')"); assert.strictEqual(t.run('_nsSort.key'), 'luong'); t.run('nsToggleSalary()'); html = t.document.getElementById('mc').innerHTML;
+    assert(!/data-sort="luong"/.test(html) && !/6\.543\.210/.test(html), 'bấm ẩn → cột và số biến mất'); assert.strictEqual(t.run('_nsSort.key'), '', 'ẩn cột → bỏ sắp xếp theo lương');
+    t.run('nsToggleSalary()'); t.run('nsResetPrivacy()'); t.run('renderNhanSu()'); assert(!/data-sort="luong"/.test(t.document.getElementById('mc').innerHTML), 'đăng xuất → lần sau lại ẨN cột');
+    ok('Admin: cột lương ẩn hẳn mặc định, bấm 👁 hiện cột + số, bấm lại ẩn, bỏ sắp xếp khi ẩn, reset khi đăng xuất'); }
 
   // 3. Hồ sơ Admin (v2.12.0): ô "Lương theo ngày" SỬA ĐƯỢC ngay trong hồ sơ; đổi → ghi lịch sử theo ngày áp dụng
   { const t = MAKE(ADMIN); t.run(`openWorkerProfile('w1')`);

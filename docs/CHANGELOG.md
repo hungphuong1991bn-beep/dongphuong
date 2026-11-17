@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [2.13.0] Cột lương ẨN HẲN / HIỆN được — chỉ Admin (17/11/2026)
+- **Danh sách nhân viên:** cột **🔒 Lương / ngày** mặc định **ẩn hẳn** (không còn tiêu đề cột, không còn ô, bảng thu hẹp lại) — trước đây chỉ che số bằng dấu chấm. Nút **👁 Hiện cột lương / 🙈 Ẩn cột lương** (cũng bấm được từ thẻ Tổng lương ngày) bật/tắt cả cột. Ẩn cột thì tự bỏ sắp xếp theo lương. Đăng xuất / đăng nhập lại luôn bắt đầu ở trạng thái ẨN.
+- **Chỉ Admin:** tài khoản khác (Nhân viên, Xem, Số liệu) không có cột, không có nút, không có số trong DOM — kể cả khi cố bật cờ hiện lương (đã thêm test). Dữ liệu lương vẫn chỉ tải về máy Admin.
+- Không đổi: tab Tăng lương, hồ sơ nhân viên, file Excel danh sách (Admin vẫn có cột lương theo ngày khi xuất).
+- Test: `hr-view.test.js` 20 nhóm (nhóm 2 viết lại cho cột ẩn/hiện; nhóm 1 thêm kiểm tra bật cờ ở tài khoản thường).
+
 ## [2.12.1] Sửa lỗi nhập lương theo ngày nhảy số + lưu ở tab Tăng lương "bị treo" (17/11/2026)
 - **Lỗi nhảy số (gõ 330000 ra 333000):** bản 2.12.0 tự chèn dấu chấm ngăn cách NGAY KHI ĐANG GÕ, làm con trỏ / bộ gõ điện thoại nhảy chỗ. **Sửa:** khi đang gõ ô chỉ giữ chữ số (không đổi nội dung), số đã định dạng hiện ở dòng nhỏ bên dưới (`= 330.000 VNĐ/ngày`); rời ô mới định dạng, vào ô lại thì trả về số thô để sửa. Áp dụng cho ô lương trong hồ sơ và ô "Mức lương mới" ở tab Tăng lương (ô này đổi từ `type=number` sang văn bản số, hết cả lỗi cuộn chuột / phím mũi tên làm đổi số).
 - **Lỗi lưu "treo, không thấy lưu":** khi số mới THẤP HƠN mức đang lưu (thường gặp ngay sau khi chuyển từ tháng sang ngày, hoặc chọn "Giữ nguyên số" trong khi số cũ là tiền tháng) form từ chối và chỉ báo bằng thông báo thoáng qua → trông như không lưu. **Sửa:** (1) lỗi hiện **ngay trong form** bằng khung đỏ, không biến mất; (2) mức thấp hơn không còn bắt tích ô rồi bấm lại — bấm Lưu sẽ **hỏi xác nhận** "Lưu như điều chỉnh / giảm lương?" (ô tích cũ vẫn dùng được); (3) mọi lỗi bất ngờ khi lưu cũng hiện trong form.
