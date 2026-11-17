@@ -176,7 +176,6 @@ function pubNsOpen(id, keepScroll){
   _pubNs.openId = id;
   const st = w.trangThai || 'Đang làm';
   const row = (l,v)=>`<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px"><div style="width:120px;flex-shrink:0;color:var(--text3)">${l}</div><div style="flex:1;font-weight:600;color:var(--text);word-break:break-word">${v===''||v==null?'—':pubEsc(v)}</div></div>`;
-  const money = w.luongCoBan ? (Number(w.luongCoBan)||0).toLocaleString('vi-VN')+' VNĐ' : '';
   const leaves = (_pubNs.nghiPhep||[]).filter(k=>k.workerId===w.id)
     .slice().sort((a,b)=>String(b.fromDate||'').localeCompare(String(a.fromDate||'')));
   const kls = (_pubNs.kyLuat||[]).filter(k=>k.workerId===w.id)
@@ -197,7 +196,7 @@ function pubNsOpen(id, keepScroll){
     ${row('Số điện thoại',w.sdt)}${row('CCCD/CMND',w.cccd)}${row('Địa chỉ',w.diaChi)}
     ${sec('Công việc')}
     ${row('Chức vụ',w.chucVu)}${row('Bộ phận / Tổ',w.boPhan)}${row('Ngày vào làm',w.ngayVaoLam?fmtDate(w.ngayVaoLam):'')}
-    ${row('Loại hợp đồng',w.loaiHopDong)}${row('Lương cơ bản',money)}
+    ${row('Loại hợp đồng',w.loaiHopDong)}
     ${sec('Tài khoản ngân hàng')}
     ${row('Ngân hàng',w.nganHang)}${row('Số tài khoản',w.soTaiKhoan)}
     ${sec('Ghi chú')}
