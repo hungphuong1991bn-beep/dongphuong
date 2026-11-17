@@ -256,75 +256,107 @@
 }
 
 
-/* ── Sơ đồ quy trình Thanh cái: Nguyên liệu → Đùn → Rút → Đánh bóng (giao diện v2) ── */
-.ovp-panel{container-type:inline-size;margin:12px 0;padding:0;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f8fafd 100%);border:1px solid #e3e9f4}
-.ovp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #edf1f8;background:linear-gradient(90deg,#f3f7ff,#fff 60%)}
+/* ── Sơ đồ quy trình Thanh cái — Smart Factory / Industrial MES (v3) ──
+   Chỉ transform/opacity cho hiệu ứng lặp; hạt sáng chạy trong .ovp-lane (overflow:hidden) nên không tràn khỏi đường dẫn.
+   Tông: xanh dương = đang chạy · xanh lá = hoàn tất/đã nhập · xám = chờ. */
+.ovp-panel{container-type:inline-size;--ovB:#2563EB;--ovB2:#38BDF8;--ovG:#16A34A;--ovN:#94A3B8;--ovLine:#DCE5F3;
+  margin:12px 0;padding:0;overflow:hidden;border:1px solid #DDE6F3;border-radius:18px;
+  background:linear-gradient(rgba(37,99,235,.035) 1px,transparent 1px) 0 0/100% 28px,linear-gradient(90deg,rgba(37,99,235,.035) 1px,transparent 1px) 0 0/28px 100%,linear-gradient(180deg,#fff 0%,#F6F9FE 100%);
+  box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 28px -16px rgba(37,99,235,.28)}
+.ovp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #E6ECF6;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .ovp-title{display:flex;align-items:center;gap:12px;min-width:0}
-.ovp-title-ic{width:38px;height:38px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:19px;border-radius:11px;background:linear-gradient(135deg,#2856D6,#4f7cf5);box-shadow:0 4px 12px rgba(40,86,214,.28)}
+.ovp-title-ic{width:38px;height:38px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:19px;border-radius:11px;background:linear-gradient(135deg,#1D4ED8,#2563EB);box-shadow:0 4px 12px rgba(37,99,235,.28),inset 0 1px 0 rgba(255,255,255,.25)}
 .ovp-title b{display:block;font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.1px}
 .ovp-title small{display:block;margin-top:2px;font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ovp-live{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#1d4ed8;background:#e8efff}
-.ovp-live i{width:7px;height:7px;border-radius:50%;background:#2856D6;animation:ovpBlink 1.6s ease-in-out infinite}
+.ovp-live{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#1D4ED8;background:#EAF1FF;border:1px solid #D3E1FB}
+.ovp-live i{width:7px;height:7px;border-radius:50%;background:var(--ovB);animation:ovpBlink 2.4s ease-in-out infinite}
 
-.ovp-flow{display:flex;align-items:stretch;padding:22px 18px 24px}
-.ovp-pipe{align-self:center}
-.ovp-node{box-sizing:border-box;position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 14px 14px;border-radius:16px;background:#fff;border:1px solid #e3e9f4;box-shadow:0 1px 2px rgba(16,24,40,.04),0 6px 16px -8px rgba(40,86,214,.18);cursor:pointer;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;animation:ovpIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*90ms)}
-.ovp-node::before{content:"";position:absolute;left:18px;right:18px;top:0;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#2856D6,#6d93ff);opacity:.9}
-.ovp-node:hover{transform:translateY(-4px);border-color:#bcd0fb;box-shadow:0 2px 4px rgba(16,24,40,.05),0 16px 28px -10px rgba(40,86,214,.35)}
+.ovp-flow{display:flex;align-items:stretch;padding:24px 18px 26px}
+/* ── Node công đoạn ── */
+.ovp-node{--tc:var(--ovN);--tcBg:#F1F5F9;--tcTx:#64748B;
+  box-sizing:border-box;position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px;border-radius:16px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,251,255,.9));border:1px solid #E1E8F4;
+  box-shadow:0 1px 2px rgba(16,24,40,.05),0 8px 18px -12px rgba(15,23,42,.22);
+  transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s ease,border-color .28s ease;
+  animation:ovpIn .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*80ms)}
+.ovp-node.tone-run{--tc:var(--ovB);--tcBg:#EAF1FF;--tcTx:#1D4ED8}
+.ovp-node.tone-ok{--tc:var(--ovG);--tcBg:#E7F8EE;--tcTx:#15803D}
+.ovp-node::before{content:"";position:absolute;left:16px;right:16px;top:-1px;height:2px;border-radius:0 0 3px 3px;background:var(--tc);opacity:.85}
+.ovp-node.tone-idle::before{opacity:.35}
+/* Ánh sáng nhẹ khi hạt tới node (độ trễ khớp hạt trên đường dẫn phía trước) */
+.ovp-node::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;border:1px solid var(--ovB2);box-shadow:0 0 16px -2px rgba(56,189,248,.45);opacity:0;animation:ovpPass 1.6s ease-out infinite;animation-delay:calc(var(--pd) - .16s)}
+.ovp-node:first-child::after{display:none}
+.ovp-node:hover,.ovp-node:focus-visible{transform:translateY(-3px);border-color:color-mix(in srgb,var(--tc) 45%,#fff);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--tc) 28%,transparent),0 2px 4px rgba(16,24,40,.05),0 18px 30px -14px color-mix(in srgb,var(--tc) 55%,transparent)}
+.ovp-node:active{transform:translateY(-1px)}
 .ovp-top{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.ovp-step{font-size:11px;font-weight:800;letter-spacing:.6px;color:#2856D6;background:#eaf0ff;border-radius:6px;padding:2px 7px}
-.ovp-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;color:#64748b;background:#f1f5f9;white-space:nowrap}
-.ovp-pill i{width:6px;height:6px;border-radius:50%;background:#94a3b8}
-.ovp-node.on .ovp-pill{color:#15803d;background:#e6f8ee}
-.ovp-node.on .ovp-pill i{background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.55);animation:ovpDot 1.8s ease-out infinite}
-.ovp-icon{position:relative;width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(145deg,#f1f5ff,#dfe9ff);box-shadow:inset 0 1px 0 #fff,0 6px 14px -6px rgba(40,86,214,.45);margin-bottom:10px}
-.ovp-icon span{font-size:26px;line-height:1;filter:drop-shadow(0 2px 3px rgba(40,86,214,.25))}
+.ovp-step{font-size:10.5px;font-weight:800;letter-spacing:.7px;color:var(--tcTx);background:var(--tcBg);border-radius:6px;padding:2px 7px;font-variant-numeric:tabular-nums}
+.ovp-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;color:var(--tcTx);background:var(--tcBg);white-space:nowrap}
+.ovp-pill i{position:relative;width:6px;height:6px;border-radius:50%;background:var(--tc)}
+.ovp-node.on .ovp-pill i::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--tc);animation:ovpDot 2s ease-out infinite}
+.ovp-icon{position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:16px;margin-bottom:10px;color:var(--tc);
+  background:linear-gradient(150deg,#fff,var(--tcBg));border:1px solid color-mix(in srgb,var(--tc) 22%,#fff);
+  box-shadow:inset 0 1px 0 #fff,0 8px 16px -10px color-mix(in srgb,var(--tc) 60%,transparent)}
+.ovp-icon svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .ovp-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.1px}
 .ovp-metric{margin:8px 0 10px;line-height:1}
-.ovp-metric b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;background:linear-gradient(180deg,#1e3a8a,#2856D6);-webkit-background-clip:text;background-clip:text;color:transparent}
-.ovp-node.off .ovp-metric b{background:none;color:#94a3b8}
+.ovp-metric b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--tcTx);font-variant-numeric:tabular-nums}
+.ovp-node.tone-idle .ovp-metric b{color:#94A3B8}
 .ovp-metric small{display:block;margin-top:4px;font-size:11px;color:var(--text3)}
 .ovp-stats{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}
-.ovp-stats>div{padding:7px 6px;border-radius:10px;background:#f5f8fe;text-align:center}
+.ovp-stats>div{padding:7px 6px;border-radius:10px;background:rgba(241,245,251,.85);border:1px solid #E9EEF7;text-align:center}
 .ovp-stats span{display:block;font-size:10px;color:var(--text3);margin-bottom:2px}
-.ovp-stats b{display:block;font-size:12px;font-weight:800;color:var(--text)}
+.ovp-stats b{display:block;font-size:12px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
 
-/* Đường ống kính mờ + hạt sáng có đuôi, chạy đều từ đầu đến cuối */
-.ovp-pipe{position:relative;flex:0 1 56px;min-width:30px;padding:0 4px;box-sizing:border-box}
-.ovp-track{position:relative;height:6px;border-radius:6px;background:linear-gradient(180deg,#dbe6fb,#eaf0ff);box-shadow:inset 0 1px 2px rgba(40,86,214,.18)}
-.ovp-track::before,.ovp-track::after{content:"";position:absolute;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#fff;border:2px solid #2856D6;box-shadow:0 0 0 3px rgba(40,86,214,.12);z-index:2}
-.ovp-track::before{left:-5px}
-.ovp-track::after{right:-5px;background:#2856D6}
-.ovp-p{position:absolute;top:50%;left:0;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;opacity:0;z-index:1;
-  background:radial-gradient(circle,#fff 0 35%,#7aa2ff 70%,#2856D6 100%);
-  box-shadow:0 0 8px 2px rgba(79,124,245,.85),0 0 18px 5px rgba(40,86,214,.4);
-  animation:ovpFlowX 2.7s cubic-bezier(.45,.05,.55,.95) infinite;animation-delay:var(--d)}
-.ovp-p::before{content:"";position:absolute;right:60%;top:50%;width:36px;height:3px;margin-top:-1.5px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(79,124,245,.75))}
+/* ── Đường dẫn ánh sáng: ray mảnh + kính mờ + 2 hạt lệch pha ── */
+.ovp-pipe{align-self:center;position:relative;flex:0 1 64px;min-width:30px;padding:0 6px;box-sizing:border-box}
+.ovp-track{position:relative;height:2px;border-radius:2px;background:linear-gradient(90deg,#C9D8F2,#DCE7F8)}
+.ovp-track::before{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px;border-radius:8px;background:rgba(255,255,255,.55);border:1px solid rgba(37,99,235,.12);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.ovp-pipe.tone-ok .ovp-track{background:linear-gradient(90deg,#BFE8CF,#D6F1E0)}
+.ovp-lane{position:absolute;left:0;right:0;top:-7px;bottom:-7px;overflow:hidden;border-radius:8px;pointer-events:none}
+/* .ovp-p là hộp rộng bằng đường dẫn, dịch bằng transform: chấm sáng nằm ở mép phải hộp → chạy đúng từ đầu tới cuối */
+.ovp-p{position:absolute;left:0;top:0;bottom:0;width:100%;opacity:0;will-change:transform,opacity;transform:translate3d(-100%,0,0);
+  animation:ovpFlowX 3.2s linear infinite;animation-delay:var(--pd)}
+.ovp-p2{animation-delay:calc(var(--pd) + 1.6s)}
+.ovp-p::before{content:"";position:absolute;right:0;top:50%;width:4px;height:4px;margin:-2px -2px 0 0;border-radius:50%;
+  background:#fff;box-shadow:0 0 0 1px rgba(56,189,248,.9),0 0 6px 1px rgba(56,189,248,.8)}
+.ovp-p::after{content:"";position:absolute;right:3px;top:50%;width:14px;height:2px;margin-top:-1px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(56,189,248,.85))}
+.ovp-pipe.tone-idle .ovp-p::before{box-shadow:0 0 0 1px rgba(148,163,184,.9),0 0 5px 1px rgba(148,163,184,.55)}
+.ovp-pipe.tone-idle .ovp-p::after{background:linear-gradient(90deg,transparent,rgba(148,163,184,.7))}
 
-@keyframes ovpFlowX{0%{left:2%;opacity:0}14%{opacity:1}86%{opacity:1}100%{left:calc(98% - 9px);opacity:0}}
-@keyframes ovpFlowY{0%{top:2%;opacity:0}14%{opacity:1}86%{opacity:1}100%{top:calc(98% - 9px);opacity:0}}
-@keyframes ovpIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes ovpDot{0%{box-shadow:0 0 0 0 rgba(22,163,74,.55)}100%{box-shadow:0 0 0 7px rgba(22,163,74,0)}}
-@keyframes ovpBlink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes ovpFlowX{0%{transform:translate3d(-100%,0,0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translate3d(0,0,0);opacity:0}}
+@keyframes ovpFlowY{0%{transform:translate3d(0,-100%,0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translate3d(0,0,0);opacity:0}}
+@keyframes ovpPass{0%{opacity:0}10%{opacity:.9}45%,100%{opacity:0}}
+@keyframes ovpIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ovpDot{0%{transform:scale(1);opacity:.55}100%{transform:scale(3);opacity:0}}
+@keyframes ovpBlink{0%,100%{opacity:1}50%{opacity:.4}}
 
-@container (max-width:1100px){.ovp-pipe{flex:0 0 54px;min-width:0;padding:0 6px}.ovp-step{display:none}.ovp-top{justify-content:center}.ovp-node{padding:12px 8px}.ovp-stats{grid-template-columns:1fr}.ovp-p::before{width:22px}}
-@container (max-width:1100px){.ovp-icon{width:50px;height:50px}.ovp-icon span{font-size:23px}.ovp-metric b{font-size:28px}.ovp-name{font-size:13px}}
-@container (max-width:900px){.ovp-flow{padding:18px 10px 20px}.ovp-title small{display:none}.ovp-pipe{flex-basis:38px}.ovp-node{padding:12px 6px}}
+@container (max-width:1100px){.ovp-pipe{flex:0 0 62px;min-width:0;padding:0 6px}.ovp-step{display:none}.ovp-top{justify-content:center}.ovp-node{padding:12px 8px}.ovp-stats{grid-template-columns:1fr}}
+@container (max-width:1100px){.ovp-icon{width:50px;height:50px}.ovp-icon svg{width:24px;height:24px}.ovp-metric b{font-size:28px}.ovp-name{font-size:13px}}
+@container (max-width:900px){.ovp-flow{padding:18px 10px 20px}.ovp-title small{display:none}.ovp-pipe{flex-basis:36px}.ovp-node{padding:12px 6px}.ovp-p2{display:none}}
+/* Màn hình lớn / TV: node và hạt lớn hơn một chút để đọc từ xa */
+@container (min-width:1500px){.ovp-flow{padding:30px 28px 32px}.ovp-pipe{flex-basis:92px}.ovp-icon{width:64px;height:64px}.ovp-icon svg{width:31px;height:31px}.ovp-name{font-size:16px}.ovp-metric b{font-size:38px}.ovp-stats b{font-size:13.5px}.ovp-stats span{font-size:11px}.ovp-p::before{width:5px;height:5px;margin:-2.5px -2.5px 0 0}.ovp-p::after{width:20px}}
 /* Điện thoại: xếp dọc, hạt chạy từ trên xuống dưới */
 @container (max-width:800px){
   .ovp-flow{flex-direction:column;align-items:center;padding:16px 14px 18px}
   .ovp-node{flex:none;width:100%;max-width:340px;padding:14px}
   .ovp-step{display:inline-block}.ovp-top{justify-content:space-between}.ovp-stats{grid-template-columns:repeat(auto-fit,minmax(0,1fr))}
-  .ovp-pipe{padding:6px 0}
-  .ovp-pipe{flex:none;width:6px;height:60px;min-width:0;padding:6px 0;box-sizing:content-box}
-  .ovp-track{width:6px;height:100%}
-  .ovp-track::before,.ovp-track::after{left:50%;right:auto;margin:0 0 0 -5px}
-  .ovp-track::before{top:-5px}
-  .ovp-track::after{top:auto;bottom:-5px}
-  .ovp-p{left:50%;top:0;margin-top:0;margin-left:-4.5px;animation-name:ovpFlowY}
-  .ovp-p::before{right:auto;left:50%;top:auto;bottom:60%;width:3px;height:36px;margin:0 0 0 -1.5px;background:linear-gradient(180deg,transparent,rgba(79,124,245,.75))}
+  .ovp-pipe{flex:none;width:2px;height:56px;min-width:0;padding:0;box-sizing:content-box;align-self:center}
+  .ovp-track{width:2px;height:100%}
+  .ovp-track::before{left:-5px;right:-5px;top:0;bottom:0}
+  .ovp-lane{left:-7px;right:-7px;top:0;bottom:0}
+  .ovp-p{width:100%;height:100%;animation-name:ovpFlowY}
+  .ovp-p::before{right:auto;left:50%;top:auto;bottom:0;margin:0 0 -2px -2px}
+  .ovp-p::after{right:auto;left:50%;top:auto;bottom:3px;width:2px;height:14px;margin:0 0 0 -1px;background:linear-gradient(180deg,transparent,rgba(56,189,248,.85))}
+  .ovp-p2{display:block}
+  .ovp-node::after{inset:-1px}
 }
+/* Tab ẩn / người dùng giảm chuyển động: dừng hoạt ảnh lặp */
+.fx-paused .ovp-p,.fx-paused .ovp-node::after,.fx-paused .ovp-live i,.fx-paused .ovp-pill i::after{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){
-  .ovp-p,.ovp-node,.ovp-live i,.ovp-node.on .ovp-pill i{animation:none}
-  .ovp-p{opacity:.9}
+  .ovp-p,.ovp-node,.ovp-node::after,.ovp-live i,.ovp-node.on .ovp-pill i::after{animation:none!important}
+  .ovp-node::after{opacity:0}
+  .ovp-p{opacity:.9;transform:none}
+  .ovp-p2{display:none}
+  .ovp-node:hover{transform:none}
 }

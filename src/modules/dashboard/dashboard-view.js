@@ -235,6 +235,15 @@ function buildOvRecentActivity(){
 // Giữa 2 công đoạn là "đường ống" có các hạt sáng chạy từ đầu đến cuối.
 // Hạt sáng LUÔN chạy đều từ công đoạn này sang công đoạn kế tiếp (chỉ để thể hiện
 // hướng đi của quy trình, không phản ánh trạng thái chạy/dừng). Chỉ ĐỌC dữ liệu có sẵn.
+// Icon đường nét (SVG) cho sơ đồ quy trình — thay emoji để đồng nhất phong cách MES. Chỉ hiển thị.
+const OVP_ICONS = {
+  nl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.6 14.5h8.8"/></svg>',
+  dun:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8" width="13" height="8" rx="2"/><path d="M15.5 10.5h3l3 1.5-3 1.5h-3M6 8v8M10 8v8"/></svg>',
+  rut:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h6.5l5 3.2v4.6l-5 3.2H3z"/><path d="M14.5 12h6.5M18.5 9.5 21 12l-2.5 2.5"/></svg>',
+  danhbong:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.5 11.6 9l4.4 1.6-4.4 1.6L10 16.7l-1.6-4.5L4 10.6 8.4 9z"/><path d="M18 3v4M16 5h4M18.5 14v3.5M16.8 15.8h3.4"/></svg>',
+  cat:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6.5" r="2.6"/><circle cx="6" cy="17.5" r="2.6"/><path d="M8 8 20 17M8 16 20 7"/></svg>',
+  kho:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg>'
+};
 function buildOvBusbarFlow(orders){
   const today = (typeof todayStr==='function') ? todayStr() : '';
   const fmt = v => (typeof ovFmtKg==='function') ? ovFmtKg(v) : v;
@@ -244,7 +253,7 @@ function buildOvBusbarFlow(orders){
 
   const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'},{key:'cat',icon:'✂️',label:'Cắt Ngắn'}];
   const nodes = [{
-    key:'nl', icon:'🧪', label:'Nguyên Liệu', active: nlToday.length>0,
+    key:'nl', icon:OVP_ICONS.nl, label:'Nguyên Liệu', active: nlToday.length>0, tone: nlToday.length>0?'ok':'idle',
     on:'Đã nhập', off:'Chưa nhập',
     big: nlToday.length, unit:'lô nhập hôm nay',
     stats:[['Khối lượng', fmt(nlKg)+' kg']],
@@ -257,7 +266,7 @@ function buildOvBusbarFlow(orders){
                            : orders.filter(o=>isRun(o) && (o.stage||'dun')===prevKey);
     const kg = running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
     nodes.push({
-      key:d.key, icon:d.icon, label:d.label, active: running.length>0,
+      key:d.key, icon:OVP_ICONS[d.key], label:d.label, active: running.length>0, tone: running.length>0?'run':'idle',
       on:'Đang chạy', off:'Đang chờ',
       big: running.length, unit:'đơn đang chạy',
       stats:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
@@ -271,7 +280,7 @@ function buildOvBusbarFlow(orders){
   const wh = (typeof htWarehouseSummary==='function') ? htWarehouseSummary(orders)
            : {wait:[], inWh:[], inToday:[], kgIn:0};
   nodes.push({
-    key:'kho', icon:'📦', label:'Nhập Kho', active: wh.inWh.length>0 || wh.wait.length>0,
+    key:'kho', icon:OVP_ICONS.kho, label:'Nhập Kho', active: wh.inWh.length>0 || wh.wait.length>0, tone: wh.wait.length>0?'run':(wh.inWh.length>0?'ok':'idle'),
     on: wh.wait.length ? `${wh.wait.length} đơn chờ nhập` : 'Đã nhập kho', off:'Chưa có đơn',
     big: wh.inWh.length, unit:'đơn đã nhập kho',
     stats:[['Chờ nhập', wh.wait.length+' đơn'], ['Nhập hôm nay', wh.inToday.length+' đơn'], ['Khối lượng', fmt(wh.kgIn)+' kg']],
@@ -281,7 +290,7 @@ function buildOvBusbarFlow(orders){
 
   const html = nodes.map((n,i)=>{
     const node = `
-      <div class="ovp-node ${n.active?'on':'off'}" style="--i:${i}" onclick="${n.click}">
+      <div class="ovp-node ${n.active?'on':'off'} tone-${n.tone}" style="--i:${i};--pd:${(Math.max(i-1,0)*0.45).toFixed(2)}s" onclick="${n.click}">
         <div class="ovp-top">
           <span class="ovp-step">0${i+1}</span>
           <span class="ovp-pill"><i></i>${n.active?n.on:n.off}</span>
@@ -293,10 +302,8 @@ function buildOvBusbarFlow(orders){
       </div>`;
     // Đường ống nối sang công đoạn kế tiếp — hạt sáng luôn chạy đều từ đầu đến cuối
     const pipe = i<nodes.length-1 ? `
-      <div class="ovp-pipe" aria-hidden="true">
-        <div class="ovp-track">
-          <i class="ovp-p" style="--d:0s"></i><i class="ovp-p" style="--d:.9s"></i><i class="ovp-p" style="--d:1.8s"></i>
-        </div>
+      <div class="ovp-pipe tone-${nodes[i+1].tone}" style="--pd:${(i*0.45).toFixed(2)}s" aria-hidden="true">
+        <div class="ovp-track"><span class="ovp-lane"><i class="ovp-p"></i><i class="ovp-p ovp-p2"></i></span></div>
       </div>` : '';
     return node + pipe;
   }).join('');

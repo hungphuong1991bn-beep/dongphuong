@@ -26,7 +26,7 @@ function khStageFlow(o, clickable){
       const state = i<act ? 'st-done' : (i===act && s!=='done' ? 'st-active' : 'st-todo');
       // Đoạn nối i-1 → i: đang chảy nếu công đoạn i-1 là công đoạn hiện tại
       const link = !i ? '' : (i-1===act && s!=='done'
-        ? `<div class="kh-link is-flow"><span class="kh-rail"></span><i class="kh-spark"></i><i class="kh-spark"></i><i class="kh-spark"></i></div>`
+        ? `<div class="kh-link is-flow"><span class="kh-rail"></span><span class="kh-lane" aria-hidden="true"><i class="kh-spark"></i><i class="kh-spark"></i></span></div>`
         : `<div class="kh-link ${i<=act?'is-done':'is-todo'}"><span class="kh-rail"></span></div>`);
       return `${link}<div class="kh-node ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="event.stopPropagation();requestSetStage('${o.id}','${st.key}')"`:''} title="${st.label}">
         <div class="kh-dot">${state==='st-done'?'✓':st.icon}</div><div class="kh-name">${st.label}</div></div>`;
@@ -35,12 +35,17 @@ function khStageFlow(o, clickable){
 }
 
 // Thanh tiến độ số lượng: đang chạy có sọc chuyển động + vệt sáng quét; đủ số lượng thì xanh lá tĩnh.
+// Nhớ % đã hiển thị gần nhất của từng đơn → khi tiến độ đổi, thanh chạy mượt từ giá trị cũ tới giá trị mới
+// (chỉ phục vụ hoạt ảnh hiển thị, không ghi vào dữ liệu).
+const khProgPrev = {};
 function khProgressFx(o){
   const qty = o.qty||0, done = o.doneQty||0;
   if(!qty || o.status==='pending') return '';
   const unit = o.isCoil ? 'cuộn' : (o.isRound ? 'cây' : 'thanh');
   const pct = Math.min(100, Math.round(done/qty*100));
   const full = pct>=100, remain = Math.max(0, qty-done);
+  const from = (o.id!=null && khProgPrev[o.id]!=null) ? khProgPrev[o.id] : 0;
+  if(o.id!=null) khProgPrev[o.id] = pct;
   const tone = full ? 'is-full' : pct>=50 ? 'is-mid' : 'is-low';
   return `<div class="kh-prog ${tone}">
     <div class="kh-prog-top">
@@ -48,7 +53,14 @@ function khProgressFx(o){
       <span class="kh-prog-remain">${full ? '✅ Đã đủ' : 'Còn '+remain+' '+unit}</span>
     </div>
     <div class="kh-prog-val"><b>${done}</b><small>/ ${qty} ${unit}</small><em>${pct}%</em></div>
-    <div class="kh-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span class="kh-bar-fill" style="width:${pct}%"></span></div>
+    <div class="kh-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span class="kh-bar-fill" style="width:${pct}%;--from:${from}%"></span></div>
     ${o.progressNote ? `<div class="kh-prog-note">📋 ${o.progressNote}</div>` : ''}
   </div>`;
 }
+
+// Tạm dừng hoạt ảnh lặp khi tab không hiển thị (tiết kiệm CPU/pin, tránh giật khi quay lại). Không đụng dữ liệu/đồng bộ.
+(function khFxVisibility(){
+  if(typeof document==='undefined' || window.__khFxVis) return; window.__khFxVis = true;
+  const sync = ()=>document.documentElement.classList.toggle('fx-paused', document.hidden);
+  document.addEventListener('visibilitychange', sync); sync();
+})();
