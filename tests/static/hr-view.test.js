@@ -55,7 +55,7 @@ const LEAVES = [
 const KL = [{id: 'kl1', workerId: 'w1', workerName: 'Nguyễn Văn An', date: '2026-11-03', loai: 'Khiển trách', lydo: 'Đi trễ', nguoiqd: 'QĐ'}];
 const server = {'/hrPrivate/salary': SAL};
 const MAKE = (user, extra = {}) => { const t = setup(user, W, Object.assign({nghiPhep: JSON.parse(JSON.stringify(LEAVES)), kyLuat: JSON.parse(JSON.stringify(KL)), server}, extra)); if(user.role === 'admin') t.ctx.DB.hrSalary = Object.assign({}, SAL); return t; };
-const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|Lương cơ bản|Quỹ lương|••••/;
+const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|Lương cơ bản|Lương hiện tại|Quỹ lương|••••/;
 
 (async () => {
   // 1. Giao diện: KHÔNG phải Admin → không có bất kỳ dấu vết lương nào trong DOM (kể cả khi dữ liệu có trong bộ nhớ)
@@ -73,7 +73,7 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
   // 2. Admin: thấy cột + ô lương; mặc định bị che; bấm hiện mới thấy số
   { const t = MAKE(ADMIN); t.run('renderNhanSu()');
     let html = t.document.getElementById('mc').innerHTML;
-    assert(/Lương cơ bản/.test(html) && /Quỹ lương/.test(html)); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định số lương bị che');
+    assert(/Lương hiện tại/.test(html) && /Quỹ lương hiện tại/.test(html) && !/Lương cơ bản/.test(html), 'đã đổi nhãn Lương cơ bản → Lương hiện tại'); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định số lương bị che');
     assert(/••••••••/.test(html));
     t.run('nsToggleSalary()'); html = t.document.getElementById('mc').innerHTML;
     assert(/6\.543\.210/.test(html) && /8\.765\.432/.test(html), 'bấm hiện → thấy số');
@@ -81,14 +81,18 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
     t.run('nsResetPrivacy()'); t.run('renderNhanSu()'); assert(!/6\.543\.210/.test(t.document.getElementById('mc').innerHTML));
     ok('Admin: có cột + quỹ lương, mặc định che số, bấm 👁 mới hiện, reset khi đăng xuất'); }
 
-  // 3. Hồ sơ Admin: ô lương hiện đúng giá trị; lưu → ghi nhánh riêng, hồ sơ chung không có lương
+  // 3. Hồ sơ Admin: ô "Mức lương hiện tại" CHỈ ĐỌC — hiện đúng giá trị, sửa DOM + lưu hồ sơ KHÔNG đổi lương; có nút sang tab Tăng lương
   { const t = MAKE(ADMIN); t.run(`openWorkerProfile('w1')`);
-    assert.strictEqual(t.document.getElementById('wpSalaryField').style.display, ''); assert.strictEqual(t.document.getElementById('wpLuongCoBan').value, '6543210');
-    t.document.getElementById('wpLuongCoBan').value = '7000000'; t.run('saveWorkerProfile()');
-    assert.strictEqual(t.run('hrSalaryGet("w1")'), 7000000); assert(t.ctx.DB.workers.every(w => !('luongCoBan' in w)));
-    assert.strictEqual(t.document.getElementById('wpLuongCoBan').value, '', 'ô lương được xoá sau khi lưu');
-    t.run(`openWorkerProfile('w1')`); t.run('closeWorkerProfile()'); assert.strictEqual(t.document.getElementById('wpLuongCoBan').value, '');
-    ok('Admin sửa lương trong hồ sơ → lưu nhánh riêng, hồ sơ chung sạch, ô nhập được dọn sau khi đóng'); }
+    const inp = t.document.getElementById('wpLuongCoBan');
+    assert.strictEqual(t.document.getElementById('wpSalaryField').style.display, ''); assert.strictEqual(inp.value, '6.543.210'); assert(inp.readOnly, 'ô lương hồ sơ phải chỉ đọc');
+    assert(/Mức lương hiện tại/.test(t.document.getElementById('wpSalaryField').innerHTML) && !/Lương cơ bản/.test(t.document.getElementById('wpSalaryField').innerHTML));
+    inp.value = '7000000'; t.run('saveWorkerProfile()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210, 'sửa DOM rồi lưu hồ sơ không đổi được lương'); assert(t.ctx.DB.workers.every(w => !('luongCoBan' in w)));
+    assert.strictEqual(inp.value, '', 'ô lương được xoá sau khi lưu');
+    t.run(`openWorkerProfile('w1')`); t.run('closeWorkerProfile()'); assert.strictEqual(inp.value, '');
+    t.run(`openWorkerProfile('w1')`); assert(/nsOpenRaiseForm\(/.test(t.document.getElementById('wpSalaryUpdBtn').getAttribute('onclick')), 'nút gọi nsOpenRaiseForm'); t.run("nsOpenRaiseForm(document.getElementById('wpId').value)");
+    assert.strictEqual(t.run('_nsTab'), 'tangluong', 'nút Cập nhật → sang tab Tăng lương'); assert.strictEqual(t.document.getElementById('rs_worker').value, 'w1', 'form mở sẵn đúng nhân viên');
+    ok('Admin: hồ sơ chỉ HIỂN THỊ mức lương hiện tại (chỉ đọc), không đổi lương qua hồ sơ; nút Cập nhật chuyển sang tab Tăng lương'); }
 
   // 4. Non-Admin không thể lưu lương dù cố tình sửa DOM; viewer không sửa được hồ sơ
   { const t = MAKE(STAFF); t.run(`openWorkerProfile('w1')`); t.document.getElementById('wpLuongCoBan').value = '99999999'; t.run('saveWorkerProfile()');
@@ -216,6 +220,34 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
   { const t = MAKE(ADMIN); t.ctx.DB.hrRaises = [{id: 'r1', workerId: 'w1', workerName: 'An', date: '2025-05-01', from: 1, to: 2, applied: true}]; let cap = null;
     t.ctx.attExcelReady = async () => true; t.ctx.attDownloadWb = async () => {}; t.ctx.ExcelJS = {Workbook: function(){}}; t.ctx.attAddSheet = (a, b, rows) => { cap = rows; return {getCell: () => ({})}; };
     await t.run('exportRaisesExcel()'); assert(cap && cap.length === 4 && /Ngày hiệu lực/.test(cap[2][1])); ok('Xuất Excel lịch sử tăng lương'); }
+
+  // 18. Tab Tăng lương = nơi cập nhật mức lương hiện tại (bảng từng nhân viên, thiết lập lần đầu, điều chỉnh/giảm, tìm kiếm)
+  { const t = MAKE(ADMIN); t.run('renderNhanSu()'); t.run(`goNsTab('tangluong')`);
+    const nm = t.ctx.DB.workers.filter(w => (w.trangThai || 'Đang làm') !== 'Đã nghỉ việc').length;
+    t.run('nsToggleSalary()'); let cur = t.document.getElementById('rsCurList');
+    assert(cur && cur.querySelectorAll('tbody tr').length === nm, 'bảng Mức lương hiện tại có đủ nhân viên đang làm (' + nm + ')');
+    assert(/6\.543\.210/.test(cur.innerHTML) && /8\.765\.432/.test(cur.innerHTML), 'hiện đúng lương hiện tại từng người'); assert(/Cập nhật lương/.test(cur.innerHTML));
+    const noSal = t.ctx.DB.workers.find(w => (w.trangThai || 'Đang làm') !== 'Đã nghỉ việc' && !t.run('hrSalaryGet("' + w.id + '")'));
+    if(noSal){ assert(/Thiết lập lương/.test(cur.innerHTML), 'người chưa có lương → nút Thiết lập lương'); }
+    // bấm nút trên dòng → form mở sẵn nhân viên đó; hạ lương cần tích Điều chỉnh
+    const set = (i, v) => { t.document.getElementById(i).value = v; };
+    t.run('openRaiseForm("w1")'); assert.strictEqual(t.document.getElementById('rs_adjust').checked, false);
+    set('rs_date', '2026-03-01'); set('rs_to', '6000000'); t.run('saveRaise()');
+    assert(t.toasts.some(x => /Điều chỉnh/.test(x.m)), 'giảm mà không tích → báo lỗi chỉ dẫn'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210);
+    t.document.getElementById('rs_adjust').checked = true; t.run('saveRaise()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6000000, 'tích Điều chỉnh → lương hiện tại cập nhật');
+    t.run('renderNhanSu()'); t.run(`goNsTab('tangluong')`);   // số vẫn đang ở chế độ hiện
+    let list = t.document.getElementById('raiseList').innerHTML; assert(/Điều chỉnh/.test(list) && /−/.test(list), 'lịch sử đánh dấu Điều chỉnh, chênh lệch âm');
+    assert(/6\.000\.000/.test(t.document.getElementById('rsCurList').innerHTML), 'bảng hiện tại cập nhật theo');
+    // lương mới = mức hiện tại → từ chối
+    t.run('openRaiseForm("w1")'); set('rs_date', '2026-04-01'); set('rs_to', '6000000'); t.run('saveRaise()'); assert(t.toasts.some(x => /bằng mức/.test(x.m)));
+    // tìm kiếm trong bảng hiện tại
+    t.run(`rsSetSearch('zzzkhongco')`); assert(/Không có nhân viên nào khớp/.test(t.document.getElementById('rsCurList').innerHTML)); t.run(`rsSetSearch('')`);
+    assert.strictEqual(t.document.getElementById('rsCurList').querySelectorAll('tbody tr').length, nm);
+    // người nghỉ việc không nằm trong bảng
+    ok('Tab Tăng lương: bảng mức lương hiện tại, thiết lập/cập nhật, giảm cần tích Điều chỉnh, từ chối bằng mức, tìm kiếm'); }
+  for(const u of [STAFF, VIEW, SOL]){ const t = MAKE(u); assert.strictEqual(t.run('renderCurrentSalary()'), '', u.role + ': không dựng bảng lương'); }
+  ok('staff / viewer / solieu: bảng Mức lương hiện tại không dựng gì');
 
   console.log('\nhr-view.test: ' + n + ' nhóm kiểm thử đạt');
 })().catch(e => { console.error('✗', e); process.exit(1); });

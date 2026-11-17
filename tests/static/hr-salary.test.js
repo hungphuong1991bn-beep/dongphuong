@@ -163,8 +163,10 @@ const W = () => [
     assert.strictEqual(t.run('hrSalaryGet("w1")'), 7000000, 'lương hiện tại cập nhật vì ngày hiệu lực đã qua');
     await t.run('hrSalaryFlush()'); assert.strictEqual(t.store['/hrPrivate/raises/' + r.raise.id].to, 7000000); assert.strictEqual(t.store['/hrPrivate/salary/w1'], 7000000);
     assert(t.writes.every(w => w[0].startsWith('/hrPrivate/'))); assert(!JSON.stringify(t.ctx.DB.workers).includes('7000000'));
-    r = t.run('hrRaiseAdd({workerId:"w1",date:"2021-06-15",to:"7000000"})'); assert(!r.ok && /cao hơn/.test(r.error), 'không cho mức mới <= mức trước');
-    r = t.run('hrRaiseAdd({workerId:"w1",date:"2021-06-15",to:"7500000"})'); assert(r.ok && r.raise.from === 7000000);
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2021-06-15",to:"7000000"})'); assert(!r.ok && /bằng mức/.test(r.error), 'mức mới = mức trước → từ chối (không có gì để cập nhật)');
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2021-06-15",to:"6500000"})'); assert(!r.ok && /Điều chỉnh/.test(r.error), 'mức thấp hơn mà không tích Điều chỉnh → từ chối, chỉ dẫn tích ô');
+    assert.strictEqual(t.ctx.DB.hrRaises.length, 1, 'lần bị từ chối không để lại bản ghi'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 7000000, 'lần bị từ chối không đổi lương');
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2021-06-15",to:"7500000"})'); assert(r.ok && r.raise.from === 7000000 && r.raise.kind === 'raise');
     assert.strictEqual(t.run('hrRaiseLast("w1").date'), '2021-06-15'); assert.strictEqual(t.run('hrRaiseList("w1").length'), 2);
     for(const bad of ['{workerId:"",date:"2020-01-01",to:1}', '{workerId:"w1",date:"",to:1}', '{workerId:"w1",date:"2020-01-01",to:0}', '{workerId:"zz",date:"2020-01-01",to:5}']) assert(!t.run('hrRaiseAdd(' + bad + ')').ok);
     ok('Tăng lương: ghi theo ngày hiệu lực, tự tính lương cũ, cập nhật lương hiện tại, lưu /hrPrivate, chặn dữ liệu sai'); }
@@ -198,6 +200,18 @@ const W = () => [
     assert.strictEqual(t.run('hrRaiseList().length'), 0); assert.strictEqual(t.run('hrRaiseLast("w1")'), null);
     const x = t.run('hrRaiseAdd({workerId:"w1",date:"2020-01-01",to:"9000000"})'); assert(!x.ok); assert.strictEqual(t.run('hrRaiseDelete("' + r.raise.id + '")'), false);
     ok('Lịch sử tăng lương: không mất khi mất mạng, xoá khi đăng xuất, non-Admin không đọc/ghi được'); }
+
+  // v2.11.0: tab Tăng lương là nơi DUY NHẤT cập nhật mức lương hiện tại — thiết lập lần đầu, điều chỉnh/giảm có cờ
+  { const t = setup({workers: [{id: 'w1', name: 'An', trangThai: 'Đang làm'}]});
+    let r = t.run('hrRaiseAdd({workerId:"w1",date:"2020-01-01",to:"6000000"})'); assert(r.ok && r.raise.from === 0 && r.raise.kind === 'raise', 'chưa có lương → thiết lập mức ban đầu (from=0)');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6000000);
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2020-06-01",to:"5500000"})'); assert(!r.ok && /Điều chỉnh/.test(r.error), 'giảm mà không tích cờ → từ chối');
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2020-06-01",to:"6000000",adjust:true})'); assert(!r.ok && /bằng mức/.test(r.error), 'bằng mức cũ → từ chối kể cả có cờ');
+    r = t.run('hrRaiseAdd({workerId:"w1",date:"2020-06-01",to:"5500000",adjust:true})'); assert(r.ok && r.raise.kind === 'adjust' && r.raise.from === 6000000, 'tích cờ → cho giảm, lưu kind=adjust');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 5500000, 'điều chỉnh có hiệu lực → lương hiện tại đổi đúng');
+    await t.run('hrSalaryFlush()'); assert.strictEqual(t.store['/hrPrivate/salary/w1'], 5500000);
+    const t2 = setup({role: 'staff', workers: [{id: 'w1', name: 'An'}]}); r = t2.run('hrRaiseAdd({workerId:"w1",date:"2020-01-01",to:"1",adjust:true})'); assert(!r.ok, 'non-Admin không cập nhật được lương');
+    ok('Cập nhật mức lương hiện tại: thiết lập lần đầu, giảm/điều chỉnh cần cờ, bằng mức bị từ chối, non-Admin bị chặn'); }
 
   console.log('\nhr-salary.test: ' + n + ' nhóm kiểm thử đạt');
 })().catch(e => { console.error('✗', e); process.exit(1); });

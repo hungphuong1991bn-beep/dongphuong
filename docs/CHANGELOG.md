@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [2.11.0] "Lương cơ bản" → "Mức lương hiện tại", cập nhật trực tiếp ở tab Tăng lương (17/11/2026)
+- **Đổi khái niệm:** hồ sơ nhân viên không còn ô nhập "Lương cơ bản". Thay bằng **🔒 Mức lương hiện tại** (chỉ đọc, chỉ Admin thấy) + nút **📈 Cập nhật** nhảy thẳng sang tab Tăng lương với form đã chọn sẵn nhân viên. Sửa DOM rồi bấm Lưu hồ sơ KHÔNG đổi được lương nữa.
+- **Tab 📈 Tăng lương là nơi duy nhất cập nhật lương:** thêm bảng **💰 Mức lương hiện tại của từng nhân viên** (có ô tìm tên/mã/bộ phận, hiện lương đang hiệu lực, ngày hiệu lực gần nhất, lần tăng chờ hiệu lực) với nút **✏️ Cập nhật lương** / **➕ Thiết lập lương** (người chưa có lương) ngay trên từng dòng. Vẫn lưu lịch sử theo ngày hiệu lực như cũ.
+- **Điều chỉnh / giảm lương:** vì ô sửa trực tiếp đã bỏ, thêm ô tích **"Điều chỉnh / giảm lương"** trong form để sửa nhập sai hoặc hạ bậc (lưu `kind:'adjust'`, hiện nhãn đỏ "Điều chỉnh", chênh lệch âm, không tính vào % tăng trung bình). Mức thấp hơn mà không tích ô → báo lỗi chỉ dẫn; bằng mức hiện tại → từ chối.
+- **Đổi tên nhãn:** "Lương cơ bản" → "Lương hiện tại" (cột bảng danh sách, thẻ Quỹ lương, Excel danh sách nhân sự); cột "Tăng" → "Chênh lệch" (cũng ở Excel lịch sử).
+- Không đổi nơi lưu dữ liệu (`/hrPrivate/salary`, `/hrPrivate/raises`), quyền (chỉ Admin) hay cơ chế tự áp dụng lần tăng có ngày hiệu lực tương lai. Xoá 1 bản ghi lịch sử vẫn KHÔNG đổi lại lương hiện tại (muốn đổi: cập nhật mức mới, tích Điều chỉnh nếu thấp hơn).
+- Test: `hr-view.test.js` 19 nhóm, `hr-salary.test.js` 20 nhóm.
+
+## [2.10.1] Sửa xuất Excel "Tổng hợp Khuôn" bị thiếu chủng loại (17/11/2026)
+- **Triệu chứng:** trên phần mềm có đủ (vd. 3x60, 3x57, 3x80, 3x100) nhưng file Excel xuất ra thiếu.
+- **Nguyên nhân:** `exportKhuonCatalogExcel()` lọc CỨNG `x.category === 'Bo cạnh'` (và 4 nhóm còn lại của mẫu). Chỉ cần tên nhóm do Admin nhập lệch một chút — hoa/thường (`Bo Cạnh`), thừa dấu cách (`Bo cạnh `), gõ dấu kiểu tổ hợp, hoặc nhóm mới (`Khuôn đặc biệt`…) — là cả nhóm bị bỏ qua IM LẶNG khỏi Excel, trong khi giao diện (gom theo đúng chuỗi) vẫn hiện đủ.
+- **Sửa (molds-export.js):**
+  - Nhận nhóm không phân biệt hoa/thường, dấu, khoảng trắng; `Đồng thanh cái` được xếp vào khối Đồng thanh dẹt.
+  - Nhóm không thuộc 5 khối của mẫu → tự thêm khối cột riêng bên phải (nhân bản đúng định dạng khối "Yêu cầu & chuẩn", kéo dài các dòng tiêu đề); bản ghi không có nhóm → khối "Chưa phân nhóm".
+  - **Đối chiếu số lượng** trước khi tải: ghi ra ≠ trong danh mục thì KHÔNG tải file và báo lỗi. Thông báo thành công nêu rõ "đủ N/N kích thước".
+  - Dữ liệu > 55 dòng: cho in nhiều trang, lặp tiêu đề cột (mẫu cũ ép 1 trang); có thêm cột → in ngang.
+  - Sửa luôn ô D55 trong file mẫu gốc lỡ dùng font Calibri 11 (thay vì Arial 9).
+- **Ngăn tái diễn (molds-view.js, molds-qty.js):** thêm `khNormCat/khCleanCat/khCanonCategory`; khi lưu kích thước vào Tổng hợp Khuôn hoặc Số lượng Khuôn, tên nhóm được chuẩn hoá về cách viết đã có nhiều nhất (không tạo thêm nhóm "na ná"). Dữ liệu cũ không bị sửa.
+- Test: `tests/static/molds-export.test.js` (đã thêm vào `run-all.sh`).
+
 ## [2.10.0] Tăng lương theo ngày hiệu lực (17/11/2026)
 - Tab mới **📈 Tăng lương** trong Quản lý nhân sự — **chỉ Admin thấy** (tài khoản khác không có nút tab, panel hay dữ liệu; `goNsTab('tangluong')` bị chặn).
 - Mỗi lần tăng ghi: **ngày/tháng/năm hiệu lực**, lương cũ (tự tính theo lịch sử), lương mới, % tăng, lý do. Chặn mức mới ≤ mức trước. Lọc theo **năm** và theo nhân viên; xuất Excel.
