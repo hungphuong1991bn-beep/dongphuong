@@ -158,6 +158,7 @@ function nsGoLeavePending(){
 function nsGoQuick(q){ _nsQuick = q; goNsTab('danhsach'); nsRefreshList(); }
 
 function renderNhanSu(){
+  if(hrSalaryCan() && typeof hrSalaryUnitNeedsAction === 'function' && hrSalaryUnitNeedsAction()){ try{ hrSalaryUnitPrompt(); }catch(e){ console.error(e); } }   // v2.12.0: còn lương cũ theo THÁNG → hỏi quy đổi sang NGÀY
   if(hrSalaryCan()){ try{ hrRaiseApplyDue(); }catch(e){ console.error(e); } }   // lần tăng lương đã đến ngày hiệu lực → tự áp dụng
   if(_nsTab==='tangluong' && !hrSalaryCan()) _nsTab = 'danhsach';
   const ym = curYM();
@@ -204,7 +205,7 @@ function renderNhanSu(){
         <div class="ns-stat" onclick="goNsTab('nghiphep')" title="Xem đơn nghỉ phép"><div class="ns-stat-val" style="color:var(--amber)">${nghiPhepCount}</div><div class="ns-stat-lbl">Đơn nghỉ tháng này</div></div>
         <div class="ns-stat" onclick="goNsTab('kyluat')" title="Xem hồ sơ kỷ luật"><div class="ns-stat-val" style="color:var(--red-m)">${klCount}</div><div class="ns-stat-lbl">Vi phạm KL</div></div>
         <div class="ns-stat" onclick="nsGoQuick('sinhnhat')" title="Sinh nhật trong tháng"><div class="ns-stat-val" style="color:#db2777">${sinhNhatCount}</div><div class="ns-stat-lbl">🎂 Sinh nhật tháng ${m}</div></div>
-        ${canSal?`<div class="ns-stat" onclick="nsToggleSalary(event)" title="🔒 Chỉ Admin thấy — bấm để hiện/ẩn số" style="border-style:dashed"><div class="ns-stat-val" style="color:#7c3aed;font-size:18px">${quyLuongTxt}</div><div class="ns-stat-lbl">🔒 Quỹ lương hiện tại</div></div>`:''}
+        ${canSal?`<div class="ns-stat" onclick="nsToggleSalary(event)" title="🔒 Chỉ Admin thấy — bấm để hiện/ẩn số" style="border-style:dashed"><div class="ns-stat-val" style="color:#7c3aed;font-size:18px">${quyLuongTxt}</div><div class="ns-stat-lbl">🔒 Tổng lương ngày (đang làm)</div></div>`:''}
       </div>
       ${thieuCount>0?`<div onclick="nsGoQuick('thieu')" style="cursor:pointer;margin-top:2px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12.5px;color:#92400e">⚠️ <b>${thieuCount}</b> hồ sơ đang làm việc còn thiếu thông tin (bộ phận, chức vụ, SĐT, ngày vào làm…) — <u>bấm để xem</u></div>`:''}
     </div>
@@ -265,7 +266,7 @@ function renderNhanSu(){
             <th>SĐT</th>
             <th data-sort="ngayVaoLam" onclick="nsSortBy('ngayVaoLam')" class="ns-th-sort" style="text-align:center">Ngày vào làm <span class="ns-sort"></span></th>
             <th style="text-align:center">Trạng thái</th>
-            ${canSal?`<th data-sort="luong" onclick="nsSortBy('luong')" class="ns-th-sort" style="text-align:right">🔒 Lương hiện tại <span class="ns-sort"></span></th>`:''}
+            ${canSal?`<th data-sort="luong" onclick="nsSortBy('luong')" class="ns-th-sort" style="text-align:right">🔒 Lương / ngày <span class="ns-sort"></span></th>`:''}
             <th data-sort="cong" onclick="nsSortBy('cong')" class="ns-th-sort" style="text-align:center">Công tháng ${m}/${y} <span class="ns-sort"></span></th>
             <th style="text-align:center">Kỷ luật</th>
             <th style="text-align:center">Nghỉ phép</th>

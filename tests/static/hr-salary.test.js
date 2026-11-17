@@ -4,14 +4,14 @@ const fs = require('fs'), vm = require('vm'), assert = require('assert'), path =
 const root = path.join(__dirname, '../..'); const rd = f => fs.readFileSync(path.join(root, f), 'utf8');
 let n = 0; const ok = m => console.log('✓', m, ++n);
 
-function setup({role = 'admin', workers = [], server = {}, failWrites = false, online = true} = {}){
+function setup({role = 'admin', workers = [], server = {}, failWrites = false, online = true, unit = 'day'} = {}){
   const store = JSON.parse(JSON.stringify(server));          // "Firebase": {path: value}
   const ls = {};                                              // localStorage
   const reads = [], writes = [], logs = [], toasts = [];
   const st = {fail: failWrites};
   const ctx = {
     console, JSON, Object, Array, Number, String, Math, isFinite, Promise, setTimeout, clearTimeout,
-    DB: {workers: JSON.parse(JSON.stringify(workers)), hrSalary: {}},
+    DB: {workers: JSON.parse(JSON.stringify(workers)), hrSalary: {}, hrUnit: unit},
     currentUser: {id: 'u1', role},
     isAdmin: () => ctx.currentUser && ctx.currentUser.role === 'admin',
     isViewer: () => ctx.currentUser && (ctx.currentUser.role === 'viewer' || ctx.currentUser.role === 'solieu'),
@@ -130,7 +130,7 @@ const W = () => [
     assert(!t.reads.some(p => p.includes('hrPrivate')) && !t.writes.length); ok('Đăng nhập non-Admin: xoá cache lương, gỡ lương cục bộ, không đọc/ghi /hrPrivate'); }
 
   // 12. Đăng nhập Admin: tải lương, di trú, vẽ lại tab nếu đang ở Quản lý nhân sự
-  { const t = setup({workers: W(), server: {'/hrPrivate/salary': {w9: 1234567}}}); t.ctx.currentTab = 'nhanSu';
+  { const t = setup({workers: W(), server: {'/hrPrivate/salary': {w9: 1234567}, '/hrPrivate/salaryUnit': 'day'}}); t.ctx.currentTab = 'nhanSu';
     await t.run('hrSalaryOnLogin()');
     assert.strictEqual(t.run('hrSalaryGet("w9")'), 1234567); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6000000);
     assert(t.ctx._rendered >= 1); assert(t.toasts.some(x => /vùng bảo mật/.test(x))); ok('Đăng nhập Admin: tải + di trú lương và vẽ lại tab'); }
@@ -212,6 +212,65 @@ const W = () => [
     await t.run('hrSalaryFlush()'); assert.strictEqual(t.store['/hrPrivate/salary/w1'], 5500000);
     const t2 = setup({role: 'staff', workers: [{id: 'w1', name: 'An'}]}); r = t2.run('hrRaiseAdd({workerId:"w1",date:"2020-01-01",to:"1",adjust:true})'); assert(!r.ok, 'non-Admin không cập nhật được lương');
     ok('Cập nhật mức lương hiện tại: thiết lập lần đầu, giảm/điều chỉnh cần cờ, bằng mức bị từ chối, non-Admin bị chặn'); }
+
+
+  // ═══ v2.12.0: ĐƠN VỊ LƯƠNG = VNĐ/NGÀY ═══
+  // 20. Chưa có lương nào (cài mới) → tự đặt dấu mốc 'day', không hỏi gì
+  { const t = setup({workers: [{id: 'w1', name: 'An'}], unit: ''});
+    assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), false); assert.strictEqual(t.run('hrSalaryUnitCheck()'), false);
+    await t.run('hrSalaryFlush()'); assert.strictEqual(t.store['/hrPrivate/salaryUnit'], 'day'); assert.strictEqual(t.ctx.DB.hrUnit, 'day');
+    assert(!('__unit' in JSON.parse(JSON.stringify(t.ctx.DB.hrSalary))), 'dấu mốc không lẫn vào bảng lương');
+    ok('Cài mới (chưa có lương): tự đặt dấu mốc đơn vị = ngày, không hỏi'); }
+
+  // 21. Có lương cũ (theo tháng) mà chưa có dấu mốc → bắt buộc Admin chọn; trong lúc chờ không ghi được lương mới / không tự áp tăng lương
+  { const t = setup({workers: [{id: 'w1', name: 'An', trangThai: 'Đang làm'}], unit: '', server: {'/hrPrivate/salary': {w1: 6500000}}});
+    await t.run('hrSalaryOnLogin()');
+    assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), true); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6500000, 'chưa tự đổi số');
+    assert(!t.store['/hrPrivate/salaryUnit'], 'chưa ghi dấu mốc khi Admin chưa chọn');
+    const r = t.run('hrRaiseAdd({workerId:"w1",date:"2020-01-01",to:"250000"})'); assert(!r.ok && /THÁNG sang NGÀY/.test(r.error), 'chặn ghi lương khi chưa quy đổi');
+    assert.strictEqual(t.run('hrSalaryUnitApply("convert", 0).ok'), false); assert.strictEqual(t.run('hrSalaryUnitApply("convert", 40).ok'), false, 'số ngày công phải 1..31');
+    assert.strictEqual(t.run('hrSalaryUnitApply("bậy", 26).ok'), false); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6500000);
+    ok('Lương cũ chưa có dấu mốc: hỏi Admin, không tự đổi số, chặn ghi lương mới, kiểm tra tham số quy đổi'); }
+
+  // 22. Quy đổi: lương + lịch sử tăng lương chia N, làm tròn; dấu mốc được gửi; hỏi lần sau không còn
+  { const t = setup({workers: [{id: 'w1', name: 'An', trangThai: 'Đang làm'}, {id: 'w2', name: 'Bình', trangThai: 'Đang làm'}], unit: ''});
+    t.ctx.DB.hrSalary = {w1: 6500000, w2: 7000000};
+    t.ctx.DB.hrRaises = [{id: 'r1', workerId: 'w1', workerName: 'An', date: '2020-01-01', from: 6000000, to: 6500000, applied: true, kind: 'raise'}];
+    const res = t.run('hrSalaryUnitApply("convert", 26)'); assert(res.ok && res.salaries === 2 && res.raises === 1, JSON.stringify(res));
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 250000); assert.strictEqual(t.run('hrSalaryGet("w2")'), Math.round(7000000 / 26));
+    assert.strictEqual(t.ctx.DB.hrRaises[0].from, Math.round(6000000 / 26)); assert.strictEqual(t.ctx.DB.hrRaises[0].to, 250000);
+    await t.run('hrSalaryFlush()'); assert.strictEqual(t.store['/hrPrivate/salary/w1'], 250000); assert.strictEqual(t.store['/hrPrivate/raises/r1'].to, 250000);
+    assert.strictEqual(t.store['/hrPrivate/salaryUnit'], 'day'); assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), false);
+    assert.strictEqual(t.run('hrSalaryUnitApply("convert", 26).ok'), false, 'không quy đổi lần 2 (tránh chia hai lần)'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 250000);
+    assert(t.run('hrRaiseAdd({workerId:"w1",date:"2020-06-01",to:"260000"})').ok, 'sau khi quy đổi → ghi lương bình thường');
+    ok('Quy đổi tháng→ngày: lương + lịch sử chia 26, làm tròn, gửi dấu mốc, không quy đổi 2 lần'); }
+
+  // 23. Giữ nguyên / xoá để nhập lại
+  { const t = setup({workers: [{id: 'w1', name: 'An'}], unit: ''}); t.ctx.DB.hrSalary = {w1: 250000};
+    assert(t.run('hrSalaryUnitApply("keep")').ok); assert.strictEqual(t.run('hrSalaryGet("w1")'), 250000); assert.strictEqual(t.ctx.DB.hrUnit, 'day');
+    const u = setup({workers: [{id: 'w1', name: 'An'}], unit: ''}); u.ctx.DB.hrSalary = {w1: 6500000};
+    u.ctx.DB.hrRaises = [{id: 'r1', workerId: 'w1', workerName: 'An', date: '2020-01-01', from: 0, to: 6500000, applied: true}];
+    assert(u.run('hrSalaryUnitApply("clear")').ok); await u.run('hrSalaryFlush()');
+    assert.strictEqual(u.run('hrSalaryGet("w1")'), 0); assert.strictEqual(u.ctx.DB.hrRaises.length, 0); assert.strictEqual(u.store['/hrPrivate/salaryUnit'], 'day');
+    ok('Giữ nguyên số (đã là tiền ngày) / Xoá để nhập lại: đặt dấu mốc, dữ liệu đúng như chọn'); }
+
+  // 24. Lương cũ còn trong hồ sơ chung (luongCoBan) cũng là số THÁNG → login phải hỏi quy đổi, không tự coi là tiền ngày
+  { const t = setup({workers: W(), unit: ''}); await t.run('hrSalaryOnLogin()');
+    assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), true, 'có luongCoBan cũ → cần quyết định'); assert(!t.store['/hrPrivate/salaryUnit']);
+    ok('luongCoBan cũ trong hồ sơ chung → hỏi quy đổi, không tự đặt dấu mốc ngày'); }
+
+  // 25. Mất mạng khi quy đổi: không mất, không quy đổi lại lần 2 sau khi tải lại; có mạng thì gửi nốt cả dấu mốc
+  { const t = setup({workers: [{id: 'w1', name: 'An'}], unit: '', server: {'/hrPrivate/salary': {w1: 6500000}}}); await t.run('hrSalaryFetch()');
+    t.st.fail = true; t.run('hrSalaryUnitApply("convert", 26)'); await new Promise(r => setTimeout(r, 5));
+    t.ctx.DB.hrUnit = ''; await t.run('hrSalaryFetch()');   // tải lại bản server cũ trong lúc chưa gửi được
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 250000, 'bản server cũ không đè số đã quy đổi'); assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), false, 'không hỏi/quy đổi lại');
+    t.st.fail = false; assert.strictEqual(await t.run('hrSalaryFlush()'), true); assert.strictEqual(t.store['/hrPrivate/salary/w1'], 250000); assert.strictEqual(t.store['/hrPrivate/salaryUnit'], 'day');
+    ok('Quy đổi lúc mất mạng: hàng đợi bền giữ cả lương + dấu mốc, tải lại không đè, không quy đổi hai lần'); }
+
+  // 26. Non-Admin: không thấy/không đụng tới đơn vị lương
+  { const t = setup({role: 'staff', unit: ''}); assert.strictEqual(t.run('hrSalaryUnitNeedsAction()'), false); assert.strictEqual(t.run('hrSalaryUnitCheck()'), false);
+    assert.strictEqual(t.run('hrSalaryUnitApply("convert", 26).ok'), false); assert.strictEqual(t.writes.length, 0);
+    ok('Non-Admin: không đọc/ghi dấu mốc đơn vị lương'); }
 
   console.log('\nhr-salary.test: ' + n + ' nhóm kiểm thử đạt');
 })().catch(e => { console.error('✗', e); process.exit(1); });

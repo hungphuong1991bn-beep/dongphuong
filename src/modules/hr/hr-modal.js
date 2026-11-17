@@ -66,9 +66,10 @@ document.write(`<!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / 
       </div>
     </div>
     <div class="modal-row">
-      <div class="field" id="wpSalaryField" style="display:none"><div class="field-lbl">🔒 Mức lương hiện tại (VNĐ) <span style="font-weight:500;font-size:10.5px;color:#7c3aed">· chỉ Admin thấy</span></div>
-        <div style="display:flex;gap:6px;align-items:center"><input id="wpLuongCoBan" class="field-inp" type="text" readonly tabindex="-1" placeholder="Chưa có mức lương" autocomplete="off" style="flex:1;min-width:0;font-weight:700;background:var(--bg)"><button type="button" id="wpSalaryUpdBtn" class="ns-chip" style="white-space:nowrap" onclick="nsOpenRaiseForm(document.getElementById('wpId').value)">📈 Cập nhật</button></div>
-        <div style="font-size:10.5px;color:var(--text4);margin-top:3px">Đổi mức lương ở tab 📈 Tăng lương (có lưu lịch sử theo ngày hiệu lực)</div></div>
+      <div class="field" id="wpSalaryField" style="display:none"><div class="field-lbl">🔒 Lương theo ngày (VNĐ/ngày) <span style="font-weight:500;font-size:10.5px;color:#7c3aed">· chỉ Admin thấy</span></div>
+        <div style="display:flex;gap:6px;align-items:center"><input id="wpLuongCoBan" class="field-inp" type="text" inputmode="numeric" placeholder="VD: 250.000 (tiền 1 ngày công)" autocomplete="off" oninput="wpSalaryInput(this)" style="flex:1;min-width:0;font-weight:700"><button type="button" id="wpSalaryUpdBtn" class="ns-chip" style="white-space:nowrap" onclick="nsOpenRaiseForm(document.getElementById('wpId').value)" title="Xem lịch sử thay đổi lương / ghi nhận hàng loạt">📈 Lịch sử</button></div>
+        <div id="wpSalaryDateWrap" style="display:none;margin-top:6px"><div class="field-lbl" style="margin-bottom:2px">Áp dụng từ ngày <span style="font-weight:500;font-size:10.5px;color:var(--text4)">(đã qua / hôm nay = có hiệu lực ngay; tương lai = tự áp dụng khi đến ngày)</span></div><input id="wpSalaryDate" class="field-inp" type="date"></div>
+        <div style="font-size:10.5px;color:var(--text4);margin-top:3px">Sửa trực tiếp tại đây rồi bấm Lưu hồ sơ — mọi lần đổi đều được ghi vào lịch sử theo ngày áp dụng</div></div>
       <div class="field"><div class="field-lbl">Trạng thái</div>
         <select id="wpTrangThai" class="field-inp">
           <option value="Đang làm">🟢 Đang làm</option>

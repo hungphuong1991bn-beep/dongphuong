@@ -117,7 +117,12 @@ function openWorkerProfile(id){
   const _canSal = hrSalaryCan();
   if(_canSal){ try{ hrSalaryCaptureLegacy(); }catch(e){} }   // lương cũ còn trong hồ sơ → hiện đúng cho Admin
   const _salBox = document.getElementById('wpSalaryField'); if(_salBox) _salBox.style.display = _canSal ? '' : 'none';
-  $('wpLuongCoBan').value = _canSal ? (hrSalaryGet(w.id) ? hrSalaryGet(w.id).toLocaleString('vi-VN') : '') : '';   // chỉ đọc — đổi lương ở tab Tăng lương
+  // v2.12.0: ô lương theo NGÀY sửa trực tiếp được (chỉ Admin). Nhớ mức gốc để biết có đổi hay không.
+  const _salInp = $('wpLuongCoBan'), _cur = _canSal ? hrSalaryGet(w.id) : 0;
+  _salInp.value = _cur ? _cur.toLocaleString('vi-VN') : '';
+  _salInp.dataset.orig = _cur ? String(_cur) : '';
+  const _salDate = document.getElementById('wpSalaryDate'); if(_salDate) _salDate.value = todayStr();
+  const _salWrap = document.getElementById('wpSalaryDateWrap'); if(_salWrap) _salWrap.style.display = 'none';
   $('wpNganHang').value = w.nganHang||'';
   $('wpSoTaiKhoan').value = w.soTaiKhoan||'';
   $('wpTrangThai').value = w.trangThai||'Đang làm';
@@ -131,8 +136,15 @@ function openWorkerProfile(id){
 }
 // Đóng hồ sơ: xoá giá trị lương khỏi ô nhập (không để sót trong DOM sau khi đóng)
 function closeWorkerProfile(){
-  const el = document.getElementById('wpLuongCoBan'); if(el) el.value = '';
+  const el = document.getElementById('wpLuongCoBan'); if(el){ el.value = ''; el.dataset.orig = ''; }
   closeModal('workerProfileModal');
+}
+// Gõ vào ô lương: tự chèn dấu chấm ngăn cách nghìn; chỉ hiện ô "Áp dụng từ ngày" khi số đã khác mức hiện tại
+function wpSalaryInput(el){
+  const digits = String(el.value || '').replace(/\D/g, '');
+  el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+  const wrap = document.getElementById('wpSalaryDateWrap');
+  if(wrap) wrap.style.display = (digits && digits !== (el.dataset.orig || '')) ? '' : 'none';
 }
 function saveWorkerProfile(){
   if(guardViewer())return;
@@ -142,6 +154,21 @@ function saveWorkerProfile(){
   const _name = $('wpName').value.trim(), _ma = $('wpMaNV').value.trim();
   if(!_name){ showToast('⚠️ Vui lòng nhập họ và tên nhân viên', true); return; }
   if(_ma && DB.workers.some(x=>x.id!==id && (x.maNV||'').trim().toLowerCase()===_ma.toLowerCase())){ showToast('⚠️ Mã nhân viên "'+_ma+'" đã có người khác dùng', true); return; }
+  // v2.12.0: lương theo ngày — kiểm tra TRƯỚC khi sửa bất kỳ trường nào để lỗi lương không làm hồ sơ lưu dở
+  let _salChange = null;
+  if(hrSalaryCan()){
+    const _inp = $('wpLuongCoBan'), _raw = String(_inp.value || '').trim(), _orig = Number(_inp.dataset.orig) || 0;
+    if(_raw){
+      const _n = hrSalaryNum(_raw);
+      if(!_n){ showToast('⚠️ Lương theo ngày không hợp lệ — chỉ nhập số tiền (VNĐ/ngày)', true); return; }
+      if(_n !== _orig){
+        const _d = ($('wpSalaryDate').value || '').trim();
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(_d)){ showToast('⚠️ Vui lòng chọn ngày áp dụng mức lương mới', true); return; }
+        if(typeof hrSalaryUnitNeedsAction === 'function' && hrSalaryUnitNeedsAction()){ showToast('⚠️ Cần xác nhận quy đổi lương từ tháng sang ngày trước khi sửa lương', true); if(typeof hrSalaryUnitPrompt === 'function') hrSalaryUnitPrompt(); return; }
+        _salChange = {workerId: id, date: _d, to: _n};
+      }
+    }
+  }
   w.name = _name;
   w.maNV = _ma;
   w.gioiTinh = $('wpGioiTinh').value;
@@ -160,15 +187,19 @@ function saveWorkerProfile(){
   if(w.trangThai==='Đã nghỉ việc'){ if(!w.ngayNghiViec) w.ngayNghiViec = todayStr(); } else { delete w.ngayNghiViec; }
   w.ghiChu = $('wpGhiChu').value.trim();
   // v2.9.0: lương lưu riêng (chỉ Admin) — KHÔNG ghi vào hồ sơ chung, KHÔNG đưa số tiền vào nhật ký
-  // v2.11.0: hồ sơ chỉ HIỂN THỊ mức lương hiện tại; mọi thay đổi lương đi qua tab "Tăng lương" (hrRaiseAdd)
+  // v2.12.0: lương THEO NGÀY sửa được ngay trong hồ sơ (chỉ Admin) nhưng vẫn đi qua hrRaiseAdd → có lịch sử theo ngày áp dụng
+  let _salRes = null;
   if(hrSalaryCan()){
     try{ hrSalaryCaptureLegacy(); }catch(e){}
     delete w.luongCoBan;   // không bao giờ để lương trong hồ sơ chung
+    if(_salChange) _salRes = hrRaiseAdd({workerId: _salChange.workerId, date: _salChange.date, to: _salChange.to, adjust: true, reason: 'Sửa từ hồ sơ nhân viên'});
   }
   saveWorkers();
   log('Sửa hồ sơ nhân viên', `${w.name||'(chưa có tên)'} · ${w.chucVu||''} ${w.boPhan?('· '+w.boPhan):''}`, '', null, {workerId:id});
-  const _se = document.getElementById('wpLuongCoBan'); if(_se) _se.value = '';
+  if(_salRes && _salRes.ok) log(_salRes.raise.kind === 'adjust' ? 'Điều chỉnh lương' : 'Tăng lương', `${_salRes.raise.workerName || '?'} · hiệu lực ${_salRes.raise.date} (số tiền không ghi vào nhật ký)`, '');
+  const _se = document.getElementById('wpLuongCoBan'); if(_se){ _se.value = ''; _se.dataset.orig = ''; }
   closeModal('workerProfileModal');
-  showToast('✅ Đã lưu hồ sơ nhân viên');
+  if(_salRes && !_salRes.ok) showToast('✅ Đã lưu hồ sơ — nhưng KHÔNG đổi được lương: ' + _salRes.error, true);
+  else showToast(_salRes && _salRes.ok ? '✅ Đã lưu hồ sơ và cập nhật lương theo ngày' : '✅ Đã lưu hồ sơ nhân viên');
   refreshWorkerViews();
 }

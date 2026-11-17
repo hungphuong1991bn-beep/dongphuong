@@ -1,4 +1,5 @@
 // src/modules/hr/hr-raise.js — v2.10.0: tab "📈 Tăng lương" (CHỈ ADMIN) — ghi nhận tăng lương theo ngày hiệu lực.
+// v2.12.0: mọi số tiền là VNĐ/NGÀY; có hộp thoại quy đổi lương cũ (theo tháng) sang theo ngày (hrSalaryUnitPrompt).
 // Dữ liệu + quy tắc nằm ở hr-salary.js (hrRaise*). File này chỉ lo giao diện. Tài khoản khác Admin: không dựng gì.
 
 let _rsYear = 'all';       // 'all' | '2026' ...
@@ -29,7 +30,7 @@ function renderRaiseList(){
   const nWorkers = new Set(list.map(r => r.workerId)).size;
   return `<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${list.length} lượt · ${nWorkers} nhân viên${pcts.length ? ' · trung bình <b>+' + avg.toFixed(1) + '%</b>' : ''}</div>
   <div style="overflow-x:auto"><table class="ns-table" style="min-width:760px">
-    <thead><tr><th>Ngày hiệu lực</th><th>Nhân viên</th><th style="text-align:right">Lương cũ</th><th style="text-align:right">Lương mới</th><th style="text-align:right">Chênh lệch</th><th>Lý do</th><th style="text-align:center">Trạng thái</th><th style="width:40px"></th></tr></thead>
+    <thead><tr><th>Ngày hiệu lực</th><th>Nhân viên</th><th style="text-align:right">Lương cũ (VNĐ/ngày)</th><th style="text-align:right">Lương mới (VNĐ/ngày)</th><th style="text-align:right">Chênh lệch</th><th>Lý do</th><th style="text-align:center">Trạng thái</th><th style="width:40px"></th></tr></thead>
     <tbody>${list.map(r => {
       const diff = r.to - r.from, pct = r.from > 0 ? (Math.abs(diff) / r.from * 100).toFixed(1) : '', neg = diff < 0;
       const pending = r.date > today;
@@ -60,7 +61,7 @@ function renderCurrentSalary(){
   const rows = rsCurrentRows(), today = todayStr();
   if(!rows.length) return `<div style="text-align:center;color:var(--text4);padding:14px;font-size:13px">Không có nhân viên nào khớp</div>`;
   return `<div style="overflow-x:auto"><table class="ns-table" style="min-width:640px">
-    <thead><tr><th>Nhân viên</th><th>Bộ phận</th><th style="text-align:right">Mức lương hiện tại</th><th>Hiệu lực từ</th><th style="width:130px"></th></tr></thead>
+    <thead><tr><th>Nhân viên</th><th>Bộ phận</th><th style="text-align:right">Lương hiện tại (VNĐ/ngày)</th><th>Hiệu lực từ</th><th style="width:130px"></th></tr></thead>
     <tbody>${rows.map(w => {
       const cur = hrSalaryGet(w.id), last = hrRaiseLast(w.id);
       const next = hrRaiseList(w.id).find(r => r.date > today);
@@ -85,7 +86,7 @@ function renderRaisePanel(){
   const years = rsYears();
   return `<div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:15px;color:#7c3aed">📈 Mức lương &amp; lịch sử tăng lương <span style="font-weight:500;font-size:11px;color:var(--text4)">🔒 chỉ Admin thấy</span></div>
+      <div style="font-weight:700;font-size:15px;color:#7c3aed">📈 Lương theo ngày &amp; lịch sử tăng lương <span style="font-weight:500;font-size:11px;color:var(--text4)">🔒 chỉ Admin thấy</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="ns-chip" onclick="nsToggleSalary(event)">${_nsShowSalary ? '🙈 Ẩn số tiền' : '👁 Hiện số tiền'}</button>
         <button class="set-btn" style="width:auto;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer" onclick="exportRaisesExcel()">📥 Xuất Excel</button>
@@ -93,7 +94,7 @@ function renderRaisePanel(){
       </div>
     </div>
     <div id="raiseForm" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📝 Cập nhật mức lương hiện tại</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📝 Cập nhật lương theo ngày</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Nhân viên *</label>
           <select id="rs_worker" class="field-inp" style="width:100%" onchange="rsHint()">
@@ -102,8 +103,8 @@ function renderRaisePanel(){
           </select></div>
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Ngày hiệu lực * <span style="color:var(--text4)">(ngày/tháng/năm bắt đầu hưởng lương mới)</span></label>
           <input type="date" id="rs_date" class="field-inp" style="width:100%" value="${todayStr()}"></div>
-        <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Mức lương mới (VNĐ) * <span style="color:var(--text4)">(sẽ thành "mức lương hiện tại" từ ngày hiệu lực)</span></label>
-          <input type="number" id="rs_to" class="field-inp" style="width:100%" min="0" inputmode="numeric" placeholder="VD: 7000000" autocomplete="off" oninput="rsHint()"></div>
+        <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Mức lương mới (VNĐ/ngày) * <span style="color:var(--text4)">(tiền 1 ngày công — thành "lương hiện tại" từ ngày hiệu lực)</span></label>
+          <input type="number" id="rs_to" class="field-inp" style="width:100%" min="0" inputmode="numeric" placeholder="VD: 250000" autocomplete="off" oninput="rsHint()"></div>
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Lý do / ghi chú</label>
           <input type="text" id="rs_reason" class="field-inp" style="width:100%" placeholder="VD: Tăng lương định kỳ, nâng bậc..."></div>
       </div>
@@ -141,7 +142,7 @@ function rsHint(){
   const wid = (document.getElementById('rs_worker') || {}).value, to = hrSalaryNum((document.getElementById('rs_to') || {}).value);
   if(!wid){ el.textContent = ''; return; }
   const cur = hrSalaryGet(wid);
-  let t = cur ? 'Lương hiện tại: ' + cur.toLocaleString('vi-VN') + ' VNĐ' : 'Nhân viên này chưa có mức lương — lần lưu này sẽ THIẾT LẬP mức lương ban đầu';
+  let t = cur ? 'Lương hiện tại: ' + cur.toLocaleString('vi-VN') + ' VNĐ/ngày' : 'Nhân viên này chưa có mức lương — lần lưu này sẽ THIẾT LẬP mức lương ban đầu';
   if(cur && to > cur) t += ' → tăng +' + (to - cur).toLocaleString('vi-VN') + ' (+' + ((to - cur) / cur * 100).toFixed(1) + '%)';
   else if(cur && to && to < cur) t += ' → thấp hơn ' + (cur - to).toLocaleString('vi-VN') + ' — tích "Điều chỉnh / giảm lương" để lưu';
   el.textContent = t;
@@ -187,8 +188,8 @@ async function exportRaisesExcel(){
   if(!list.length){ showToast('⚠️ Không có dữ liệu tăng lương để xuất (kiểm tra bộ lọc)', true); return; }
   if(typeof attExcelReady !== 'function' || !(await attExcelReady())) return;
   try{
-    const rows = [['LỊCH SỬ TĂNG LƯƠNG' + (_rsYear !== 'all' ? ' NĂM ' + _rsYear : '')], ['Xuất ngày ' + fmtDate(todayStr()) + ' · ' + list.length + ' lượt'],
-      ['STT', 'Ngày hiệu lực', 'Nhân viên', 'Lương cũ (VNĐ)', 'Lương mới (VNĐ)', 'Chênh lệch (VNĐ)', '% tăng', 'Lý do', 'Trạng thái']];
+    const rows = [['LỊCH SỬ TĂNG LƯƠNG (THEO NGÀY)' + (_rsYear !== 'all' ? ' NĂM ' + _rsYear : '')], ['Xuất ngày ' + fmtDate(todayStr()) + ' · ' + list.length + ' lượt'],
+      ['STT', 'Ngày hiệu lực', 'Nhân viên', 'Lương cũ (VNĐ/ngày)', 'Lương mới (VNĐ/ngày)', 'Chênh lệch (VNĐ/ngày)', '% tăng', 'Lý do', 'Trạng thái']];
     list.forEach((r, i) => rows.push([i + 1, fmtDate(r.date), r.workerName || '', r.from || '', r.to, r.to - r.from, r.from > 0 ? +((r.to - r.from) / r.from * 100).toFixed(1) : '', (r.kind === 'adjust' || r.to < r.from ? '[Điều chỉnh] ' : '') + (r.reason || ''), r.date > todayStr() ? 'Chờ hiệu lực' : 'Đã áp dụng']));
     const wb = new ExcelJS.Workbook();
     const ws = attAddSheet(wb, 'Tang_luong', rows, {widths: [5, 14, 24, 15, 15, 15, 8, 28, 14], mergeRows: [1, 2], freezeY: 3, hdr: 3, last: rows.length, leftCols: [3, 8]});
@@ -197,4 +198,39 @@ async function exportRaisesExcel(){
     log('Xuất lịch sử tăng lương', list.length + ' lượt', '');
     showToast('✅ Đã xuất ' + list.length + ' lượt tăng lương');
   }catch(e){ console.error(e); showToast('❌ Xuất Excel lỗi: ' + (e && e.message || e), true); }
+}
+
+// ═════════════ Hộp thoại QUY ĐỔI lương cũ (theo THÁNG) → theo NGÀY (chỉ Admin, chỉ hiện khi còn dữ liệu chưa có dấu mốc đơn vị) ═════════════
+function hrSalaryUnitPrompt(){
+  if(typeof hrSalaryUnitNeedsAction !== 'function' || !hrSalaryUnitNeedsAction()) return;
+  let m = document.getElementById('hrUnitModal');
+  if(!m){ m = document.createElement('div'); m.className = 'modal'; m.id = 'hrUnitModal'; document.body.appendChild(m); }
+  const ids = Object.keys(DB.hrSalary || {}), sample = ids.slice(0, 3).map(id => {
+    const w = (DB.workers || []).find(x => x.id === id); return nsEsc((w && w.name) || id) + ': <b>' + hrSalaryGet(id).toLocaleString('vi-VN') + '</b>';
+  }).join(' · ');
+  m.innerHTML = `<div class="modal-box"><div class="modal-handle"></div>
+    <div class="modal-title">🔒 Lương chuyển từ THÁNG sang NGÀY</div>
+    <div style="font-size:13px;line-height:1.55;color:var(--text2)">Hệ thống đang lưu <b>${ids.length}</b> mức lương${(DB.hrRaises || []).length ? ' và <b>' + DB.hrRaises.length + '</b> lần tăng lương' : ''} theo cách cũ (<b>tiền mỗi tháng</b>). Từ nay mọi số tiền là <b>VNĐ mỗi ngày</b>. Dữ liệu cũ <b>không tự đổi</b> — chọn cách xử lý:
+      ${sample ? '<div style="margin-top:6px;font-size:12px;color:var(--text3)">Ví dụ đang lưu: ' + sample + (ids.length > 3 ? ' …' : '') + '</div>' : ''}</div>
+    <div class="field" style="margin-top:12px"><div class="field-lbl">Số ngày công / tháng để quy đổi (lương ngày = lương tháng ÷ số này)</div>
+      <input id="hrUnitDiv" class="field-inp" type="number" min="1" max="31" value="${HR_MONTH_DAYS}" inputmode="numeric"></div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-primary" onclick="hrSalaryUnitChoose('convert')">➗ Quy đổi tất cả</button>
+      <button class="btn btn-ghost" onclick="hrSalaryUnitChoose('keep')" title="Chỉ chọn nếu các số hiện có VỐN ĐÃ là tiền mỗi ngày">Giữ nguyên số (đã là tiền ngày)</button>
+      <button class="btn btn-ghost" style="color:#dc2626" onclick="hrSalaryUnitChoose('clear')" title="Xoá hết mức lương và lịch sử tăng lương cũ để nhập lại từ đầu">🗑 Xoá để nhập lại</button>
+    </div></div>`;
+  openModal('hrUnitModal');
+}
+function hrSalaryUnitChoose(mode){
+  if(guardViewer() || !hrSalaryCan()) return;
+  const run = () => {
+    const res = hrSalaryUnitApply(mode, (document.getElementById('hrUnitDiv') || {}).value);
+    if(!res.ok){ showToast('⚠️ ' + res.error, true); return; }
+    log('Đổi đơn vị lương sang theo ngày', ({convert: 'Quy đổi từ tháng', keep: 'Giữ nguyên số', clear: 'Xoá để nhập lại'})[mode] + ' · ' + res.salaries + ' mức lương, ' + res.raises + ' lần tăng (số tiền không ghi vào nhật ký)', '');
+    closeModal('hrUnitModal');
+    showToast('✅ Lương đã chuyển sang tính theo NGÀY');
+    renderNhanSu();
+  };
+  if(mode === 'clear') confirm2('Xoá toàn bộ lương cũ?', 'Mọi mức lương và lịch sử tăng lương hiện có sẽ bị XOÁ để nhập lại theo ngày. Không hoàn tác được. Tiếp tục?', run);
+  else run();
 }

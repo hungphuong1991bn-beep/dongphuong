@@ -131,7 +131,7 @@ async function exportWorkersExcel(){
   try{
     const admin = hrSalaryCan();
     const head = ['STT','Mã NV','Họ và tên','Giới tính','Ngày sinh','SĐT','Chức vụ','Bộ phận','Ngày vào làm','Thâm niên','Loại hợp đồng','Trạng thái'];
-    if(admin) head.push('Lương hiện tại (VNĐ)');
+    if(admin) head.push('Lương theo ngày (VNĐ/ngày)');
     const rows = [['DANH SÁCH NHÂN VIÊN'], ['Xuất ngày ' + fmtDate(todayStr()) + ' · ' + list.length + ' người'], head];
     list.forEach((w, i) => {
       const r = [i + 1, w.maNV || '', w.name || '', w.gioiTinh || '', w.ngaySinh ? fmtDate(w.ngaySinh) : '', w.sdt || '', w.chucVu || '', w.boPhan || '',
@@ -144,7 +144,7 @@ async function exportWorkersExcel(){
     const ws = attAddSheet(wb, 'Nhan_vien', rows, {widths, mergeRows:[1, 2], freezeY:3, hdr:3, last:rows.length, leftCols:[3, 6, 7, 8]});
     if(admin){ const c = widths.length; for(let r = 4; r <= rows.length; r++) ws.getCell(r, c).numFmt = '#,##0'; }
     await attDownloadWb(wb, 'Danh_sach_nhan_vien_' + todayStr() + '.xlsx');
-    log('Xuất danh sách nhân sự', list.length + ' nhân viên' + (admin ? ' (kèm lương hiện tại)' : ''), '');
+    log('Xuất danh sách nhân sự', list.length + ' nhân viên' + (admin ? ' (kèm lương theo ngày)' : ''), '');
     showToast('✅ Đã xuất ' + list.length + ' nhân viên');
   }catch(e){ console.error(e); showToast('❌ Xuất Excel lỗi: ' + (e && e.message || e), true); }
 }

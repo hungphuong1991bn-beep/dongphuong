@@ -10,14 +10,14 @@ const TODAY = '2026-11-17';
 function setup(user, workers, extra = {}){
   const dom = new JSDOM('<body><div id="mc"></div><div id="toast"></div><div id="nsTabBar"></div></body>', {url: 'http://localhost/'});
   dom.window.Element.prototype.scrollIntoView = function(){};   // jsdom không có
-  const document = dom.window.document, store = new Map(), toasts = [], confirms = [], exported = [];
+  const document = dom.window.document, store = new Map(), toasts = [], confirms = [], exported = [], logs = [];
   const ctx = {
     console, Date, Object, Math, JSON, parseInt, parseFloat, String, Number, Array, Set, Promise, isNaN, isFinite, document,
     localStorage: {getItem: k => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k)},
     navigator: {onLine: true}, window: {addEventListener(){}},
     DB: {attendance: extra.att || {}, attMeta: {}, workers: JSON.parse(JSON.stringify(workers)), nghiPhep: extra.nghiPhep || [], kyLuat: extra.kyLuat || [], lichLamViec: [], hrSalary: {}},
     currentUser: user, currentTab: 'nhanSu',
-    showToast: (m, e) => toasts.push({m, e}), log(){}, lsSave(){}, syncArrFieldToServer(){}, saveLichLamViec(){},
+    showToast: (m, e) => toasts.push({m, e}), log: (a, d) => logs.push([a, d]), lsSave(){}, syncArrFieldToServer(){}, saveLichLamViec(){},
     fbOk: () => true, fbRead: async p => extra.server && extra.server[p] !== undefined ? extra.server[p] : null, fbWrite: async () => ({}),
     scheduleUIRefresh(){}, goTab(){}, openNhanSuQrModal(){}, setSyncDot(){},
     openModal: id => document.getElementById(id).classList.add('open'), closeModal: id => document.getElementById(id).classList.remove('open'),
@@ -36,7 +36,7 @@ function setup(user, workers, extra = {}){
   ['src/modules/attendance/attendance-core.js', 'src/modules/attendance/attendance-view.js', 'src/modules/hr/hr-service.js', 'src/modules/hr/hr-salary.js',
    'src/modules/hr/hr-insight.js', 'src/modules/hr/hr-raise.js', 'src/modules/hr/hr-view.js', 'src/modules/hr/hr-leave-discipline.js', 'src/modules/hr/hr-workers.js'].forEach(f => run(rd(f)));
   run(`_attYM='2026-11'`);
-  return {ctx, run, document, toasts, confirms, exported};
+  return {ctx, run, document, toasts, confirms, exported, logs};
 }
 
 const ADMIN = {id: 'u1', name: 'Admin', role: 'admin'}, STAFF = {id: 'u2', name: 'NV', role: 'staff'}, VIEW = {id: 'u3', name: 'Xem', role: 'viewer'}, SOL = {id: 'u4', name: 'SL', role: 'solieu'};
@@ -54,8 +54,8 @@ const LEAVES = [
 ];
 const KL = [{id: 'kl1', workerId: 'w1', workerName: 'Nguyễn Văn An', date: '2026-11-03', loai: 'Khiển trách', lydo: 'Đi trễ', nguoiqd: 'QĐ'}];
 const server = {'/hrPrivate/salary': SAL};
-const MAKE = (user, extra = {}) => { const t = setup(user, W, Object.assign({nghiPhep: JSON.parse(JSON.stringify(LEAVES)), kyLuat: JSON.parse(JSON.stringify(KL)), server}, extra)); if(user.role === 'admin') t.ctx.DB.hrSalary = Object.assign({}, SAL); return t; };
-const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|Lương cơ bản|Lương hiện tại|Quỹ lương|••••/;
+const MAKE = (user, extra = {}) => { const t = setup(user, W, Object.assign({nghiPhep: JSON.parse(JSON.stringify(LEAVES)), kyLuat: JSON.parse(JSON.stringify(KL)), server}, extra)); if(user.role === 'admin'){ t.ctx.DB.hrSalary = Object.assign({}, SAL); t.ctx.DB.hrUnit = 'day'; } return t; };
+const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|Lương cơ bản|Lương hiện tại|Quỹ lương|Lương \/ ngày|Tổng lương ngày|Lương theo ngày|VNĐ\/ngày|••••/;
 
 (async () => {
   // 1. Giao diện: KHÔNG phải Admin → không có bất kỳ dấu vết lương nào trong DOM (kể cả khi dữ liệu có trong bộ nhớ)
@@ -73,26 +73,59 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
   // 2. Admin: thấy cột + ô lương; mặc định bị che; bấm hiện mới thấy số
   { const t = MAKE(ADMIN); t.run('renderNhanSu()');
     let html = t.document.getElementById('mc').innerHTML;
-    assert(/Lương hiện tại/.test(html) && /Quỹ lương hiện tại/.test(html) && !/Lương cơ bản/.test(html), 'đã đổi nhãn Lương cơ bản → Lương hiện tại'); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định số lương bị che');
+    assert(/Lương \/ ngày/.test(html) && /Tổng lương ngày/.test(html) && !/Lương cơ bản/.test(html) && !/Quỹ lương/.test(html), 'nhãn theo NGÀY: Lương / ngày, Tổng lương ngày'); assert(!/6\.?543\.?210|8\.?765\.?432/.test(html), 'mặc định số lương bị che');
     assert(/••••••••/.test(html));
     t.run('nsToggleSalary()'); html = t.document.getElementById('mc').innerHTML;
     assert(/6\.543\.210/.test(html) && /8\.765\.432/.test(html), 'bấm hiện → thấy số');
-    assert(/15,3 tr|15\.3 tr/.test(html.replace(/\s/g, '')) || /15,3\s*tr/.test(html), 'quỹ lương = 6.543.210+8.765.432 (Đang làm) ≈ 15,3 tr: ' + (html.match(/class="ns-stat-val"[^>]*>[^<]*tr</) || ''));
+    assert(/15,3 tr|15\.3 tr/.test(html.replace(/\s/g, '')) || /15,3\s*tr/.test(html), 'tổng lương ngày = 6.543.210+8.765.432 (Đang làm) ≈ 15,3 tr: ' + (html.match(/class="ns-stat-val"[^>]*>[^<]*tr</) || ''));
     t.run('nsResetPrivacy()'); t.run('renderNhanSu()'); assert(!/6\.543\.210/.test(t.document.getElementById('mc').innerHTML));
     ok('Admin: có cột + quỹ lương, mặc định che số, bấm 👁 mới hiện, reset khi đăng xuất'); }
 
-  // 3. Hồ sơ Admin: ô "Mức lương hiện tại" CHỈ ĐỌC — hiện đúng giá trị, sửa DOM + lưu hồ sơ KHÔNG đổi lương; có nút sang tab Tăng lương
+  // 3. Hồ sơ Admin (v2.12.0): ô "Lương theo ngày" SỬA ĐƯỢC ngay trong hồ sơ; đổi → ghi lịch sử theo ngày áp dụng
   { const t = MAKE(ADMIN); t.run(`openWorkerProfile('w1')`);
-    const inp = t.document.getElementById('wpLuongCoBan');
-    assert.strictEqual(t.document.getElementById('wpSalaryField').style.display, ''); assert.strictEqual(inp.value, '6.543.210'); assert(inp.readOnly, 'ô lương hồ sơ phải chỉ đọc');
-    assert(/Mức lương hiện tại/.test(t.document.getElementById('wpSalaryField').innerHTML) && !/Lương cơ bản/.test(t.document.getElementById('wpSalaryField').innerHTML));
-    inp.value = '7000000'; t.run('saveWorkerProfile()');
-    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210, 'sửa DOM rồi lưu hồ sơ không đổi được lương'); assert(t.ctx.DB.workers.every(w => !('luongCoBan' in w)));
+    const inp = t.document.getElementById('wpLuongCoBan'), wrap = t.document.getElementById('wpSalaryDateWrap');
+    assert.strictEqual(t.document.getElementById('wpSalaryField').style.display, ''); assert.strictEqual(inp.value, '6.543.210'); assert(!inp.readOnly, 'ô lương hồ sơ phải sửa được');
+    const lbl = t.document.getElementById('wpSalaryField').innerHTML; assert(/Lương theo ngày \(VNĐ\/ngày\)/.test(lbl) && !/Lương cơ bản|theo tháng/.test(lbl));
+    assert.strictEqual(wrap.style.display, 'none', 'chưa đổi số → chưa hiện ô ngày áp dụng');
+    // lưu không đổi lương → không tạo bản ghi lịch sử
+    t.run('saveWorkerProfile()'); assert.strictEqual(t.ctx.DB.hrRaises.length, 0, 'không đổi lương → không có lịch sử'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210);
+    // sửa số → hiện ô ngày; lưu → lương đổi + có lịch sử + hồ sơ chung không chứa số
+    t.run(`openWorkerProfile('w1')`); inp.value = '7000000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))');
+    assert.strictEqual(inp.value, '7.000.000', 'tự chèn dấu ngăn cách'); assert.strictEqual(wrap.style.display, '', 'đổi số → hiện ô ngày áp dụng');
+    assert.strictEqual(t.document.getElementById('wpSalaryDate').value, t.run('todayStr()'));
+    t.run('saveWorkerProfile()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 7000000, 'sửa trực tiếp trong hồ sơ → đổi lương theo ngày'); assert.strictEqual(t.ctx.DB.hrRaises.length, 1);
+    assert.strictEqual(t.ctx.DB.hrRaises[0].from, 6543210); assert.strictEqual(t.ctx.DB.hrRaises[0].to, 7000000);
+    assert(t.ctx.DB.workers.every(w => !('luongCoBan' in w)) && !JSON.stringify(t.ctx.DB.workers).includes('7000000'), 'hồ sơ chung không chứa lương');
+    assert(!t.logs.some(l => /7000000|7\.000\.000/.test(JSON.stringify(l))), 'nhật ký không chứa số tiền');
     assert.strictEqual(inp.value, '', 'ô lương được xoá sau khi lưu');
-    t.run(`openWorkerProfile('w1')`); t.run('closeWorkerProfile()'); assert.strictEqual(inp.value, '');
-    t.run(`openWorkerProfile('w1')`); assert(/nsOpenRaiseForm\(/.test(t.document.getElementById('wpSalaryUpdBtn').getAttribute('onclick')), 'nút gọi nsOpenRaiseForm'); t.run("nsOpenRaiseForm(document.getElementById('wpId').value)");
-    assert.strictEqual(t.run('_nsTab'), 'tangluong', 'nút Cập nhật → sang tab Tăng lương'); assert.strictEqual(t.document.getElementById('rs_worker').value, 'w1', 'form mở sẵn đúng nhân viên');
-    ok('Admin: hồ sơ chỉ HIỂN THỊ mức lương hiện tại (chỉ đọc), không đổi lương qua hồ sơ; nút Cập nhật chuyển sang tab Tăng lương'); }
+    // giảm lương trực tiếp trong hồ sơ cũng được (kind=adjust, không cần tích cờ như ở tab Tăng lương)
+    t.run(`openWorkerProfile('w1')`); inp.value = '6.800.000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))'); t.run('saveWorkerProfile()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6800000); assert.strictEqual(t.ctx.DB.hrRaises[1].kind, 'adjust');
+    // số không hợp lệ → báo lỗi, KHÔNG lưu dở hồ sơ (tên không đổi)
+    t.run(`openWorkerProfile('w1')`); const nm0 = t.ctx.DB.workers.find(w => w.id === 'w1').name;
+    t.document.getElementById('wpName').value = 'Tên mới'; inp.value = 'abc'; t.run('saveWorkerProfile()');
+    assert(t.toasts.some(x => /không hợp lệ/.test(x.m))); assert.strictEqual(t.ctx.DB.workers.find(w => w.id === 'w1').name, nm0, 'lỗi lương → hồ sơ không bị lưu dở');
+    // thiếu ngày áp dụng → báo lỗi
+    inp.value = '7.100.000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))'); t.document.getElementById('wpSalaryDate').value = ''; t.run('saveWorkerProfile()');
+    assert(t.toasts.some(x => /ngày áp dụng/.test(x.m))); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6800000);
+    // ngày áp dụng ở tương lai → chờ hiệu lực, lương hiện tại chưa đổi
+    t.document.getElementById('wpSalaryDate').value = '2999-01-01'; t.run('saveWorkerProfile()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6800000); assert.strictEqual(t.ctx.DB.hrRaises[2].applied, false);
+    t.run(`openWorkerProfile('w1')`); assert(/nsOpenRaiseForm\(/.test(t.document.getElementById('wpSalaryUpdBtn').getAttribute('onclick')), 'nút Lịch sử gọi nsOpenRaiseForm'); t.run("nsOpenRaiseForm(document.getElementById('wpId').value)");
+    assert.strictEqual(t.run('_nsTab'), 'tangluong'); assert.strictEqual(t.document.getElementById('rs_worker').value, 'w1');
+    ok('Admin: sửa lương THEO NGÀY ngay trong hồ sơ (ghi lịch sử, giảm được, ngày tương lai chờ hiệu lực, lỗi không lưu dở)'); }
+
+  // 3b. Đơn vị lương: dữ liệu cũ (theo THÁNG) chưa có dấu mốc → chặn sửa lương + hộp thoại quy đổi
+  { const t = MAKE(ADMIN); t.ctx.DB.hrUnit = ''; t.run('renderNhanSu()');
+    const m = t.document.getElementById('hrUnitModal'); assert(m && m.classList.contains('open'), 'hiện hộp thoại quy đổi');
+    assert(/THÁNG sang NGÀY/.test(m.innerHTML) && /value="26"/.test(m.innerHTML));
+    t.run(`openWorkerProfile('w1')`); t.document.getElementById('wpLuongCoBan').value = '7.000.000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))'); t.run('saveWorkerProfile()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210, 'chưa quy đổi → không cho sửa lương'); assert(t.toasts.some(x => /quy đổi/.test(x.m)));
+    t.document.getElementById('hrUnitDiv').value = '26'; t.run("hrSalaryUnitChoose('convert')");
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), Math.round(6543210 / 26)); assert.strictEqual(t.ctx.DB.hrUnit, 'day'); assert(!m.classList.contains('open'));
+    assert(t.logs.some(l => /Đổi đơn vị lương/.test(l[0])) && !t.logs.some(l => /6543210|251662/.test(JSON.stringify(l))));
+    ok('Dữ liệu lương cũ theo tháng: hộp thoại quy đổi, chặn sửa lương cho tới khi chọn, quy đổi ÷26'); }
 
   // 4. Non-Admin không thể lưu lương dù cố tình sửa DOM; viewer không sửa được hồ sơ
   { const t = MAKE(STAFF); t.run(`openWorkerProfile('w1')`); t.document.getElementById('wpLuongCoBan').value = '99999999'; t.run('saveWorkerProfile()');
