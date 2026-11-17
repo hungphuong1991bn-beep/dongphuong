@@ -71,6 +71,35 @@ function khLiveCategories(seedCats, list){
   return [...set].sort((a,b)=>a.localeCompare(b,'vi'));
 }
 
+// ── Chuẩn hóa TÊN NHÓM khuôn ────────────────────────────────────────────
+// khNormCat: khóa so sánh — bỏ dấu, thường hóa, bỏ ký tự lạ/khoảng trắng thừa
+//   ("Bo Cạnh", "bo cạnh ", "Bo cạnh" gõ dấu kiểu tổ hợp… đều ra "bo canh").
+// khCleanCat: tên hiển thị gọn — NFC + gộp khoảng trắng + cắt đầu/cuối.
+// khCanonCategory: khi Admin gõ nhóm, dùng lại đúng cách viết ĐÃ CÓ nhiều nhất
+//   trong dữ liệu (kể cả 5 nhóm mặc định) để không tạo thêm nhóm "na ná" —
+//   nguyên nhân khiến nhóm bị tách đôi trên giao diện và thiếu trong Excel.
+function khNormCat(s){
+  return _khStripAccents(String(s==null?'':s)).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+function khCleanCat(s){
+  return String(s==null?'':s).normalize('NFC').replace(/\s+/g,' ').trim();
+}
+function khCanonCategory(raw, list, seedCats){
+  const typed = khCleanCat(raw);
+  const key = khNormCat(typed);
+  if(!key) return typed;
+  const count = new Map(); // cách viết (đã làm gọn) -> số bản ghi đang dùng
+  (seedCats||[]).forEach(c=>{ if(khNormCat(c)===key){ const v=khCleanCat(c); count.set(v,(count.get(v)||0)+1); } });
+  (list||[]).forEach(x=>{
+    if(!x || !x.category || khNormCat(x.category)!==key) return;
+    const v = khCleanCat(x.category); count.set(v,(count.get(v)||0)+1);
+  });
+  if(!count.size) return typed;
+  let best = null, bestN = -1;
+  count.forEach((n,v)=>{ if(n>bestN){ best=v; bestN=n; } });
+  return best;
+}
+
 let _khTab = 'catalog';       // 'catalog' | 'qty'
 let _khSearch = '';
 let _khCatFilter = 'all';     // lọc theo nhóm ở tab Tổng hợp Khuôn

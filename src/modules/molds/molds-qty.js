@@ -114,7 +114,7 @@ function khCatOpenEdit(id){if(guardNotAdmin())return;
   openModal('khCatModal');
 }
 function khCatSave(){if(guardNotAdmin())return;
-  const category = $('khCatGroup').value.trim();
+  const category = khCanonCategory($('khCatGroup').value, DB.khuonCatalog, KHUON_CATALOG_CATS);
   const size = $('khCatSize').value.trim();
   if(!category||!size){ $('khCatErr').textContent='Vui lòng nhập đủ Nhóm khuôn và Kích thước'; $('khCatErr').style.display='block'; return; }
   if(_khCatEditId){
@@ -235,7 +235,7 @@ function khQtyOpenEdit(id){if(guardNotAdmin())return;
 }
 function khQtySave(){if(guardNotAdmin())return;
   const loai = $('khQtyLoai').value;
-  const category = $('khQtyGroup').value.trim();
+  const category = khCanonCategory($('khQtyGroup').value, DB.khuonQty, KHUON_QTY_CATS);
   const size = $('khQtySize').value.trim();
   const numVal = $('khQtyNum').value;
   if(!category||!size||numVal===''){ $('khQtyErr').textContent='Vui lòng nhập đủ Nhóm khuôn, Kích thước và Số lượng'; $('khQtyErr').style.display='block'; return; }

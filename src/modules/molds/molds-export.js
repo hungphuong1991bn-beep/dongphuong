@@ -31,12 +31,87 @@ const KHUON_XLSX_TEMPLATE_LASTCOL = 12; // cột L
 
 function khColIdx(letter){ return letter.toUpperCase().charCodeAt(0) - 64; }
 
-// Xuất file Excel "Tổng hợp Khuôn" — nạp file mẫu gốc, chia dữ liệu hiện
-// có trong kho (DB.khuonCatalog) vào đúng các khối cột như file mẫu (sắp
-// xếp kích thước tăng dần bằng đúng logic đang dùng trên giao diện), rồi
-// tải file .xlsx về máy. Nếu dữ liệu nhiều/ít hơn 55 dòng so với mẫu gốc,
-// tự thêm/bớt dòng và nhân bản đúng định dạng (viền/màu/font) của dòng dữ
-// liệu cuối cùng trong mẫu — không làm sai lệch khung bảng.
+// ── Phân nhóm "chịu lỗi" ──────────────────────────────────────────────
+// Lỗi cũ: lọc cứng `x.category === 'Bo cạnh'`… nên chỉ cần Admin gõ tên nhóm
+// lệch một chút (hoa/thường "Bo Cạnh", thừa dấu cách "Bo cạnh ", gõ dấu kiểu
+// tổ hợp, hoặc nhóm mới như "Khuôn đặc biệt") là TOÀN BỘ kích thước của nhóm
+// đó biến mất khỏi file Excel dù vẫn hiện đủ trên màn hình. Bản mới:
+//   1) so khớp tên nhóm không phân biệt hoa/thường, dấu, khoảng trắng;
+//   2) nhóm không thuộc 5 khối của mẫu → tự thêm khối cột riêng bên phải;
+//   3) đối chiếu số lượng xuất ra với danh mục, lệch thì báo lỗi rõ ràng.
+const KHUON_XLSX_CAT_RULES = [
+  {category:'Yêu cầu & chuẩn', re:/yeu cau|chuan/},
+  {category:'Bo cạnh',         re:/bo canh|(^| )bc( |$)/},
+  {category:'Điện cực',        re:/dien cuc/},
+  {category:'Phi tròn',        re:/(^| )phi( |$)|(^| )fi( |$)|tron/},
+  {category:'Đồng thanh dẹt',  re:/dong thanh|(^| )det( |$)/}
+];
+const KHUON_XLSX_EXTRA_COLS = 2; // mỗi nhóm ngoài mẫu chiếm 2 cột (giống khối "Yêu cầu & chuẩn")
+
+// Trả về tên nhóm CHUẨN của mẫu (1 trong 5) hoặc null nếu là nhóm lạ.
+function khXlsxGroupOf(category){
+  const k = khNormCat(category);
+  for(const g of KHUON_XLSX_GROUPS){ if(khNormCat(g.category)===k) return g.category; }
+  for(const r of KHUON_XLSX_CAT_RULES){ if(r.re.test(k)) return r.category; }
+  return null;
+}
+
+// Lập kế hoạch xuất: mỗi khối = {category, label, cols:[chỉ số cột], chunks, rowsPerCol, extra}.
+// Hàm thuần (không đụng DOM/ExcelJS) để kiểm thử được.
+function khXlsxBuildPlan(catalog){
+  const fixed = {}; KHUON_XLSX_GROUPS.forEach(g=>{ fixed[g.category] = []; });
+  const extras = new Map(); // khoá chuẩn hoá -> {label, list}
+  let total = 0, skipped = 0;
+  (catalog||[]).forEach(x=>{
+    if(!x) return;
+    const size = String(x.size==null?'':x.size).trim();
+    if(!size){ skipped++; return; }          // bản ghi rỗng kích thước: không có gì để xuất
+    const rec = Object.assign({}, x, {size});
+    total++;
+    const g = khXlsxGroupOf(x.category);
+    if(g){ fixed[g].push(rec); return; }
+    const label = khCleanCat(x.category) || 'Chưa phân nhóm';
+    const key = khNormCat(label) || 'chua phan nhom';
+    if(!extras.has(key)) extras.set(key, {label, list:[]});
+    extras.get(key).list.push(rec);
+  });
+
+  const split = (list, ncols)=>{
+    const sorted = sortKhuonList(list, 'size');
+    const rowsPerCol = Math.ceil(sorted.length / ncols) || 0;
+    return {rowsPerCol, chunks: Array.from({length:ncols}, (_,i)=> sorted.slice(i*rowsPerCol, (i+1)*rowsPerCol))};
+  };
+
+  const blocks = KHUON_XLSX_GROUPS.map(g=>{
+    const cols = g.cols.map(khColIdx);
+    return Object.assign({category:g.category, label:g.category, cols, extra:false}, split(fixed[g.category], cols.length));
+  });
+  let nextCol = KHUON_XLSX_TEMPLATE_LASTCOL + 1;
+  [...extras.values()]
+    .sort((a,b)=>a.label.localeCompare(b.label,'vi'))
+    .forEach(e=>{
+      const cols = Array.from({length:KHUON_XLSX_EXTRA_COLS}, (_,i)=> nextCol + i);
+      nextCol += KHUON_XLSX_EXTRA_COLS;
+      blocks.push(Object.assign({category:e.label, label:e.label, cols, extra:true}, split(e.list, cols.length)));
+    });
+
+  return {
+    blocks, total, skipped,
+    lastCol: nextCol - 1,
+    neededRows: Math.max(1, ...blocks.map(b=>b.rowsPerCol)),
+    extraBlocks: blocks.filter(b=>b.extra)
+  };
+}
+
+function khXlsxCloneStyle(st){ return JSON.parse(JSON.stringify(st||{})); }
+
+// Xuất file Excel "Tổng hợp Khuôn" — nạp file mẫu gốc, chia TOÀN BỘ dữ liệu
+// trong kho (DB.khuonCatalog) vào các khối cột (sắp xếp kích thước tăng dần
+// bằng đúng logic sortKhuonList đang dùng trên giao diện), rồi tải .xlsx về.
+// - Dữ liệu nhiều/ít hơn 55 dòng của mẫu: tự thêm/bớt dòng, nhân bản đúng
+//   định dạng (viền/màu/font) của dòng dữ liệu cuối trong mẫu.
+// - Nhóm không thuộc 5 khối của mẫu: thêm khối cột mới bên phải, nhân bản
+//   đúng định dạng khối "Yêu cầu & chuẩn", kéo dài các dòng tiêu đề.
 async function exportKhuonCatalogExcel(){
   showToast('⏳ Đang tạo file Excel...', false);
   try{ await ensureExcelJs(); }
@@ -44,19 +119,9 @@ async function exportKhuonCatalogExcel(){
   if(!window.ExcelJS){ showToast('⏳ Thư viện Excel chưa tải xong, vui lòng bấm "Xuất Excel" lại sau vài giây', true); return; }
 
   try{
-    const catalog = DB.khuonCatalog || [];
-
-    // Với mỗi khối: lọc theo nhóm, sắp xếp kích thước tăng dần (đúng
-    // logic sortKhuonList đang dùng để hiển thị trên tab), rồi chia đều
-    // số dòng cho các cột trong khối (cột trước lấp trước, đúng kiểu
-    // trình bày trong file mẫu).
-    const groupData = KHUON_XLSX_GROUPS.map(g=>{
-      const list = sortKhuonList(catalog.filter(x=>x.category===g.category), 'size');
-      const rowsPerCol = Math.ceil(list.length / g.cols.length) || 0;
-      const chunks = g.cols.map((_,i)=> list.slice(i*rowsPerCol, (i+1)*rowsPerCol));
-      return {...g, chunks, rowsPerCol};
-    });
-    const neededRows = Math.max(1, ...groupData.map(g=>g.rowsPerCol));
+    const plan = khXlsxBuildPlan(DB.khuonCatalog || []);
+    const {blocks, neededRows, lastCol, extraBlocks} = plan;
+    const totalRows = Math.max(neededRows, KHUON_XLSX_TEMPLATE_ROWS);
 
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(b64ToArrayBuffer(KHUON_XLSX_TEMPLATE_B64));
@@ -74,34 +139,89 @@ async function exportKhuonCatalogExcel(){
         const row = ws.getRow(KHUON_XLSX_FIRST_DATA_ROW + r);
         row.height = templateLastRow.height;
         for(let c=1; c<=KHUON_XLSX_TEMPLATE_LASTCOL; c++){
-          row.getCell(c).style = JSON.parse(JSON.stringify(templateLastRow.getCell(c).style));
+          row.getCell(c).style = khXlsxCloneStyle(templateLastRow.getCell(c).style);
         }
       }
+    }
+
+    // Có nhóm ngoài mẫu → dựng thêm cột bên phải cột L bằng cách nhân bản
+    // style của chính khối "Yêu cầu & chuẩn" (cột K = trái, L = phải).
+    if(extraBlocks.length){
+      const lastDataRow = KHUON_XLSX_FIRST_DATA_ROW + totalRows - 1;
+      const colK = KHUON_XLSX_TEMPLATE_LASTCOL - 1, colL = KHUON_XLSX_TEMPLATE_LASTCOL;
+      const widthL = (ws.getColumn(colL).width) || 12;
+      // Dòng tiêu đề 1-4 đang gộp ô A:L → bỏ gộp, phủ style sang cột mới rồi gộp lại tới cột cuối.
+      for(let r=1; r<=4; r++){
+        ws.unMergeCells(r, 1, r, KHUON_XLSX_TEMPLATE_LASTCOL);
+        for(let c=KHUON_XLSX_TEMPLATE_LASTCOL+1; c<=lastCol; c++){
+          ws.getCell(r, c).style = khXlsxCloneStyle(ws.getCell(r, colL).style);
+        }
+        ws.mergeCells(r, 1, r, lastCol);
+      }
+      extraBlocks.forEach(b=>{
+        b.cols.forEach((c, i)=>{
+          const src = i===0 ? colK : colL;
+          ws.getColumn(c).width = widthL;
+          [5,6].forEach(r=>{ ws.getCell(r, c).style = khXlsxCloneStyle(ws.getCell(r, src).style); });
+          for(let r=KHUON_XLSX_FIRST_DATA_ROW; r<=lastDataRow; r++){
+            ws.getCell(r, c).style = khXlsxCloneStyle(ws.getCell(r, src).style);
+          }
+        });
+        ws.mergeCells(5, b.cols[0], 5, b.cols[b.cols.length-1]);
+      });
     }
 
     // Xoá sạch toàn bộ vùng dữ liệu cũ (STT + tất cả các cột) trước khi
     // ghi dữ liệu mới, để không sót giá trị mẫu/lần xuất trước — kể cả
     // các dòng dư ra ngoài số dòng cần dùng lần này (chỉ xoá nội dung,
     // giữ nguyên định dạng/viền nên khung bảng không đổi).
-    const clearToRows = Math.max(neededRows, KHUON_XLSX_TEMPLATE_ROWS);
-    for(let r=0; r<clearToRows; r++){
+    for(let r=0; r<totalRows; r++){
       const rowNum = KHUON_XLSX_FIRST_DATA_ROW + r;
-      for(let c=1; c<=KHUON_XLSX_TEMPLATE_LASTCOL; c++){
-        ws.getCell(rowNum, c).value = null;
+      for(let c=1; c<=lastCol; c++) ws.getCell(rowNum, c).value = null;
+    }
+
+    // File mẫu gốc có 1 ô dữ liệu (D55) lỡ mang font Calibri 11 thay vì Arial 9 →
+    // ô nào lệch font so với dòng dữ liệu chuẩn thì lấy lại định dạng của ô liền trên.
+    for(let r=KHUON_XLSX_FIRST_DATA_ROW+1; r<KHUON_XLSX_FIRST_DATA_ROW+totalRows; r++){
+      for(let c=2; c<=lastCol; c++){
+        const cell = ws.getCell(r, c), f = cell.font;
+        if(f && (f.name!=='Arial' || f.size!==9)) cell.style = khXlsxCloneStyle(ws.getCell(r-1, c).style);
       }
     }
 
+    // Tiêu đề khối cho các nhóm ngoài mẫu
+    extraBlocks.forEach(b=>{
+      ws.getCell(5, b.cols[0]).value = String(b.label).toUpperCase() + '  ';
+      b.cols.forEach(c=>{ ws.getCell(6, c).value = 'CHỦNG LOẠI'; });
+    });
+
     // Ghi STT + dữ liệu từng khối cột
+    let written = 0;
     for(let r=0; r<neededRows; r++){
       const rowNum = KHUON_XLSX_FIRST_DATA_ROW + r;
       ws.getCell(rowNum, 1).value = r + 1;
-      groupData.forEach(g=>{
-        g.cols.forEach((colLetter, ci)=>{
-          const item = g.chunks[ci][r];
-          ws.getCell(rowNum, khColIdx(colLetter)).value = item ? item.size : null;
+      blocks.forEach(b=>{
+        b.cols.forEach((colIdx, ci)=>{
+          const item = b.chunks[ci][r];
+          if(item){ ws.getCell(rowNum, colIdx).value = item.size; written++; }
         });
       });
     }
+
+    // Đối chiếu: số kích thước ghi ra file PHẢI bằng số kích thước trong danh mục.
+    if(written !== plan.total){
+      console.error('[Xuất Excel khuôn] lệch số lượng', {written, expected:plan.total});
+      showToast(`❌ Xuất Excel lệch số liệu (ghi ${written}/${plan.total} kích thước) — chưa tải file, vui lòng báo quản trị`, true);
+      return;
+    }
+
+    // Nhiều dòng → cho phép in nhiều trang (mẫu ép vừa 1 trang) và lặp tiêu đề cột;
+    // thêm cột → chuyển ngang để vẫn đọc được.
+    if(neededRows > KHUON_XLSX_TEMPLATE_ROWS){
+      ws.pageSetup.fitToHeight = 0;
+      ws.pageSetup.printTitlesRow = '5:6';
+    }
+    if(extraBlocks.length) ws.pageSetup.orientation = 'landscape';
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -111,7 +231,8 @@ async function exportKhuonCatalogExcel(){
     a.href = url; a.download = `Tong_hop_Khuon_${stamp}.xlsx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('✅ Đã xuất file Excel Tổng hợp Khuôn');
+    const more = extraBlocks.length ? ` (gồm ${extraBlocks.length} nhóm ngoài mẫu: ${extraBlocks.map(b=>b.label).join(', ')})` : '';
+    showToast(`✅ Đã xuất file Excel Tổng hợp Khuôn — đủ ${written}/${plan.total} kích thước${more}`);
   }catch(err){
     console.error(err);
     showToast('❌ Xuất Excel thất bại: ' + (err && err.message || err), true);
