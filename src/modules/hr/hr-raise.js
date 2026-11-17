@@ -104,12 +104,13 @@ function renderRaisePanel(){
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Ngày hiệu lực * <span style="color:var(--text4)">(ngày/tháng/năm bắt đầu hưởng lương mới)</span></label>
           <input type="date" id="rs_date" class="field-inp" style="width:100%" value="${todayStr()}"></div>
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Mức lương mới (VNĐ/ngày) * <span style="color:var(--text4)">(tiền 1 ngày công — thành "lương hiện tại" từ ngày hiệu lực)</span></label>
-          <input type="number" id="rs_to" class="field-inp" style="width:100%" min="0" inputmode="numeric" placeholder="VD: 250000" autocomplete="off" oninput="rsHint()"></div>
+          <input type="text" id="rs_to" class="field-inp" style="width:100%" inputmode="numeric" placeholder="VD: 330000" autocomplete="off" oninput="rsToInput(this)"></div>
         <div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Lý do / ghi chú</label>
           <input type="text" id="rs_reason" class="field-inp" style="width:100%" placeholder="VD: Tăng lương định kỳ, nâng bậc..."></div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-top:10px;cursor:pointer"><input type="checkbox" id="rs_adjust"> Điều chỉnh / giảm lương (sửa nhập sai, hạ bậc — không phải tăng lương)</label>
       <div id="rs_hint" style="font-size:12px;color:var(--text3);margin-top:8px"></div>
+      <div id="rs_err" role="alert" style="display:none;font-size:12.5px;font-weight:600;color:#b91c1c;background:#fee2e2;border-left:3px solid #dc2626;border-radius:7px;padding:8px 12px;margin-top:8px"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="set-btn" style="width:auto;padding:9px 18px;background:#7c3aed;color:#fff;font-weight:700;border:none;cursor:pointer" onclick="saveRaise()">💾 Lưu</button>
         <button class="set-btn" style="width:auto;padding:9px 14px;border:none;cursor:pointer" onclick="closeRaiseForm()">✕ Hủy</button>
@@ -137,21 +138,27 @@ function renderRaisePanel(){
   </div>`;
 }
 
+// v2.12.1: ô tiền chỉ giữ chữ số (không định dạng khi đang gõ, tránh nhảy số); số đã định dạng hiện ở dòng gợi ý
+function rsToInput(el){
+  if(/\D/.test(el.value)) el.value = el.value.replace(/\D/g, '');
+  rsErr(''); rsHint();
+}
+function rsErr(msg){ const e = document.getElementById('rs_err'); if(!e) return; e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; if(msg && e.scrollIntoView) e.scrollIntoView({behavior: 'smooth', block: 'nearest'}); }
 function rsHint(){
   const el = document.getElementById('rs_hint'); if(!el) return;
   const wid = (document.getElementById('rs_worker') || {}).value, to = hrSalaryNum((document.getElementById('rs_to') || {}).value);
   if(!wid){ el.textContent = ''; return; }
   const cur = hrSalaryGet(wid);
-  let t = cur ? 'Lương hiện tại: ' + cur.toLocaleString('vi-VN') + ' VNĐ/ngày' : 'Nhân viên này chưa có mức lương — lần lưu này sẽ THIẾT LẬP mức lương ban đầu';
+  let t = (to ? 'Mức mới: ' + to.toLocaleString('vi-VN') + ' VNĐ/ngày · ' : '') + (cur ? 'Lương hiện tại: ' + cur.toLocaleString('vi-VN') + ' VNĐ/ngày' : 'Nhân viên này chưa có mức lương — lần lưu này sẽ THIẾT LẬP mức lương ban đầu');
   if(cur && to > cur) t += ' → tăng +' + (to - cur).toLocaleString('vi-VN') + ' (+' + ((to - cur) / cur * 100).toFixed(1) + '%)';
-  else if(cur && to && to < cur) t += ' → thấp hơn ' + (cur - to).toLocaleString('vi-VN') + ' — tích "Điều chỉnh / giảm lương" để lưu';
+  else if(cur && to && to < cur) t += ' → thấp hơn ' + (cur - to).toLocaleString('vi-VN') + ' — bấm Lưu sẽ hỏi xác nhận giảm / điều chỉnh';
   el.textContent = t;
 }
 function openRaiseForm(wid){
   if(!hrSalaryCan()) return;
   const f = document.getElementById('raiseForm'); if(!f) return;
   const set = (id, v) => { const e = document.getElementById(id); if(e) e.value = v; };
-  set('rs_worker', wid || ''); set('rs_date', todayStr()); set('rs_to', ''); set('rs_reason', ''); const _adj = document.getElementById('rs_adjust'); if(_adj) _adj.checked = false; rsHint();
+  set('rs_worker', wid || ''); set('rs_date', todayStr()); set('rs_to', ''); set('rs_reason', ''); const _adj = document.getElementById('rs_adjust'); if(_adj) _adj.checked = false; rsErr(''); rsHint();
   f.style.display = 'block'; f.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 function closeRaiseForm(){ const f = document.getElementById('raiseForm'); if(f) f.style.display = 'none'; }
@@ -166,13 +173,29 @@ function saveRaise(){
   if(guardViewer()) return;
   if(!hrSalaryCan()){ showToast('🔒 Chỉ Admin mới có quyền ghi nhận tăng lương', true); return; }
   const v = id => (document.getElementById(id) || {}).value;
-  const res = hrRaiseAdd({workerId: v('rs_worker'), date: v('rs_date'), to: v('rs_to'), reason: v('rs_reason'), adjust: !!(document.getElementById('rs_adjust') || {}).checked});
-  if(!res.ok){ showToast('⚠️ ' + res.error, true); return; }
-  const r = res.raise;
-  log(r.kind === 'adjust' ? 'Điều chỉnh lương' : 'Tăng lương', `${r.workerName || '?'} · hiệu lực ${r.date} (số tiền không ghi vào nhật ký)`, '');
-  showToast(r.date > todayStr() ? '✅ Đã lưu — sẽ tự áp dụng từ ngày ' + fmtDate(r.date) : '✅ Đã cập nhật mức lương hiện tại');
-  closeRaiseForm();
-  renderNhanSu();
+  const tick = !!(document.getElementById('rs_adjust') || {}).checked;
+  // v2.12.1: mọi kết quả (kể cả lỗi) đều hiện NGAY TRONG FORM (khung đỏ) — bản cũ chỉ báo bằng thông báo thoáng qua nên trông như "treo, không lưu"
+  const attempt = adjust => {
+    let res;
+    try{ res = hrRaiseAdd({workerId: v('rs_worker'), date: v('rs_date'), to: v('rs_to'), reason: v('rs_reason'), adjust}); }
+    catch(e){ console.error(e); rsErr('❌ Lỗi khi lưu: ' + (e && e.message || e)); showToast('❌ Lỗi khi lưu lương', true); return; }
+    if(!res.ok){
+      if(res.needAdjust && !adjust){   // thấp hơn mức hiện tại → hỏi xác nhận thay vì bắt tích ô rồi bấm lại
+        confirm2('Mức lương mới thấp hơn mức hiện tại',
+          'Mức mới ' + res.to.toLocaleString('vi-VN') + ' VNĐ/ngày thấp hơn mức trước đó ' + res.from.toLocaleString('vi-VN') + ' VNĐ/ngày. Lưu như một lần điều chỉnh / giảm lương?',
+          () => attempt(true));
+        rsErr('⚠️ ' + res.error.split('. ')[0] + ' — hãy xác nhận trong hộp thoại, hoặc sửa lại số tiền.');
+        return;
+      }
+      rsErr('⚠️ ' + res.error); showToast('⚠️ ' + res.error, true); return;
+    }
+    const r = res.raise;
+    log(r.kind === 'adjust' ? 'Điều chỉnh lương' : 'Tăng lương', `${r.workerName || '?'} · hiệu lực ${r.date} (số tiền không ghi vào nhật ký)`, '');
+    showToast(r.date > todayStr() ? '✅ Đã lưu — sẽ tự áp dụng từ ngày ' + fmtDate(r.date) : '✅ Đã cập nhật lương theo ngày');
+    rsErr(''); closeRaiseForm();
+    renderNhanSu();
+  };
+  attempt(tick);
 }
 function deleteRaise(id){
   if(guardViewer() || !hrSalaryCan()) return;

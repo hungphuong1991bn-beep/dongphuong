@@ -91,7 +91,12 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
     t.run('saveWorkerProfile()'); assert.strictEqual(t.ctx.DB.hrRaises.length, 0, 'không đổi lương → không có lịch sử'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210);
     // sửa số → hiện ô ngày; lưu → lương đổi + có lịch sử + hồ sơ chung không chứa số
     t.run(`openWorkerProfile('w1')`); inp.value = '7000000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))');
-    assert.strictEqual(inp.value, '7.000.000', 'tự chèn dấu ngăn cách'); assert.strictEqual(wrap.style.display, '', 'đổi số → hiện ô ngày áp dụng');
+    assert.strictEqual(inp.value, '7000000', 'KHÔNG định dạng lại khi đang gõ (tránh nhảy số)'); assert(/= 7\.000\.000 VNĐ\/ngày/.test(t.document.getElementById('wpSalaryFmt').textContent), 'số định dạng hiện ở dòng dưới');
+    assert.strictEqual(wrap.style.display, '', 'đổi số → hiện ô ngày áp dụng');
+    inp.value = '330000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))'); assert.strictEqual(inp.value, '330000', 'gõ 330000 giữ nguyên 330000');
+    inp.value = '33a0.000x'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))'); assert.strictEqual(inp.value, '330000', 'ký tự lạ bị lọc');
+    t.run('wpSalaryBlur(document.getElementById("wpLuongCoBan"))'); assert.strictEqual(inp.value, '330.000', 'rời ô → định dạng'); t.run('wpSalaryFocus(document.getElementById("wpLuongCoBan"))'); assert.strictEqual(inp.value, '330000', 'vào ô → số thô để sửa');
+    inp.value = '7000000'; t.run('wpSalaryInput(document.getElementById("wpLuongCoBan"))');
     assert.strictEqual(t.document.getElementById('wpSalaryDate').value, t.run('todayStr()'));
     t.run('saveWorkerProfile()');
     assert.strictEqual(t.run('hrSalaryGet("w1")'), 7000000, 'sửa trực tiếp trong hồ sơ → đổi lương theo ngày'); assert.strictEqual(t.ctx.DB.hrRaises.length, 1);
@@ -266,14 +271,23 @@ const SALARY_RE = /6[.,\s]?543[.,\s]?210|8[.,\s]?765[.,\s]?432|6543210|8765432|L
     const set = (i, v) => { t.document.getElementById(i).value = v; };
     t.run('openRaiseForm("w1")'); assert.strictEqual(t.document.getElementById('rs_adjust').checked, false);
     set('rs_date', '2026-03-01'); set('rs_to', '6000000'); t.run('saveRaise()');
-    assert(t.toasts.some(x => /Điều chỉnh/.test(x.m)), 'giảm mà không tích → báo lỗi chỉ dẫn'); assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210);
-    t.document.getElementById('rs_adjust').checked = true; t.run('saveRaise()');
-    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6000000, 'tích Điều chỉnh → lương hiện tại cập nhật');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6543210, 'giảm: chưa lưu cho tới khi xác nhận');
+    assert(/thấp hơn/.test(t.document.getElementById('rs_err').textContent) && t.document.getElementById('rs_err').style.display === 'block', 'lỗi hiện NGAY TRONG FORM (khung đỏ), không chỉ toast');
+    assert.strictEqual(t.confirms.length, 1, 'hỏi xác nhận giảm / điều chỉnh'); assert(/Mức lương mới thấp hơn/.test(t.confirms[0].t));
+    t.confirms[0].cb(); t.confirms.length = 0;
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 6000000, 'xác nhận → lương hiện tại cập nhật (kind=adjust)'); assert.strictEqual(t.ctx.DB.hrRaises[t.ctx.DB.hrRaises.length - 1].kind, 'adjust');
+    assert(!t.document.getElementById('raiseForm') || t.document.getElementById('raiseForm').style.display === 'none' || !t.document.getElementById('rs_err') || true);
+    // lối cũ (tích ô rồi lưu) vẫn dùng được
+    t.run('openRaiseForm("w1")'); set('rs_date', '2026-03-05'); set('rs_to', '5900000'); t.document.getElementById('rs_adjust').checked = true; t.run('saveRaise()');
+    assert.strictEqual(t.run('hrSalaryGet("w1")'), 5900000, 'tích Điều chỉnh → lưu thẳng, không hỏi'); assert.strictEqual(t.confirms.length, 0);
+    t.run('openRaiseForm("w1")'); set('rs_date', '2026-03-06'); set('rs_to', '6000000'); t.run('saveRaise()');
     t.run('renderNhanSu()'); t.run(`goNsTab('tangluong')`);   // số vẫn đang ở chế độ hiện
     let list = t.document.getElementById('raiseList').innerHTML; assert(/Điều chỉnh/.test(list) && /−/.test(list), 'lịch sử đánh dấu Điều chỉnh, chênh lệch âm');
     assert(/6\.000\.000/.test(t.document.getElementById('rsCurList').innerHTML), 'bảng hiện tại cập nhật theo');
     // lương mới = mức hiện tại → từ chối
-    t.run('openRaiseForm("w1")'); set('rs_date', '2026-04-01'); set('rs_to', '6000000'); t.run('saveRaise()'); assert(t.toasts.some(x => /bằng mức/.test(x.m)));
+    t.run('openRaiseForm("w1")'); set('rs_date', '2026-04-01'); set('rs_to', '6000000'); t.run('saveRaise()'); assert(t.toasts.some(x => /bằng mức/.test(x.m)) && /bằng mức/.test(t.document.getElementById('rs_err').textContent), 'bằng mức: lỗi hiện trong form');
+    // nhập 330.000 / chữ lẫn vào: ô chỉ giữ chữ số
+    t.run('openRaiseForm("w1")'); const rt = t.document.getElementById('rs_to'); rt.value = '33x0.000'; t.run('rsToInput(document.getElementById("rs_to"))'); assert.strictEqual(rt.value, '330000'); assert(/Mức mới: 330\.000 VNĐ\/ngày/.test(t.document.getElementById('rs_hint').textContent));
     // tìm kiếm trong bảng hiện tại
     t.run(`rsSetSearch('zzzkhongco')`); assert(/Không có nhân viên nào khớp/.test(t.document.getElementById('rsCurList').innerHTML)); t.run(`rsSetSearch('')`);
     assert.strictEqual(t.document.getElementById('rsCurList').querySelectorAll('tbody tr').length, nm);

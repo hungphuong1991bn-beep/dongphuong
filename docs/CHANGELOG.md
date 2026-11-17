@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [2.12.1] Sửa lỗi nhập lương theo ngày nhảy số + lưu ở tab Tăng lương "bị treo" (17/11/2026)
+- **Lỗi nhảy số (gõ 330000 ra 333000):** bản 2.12.0 tự chèn dấu chấm ngăn cách NGAY KHI ĐANG GÕ, làm con trỏ / bộ gõ điện thoại nhảy chỗ. **Sửa:** khi đang gõ ô chỉ giữ chữ số (không đổi nội dung), số đã định dạng hiện ở dòng nhỏ bên dưới (`= 330.000 VNĐ/ngày`); rời ô mới định dạng, vào ô lại thì trả về số thô để sửa. Áp dụng cho ô lương trong hồ sơ và ô "Mức lương mới" ở tab Tăng lương (ô này đổi từ `type=number` sang văn bản số, hết cả lỗi cuộn chuột / phím mũi tên làm đổi số).
+- **Lỗi lưu "treo, không thấy lưu":** khi số mới THẤP HƠN mức đang lưu (thường gặp ngay sau khi chuyển từ tháng sang ngày, hoặc chọn "Giữ nguyên số" trong khi số cũ là tiền tháng) form từ chối và chỉ báo bằng thông báo thoáng qua → trông như không lưu. **Sửa:** (1) lỗi hiện **ngay trong form** bằng khung đỏ, không biến mất; (2) mức thấp hơn không còn bắt tích ô rồi bấm lại — bấm Lưu sẽ **hỏi xác nhận** "Lưu như điều chỉnh / giảm lương?" (ô tích cũ vẫn dùng được); (3) mọi lỗi bất ngờ khi lưu cũng hiện trong form.
+- **Chắc chắn hơn:** đọc dấu mốc đơn vị lương bị lỗi mạng/quyền không còn làm hỏng cả lần tải lương.
+- Test: `hr-view.test.js` 20 nhóm, `hr-salary.test.js` 27 nhóm (đã bổ sung kiểm tra gõ 330000, lọc ký tự lạ, định dạng khi rời ô, khung lỗi trong form, hộp thoại xác nhận giảm lương).
+
 ## [2.12.0] Lương tính THEO NGÀY + sửa lương trực tiếp trong hồ sơ nhân viên (17/11/2026)
 - **Đơn vị lương = VNĐ/ngày** (tiền 1 ngày công), không còn hiểu theo tháng. Đổi nhãn ở mọi nơi: ô trong hồ sơ, cột danh sách (**Lương / ngày**), thẻ thống kê (**Tổng lương ngày (đang làm)**), tab Tăng lương (tiêu đề cột, form, gợi ý, ví dụ `250000`), Excel danh sách nhân sự và Excel lịch sử tăng lương (cột **VNĐ/ngày**).
 - **Hồ sơ nhân viên sửa lương trực tiếp** (chỉ Admin): ô **🔒 Lương theo ngày** nhập được, tự chèn dấu chấm ngăn cách nghìn. Khi gõ số khác mức hiện tại sẽ hiện ô **Áp dụng từ ngày** (mặc định hôm nay); bấm **Lưu hồ sơ** là đổi. Ngày áp dụng ở tương lai → lưu "chờ hiệu lực", tự áp dụng khi đến ngày. Nút cũ đổi thành **📈 Lịch sử** (sang tab Tăng lương).

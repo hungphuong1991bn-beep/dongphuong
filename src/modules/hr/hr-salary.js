@@ -133,7 +133,7 @@ async function hrSalaryFetch(){
     const rmap = {};
     if(rawR && typeof rawR === 'object') Object.keys(rawR).forEach(k => { const r = rawR[k]; if(r && typeof r === 'object' && r.workerId) rmap[k] = Object.assign({id: k}, r); });
     Object.keys(pend).forEach(k => { if(k.indexOf('r:') !== 0) return; if(pend[k]) rmap[k.slice(2)] = pend[k]; else delete rmap[k.slice(2)]; });
-    const unitRaw = await fbRead(HR_UNIT_PATH);
+    let unitRaw = null; try{ unitRaw = await fbRead(HR_UNIT_PATH); }catch(e){ unitRaw = null; }   // đọc dấu mốc lỗi KHÔNG được làm hỏng cả lần tải lương
     DB.hrUnit = (unitRaw === 'day' || pend[HR_UNIT_KEY] === 'day') ? 'day' : '';
     if(DB.hrUnit === 'day'){ try{ localStorage.setItem(HR_UNIT_LS, 'day'); }catch(e){} }
     DB.hrSalary = map; DB.hrRaises = Object.keys(rmap).map(k => rmap[k]);
@@ -300,7 +300,7 @@ function hrRaiseAdd(o){
   const from = earlier.length ? earlier[earlier.length - 1].to : (later.length ? later[0].from : hrSalaryGet(w.id));
   const adjust = o.adjust === true || o.adjust === 'true';
   if(from && to === from) return {ok: false, error: 'Mức lương mới đang bằng mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ/ngày) — không có gì để cập nhật'};
-  if(from && to < from && !adjust) return {ok: false, error: 'Mức lương mới thấp hơn mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ/ngày). Nếu là giảm lương hoặc sửa nhập sai, hãy tích "Điều chỉnh / giảm lương"'};
+  if(from && to < from && !adjust) return {ok: false, needAdjust: true, from, to, error: 'Mức lương mới thấp hơn mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ/ngày). Nếu là giảm lương hoặc sửa nhập sai, hãy tích "Điều chỉnh / giảm lương"'};
   const r = {id: 'rs' + Date.now() + Math.random().toString(36).slice(2, 5), workerId: w.id, workerName: w.name || '', date: o.date,
     from: from || 0, to, kind: (from && to < from) ? 'adjust' : 'raise', reason: String(o.reason || '').trim(), applied: false,
     by: (typeof actorName === 'function') ? actorName() : '', createdAt: hrToday()};

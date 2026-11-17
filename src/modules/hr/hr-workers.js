@@ -123,6 +123,7 @@ function openWorkerProfile(id){
   _salInp.dataset.orig = _cur ? String(_cur) : '';
   const _salDate = document.getElementById('wpSalaryDate'); if(_salDate) _salDate.value = todayStr();
   const _salWrap = document.getElementById('wpSalaryDateWrap'); if(_salWrap) _salWrap.style.display = 'none';
+  const _salFmt = document.getElementById('wpSalaryFmt'); if(_salFmt) _salFmt.textContent = '';
   $('wpNganHang').value = w.nganHang||'';
   $('wpSoTaiKhoan').value = w.soTaiKhoan||'';
   $('wpTrangThai').value = w.trangThai||'Đang làm';
@@ -140,11 +141,20 @@ function closeWorkerProfile(){
   closeModal('workerProfileModal');
 }
 // Gõ vào ô lương: tự chèn dấu chấm ngăn cách nghìn; chỉ hiện ô "Áp dụng từ ngày" khi số đã khác mức hiện tại
+// v2.12.1: KHÔNG định dạng lại ô khi đang gõ (bản 2.12.0 chèn dấu chấm giữa chừng làm con trỏ/bộ gõ điện thoại nhảy số,
+// vd gõ 330000 ra 333000). Đang gõ: chỉ giữ chữ số; hiện số đã định dạng ở dòng bên dưới; ô được định dạng khi rời ô.
 function wpSalaryInput(el){
-  const digits = String(el.value || '').replace(/\D/g, '');
-  el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+  let v = String(el.value || '');
+  if(/\D/.test(v)){ v = v.replace(/\D/g, ''); el.value = v; }   // chỉ ghi lại khi có ký tự lạ → không làm nhảy con trỏ
+  const digits = v.replace(/^0+(?=\d)/, '');
+  const fmt = document.getElementById('wpSalaryFmt'); if(fmt) fmt.textContent = digits ? '= ' + Number(digits).toLocaleString('vi-VN') + ' VNĐ/ngày' : '';
   const wrap = document.getElementById('wpSalaryDateWrap');
   if(wrap) wrap.style.display = (digits && digits !== (el.dataset.orig || '')) ? '' : 'none';
+}
+function wpSalaryFocus(el){ el.value = String(el.value || '').replace(/\D/g, ''); }
+function wpSalaryBlur(el){
+  const d = String(el.value || '').replace(/\D/g, '');
+  el.value = d ? Number(d).toLocaleString('vi-VN') : '';
 }
 function saveWorkerProfile(){
   if(guardViewer())return;
@@ -157,7 +167,8 @@ function saveWorkerProfile(){
   // v2.12.0: lương theo ngày — kiểm tra TRƯỚC khi sửa bất kỳ trường nào để lỗi lương không làm hồ sơ lưu dở
   let _salChange = null;
   if(hrSalaryCan()){
-    const _inp = $('wpLuongCoBan'), _raw = String(_inp.value || '').trim(), _orig = Number(_inp.dataset.orig) || 0;
+    const _inp = $('wpLuongCoBan'), _txt = String(_inp.value || '').trim(), _raw = _txt.replace(/\D/g, ''), _orig = Number(_inp.dataset.orig) || 0;
+    if(_txt && !_raw){ showToast('⚠️ Lương theo ngày không hợp lệ — chỉ nhập số tiền (VNĐ/ngày)', true); return; }
     if(_raw){
       const _n = hrSalaryNum(_raw);
       if(!_n){ showToast('⚠️ Lương theo ngày không hợp lệ — chỉ nhập số tiền (VNĐ/ngày)', true); return; }
