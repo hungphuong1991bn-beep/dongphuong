@@ -227,6 +227,7 @@ function handleRealtimeChange(path, val){
   _sseConnected = true;
   stopPolling(); // SSE đang sống → không cần polling song song nữa
   if(path.indexOf('/data')===0) _rtSeq++; // đánh dấu: có thay đổi dữ liệu realtime (xem doPoll)
+  if(path.indexOf('/hrPrivate')===0){ if(typeof hrSalaryOnRealtime==='function') hrSalaryOnRealtime(); return; }   // v2.9.0: lương — chỉ Admin tải lại
   if(path==='/' || path==='/data'){ doPoll(); setSyncDot('ok'); return; }
   if(path==='/data/orders' || path==='/data/orders/'){
     // Ai đó vẫn ghi đè NGUYÊN CẢ nhánh (VD lần "đẩy data lên" đầu tiên khi

@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         updateOnline();
         // Load announce đang active từ Firebase
         if(fbOk()) checkAnnounce();
-
+        if(typeof hrSalaryOnLogin === 'function') hrSalaryOnLogin();   // v2.9.0: lương chỉ Admin
       });
       requestNotif();
       updateBellBadge();

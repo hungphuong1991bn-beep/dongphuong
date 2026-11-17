@@ -132,3 +132,11 @@
 .stat-num{font-size:26px;font-weight:800;color:var(--text);line-height:1}
 .stat-lbl{font-size:11px;color:var(--text3);font-weight:500;margin-top:2px}
 .stat-icon{font-size:18px}
+
+/* ── Quản lý nhân sự v2.9.0: lọc nhanh, sắp xếp cột ── */
+.ns-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2,var(--text3));font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s}
+.ns-chip:hover{border-color:var(--brand);color:var(--brand)}
+.ns-chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.ns-th-sort{cursor:pointer;user-select:none;white-space:nowrap}
+.ns-th-sort:hover{color:var(--brand)}
+.ns-sort{font-size:9px;color:var(--brand)}
