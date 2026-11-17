@@ -42,6 +42,7 @@ assert(/Nguyên liệu → Đùn → Rút → Đánh bóng → Cắt ngắn → 
 assert.strictEqual((h.match(/class="ovp-pipe /g)||[]).length,5,'5 đường dẫn');
 assert.strictEqual((h.match(/class="ovp-p"/g)||[]).length,5,'1 hạt chính / đường dẫn');
 assert.strictEqual((h.match(/class="ovp-p ovp-p2"/g)||[]).length,5,'+1 hạt lệch pha / đường dẫn (tổng 2)');
+assert(/<b>1<\/b><small>đơn đã nhập kho/.test(h),'Nhập Kho = số đơn hoàn thành');
 assert.strictEqual((h.match(/<svg /g)||[]).length,6,'mỗi node 1 icon SVG');
 assert(/dpOpenStageList\('dun'\)/.test(h)&&/dpOpenStageList\('cat'\)/.test(h)&&/goTab\('soLieu'\)/.test(h),'bấm node vẫn mở đúng chi tiết');
 assert(/tone-run/.test(h)&&/tone-idle/.test(h),'màu: đang chạy xanh dương / chờ trung tính');

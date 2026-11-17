@@ -251,6 +251,8 @@ function buildOvBusbarFlow(orders){
   const nlToday = (DB.nguyenLieuLog||[]).filter(r=>r.ngay===today && r.heatLot);
   const nlKg = nlToday.reduce((t,r)=>t+(parseFloat(r.soLuong)||0),0);
 
+  const whAll = (typeof htWarehouseSummary==='function') ? htWarehouseSummary(orders) : {all:[],wait:[],inWh:[],inToday:[],kgIn:0};
+  const doneCnt = whAll.all.filter(o=>!o.returned).length;
   const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'},{key:'cat',icon:'✂️',label:'Cắt Ngắn'}];
   const nodes = [{
     key:'nl', icon:OVP_ICONS.nl, label:'Nguyên Liệu', active: nlToday.length>0, tone: nlToday.length>0?'ok':'idle',
@@ -274,18 +276,17 @@ function buildOvBusbarFlow(orders){
     });
   });
 
-  // Bước 6 — Nhập kho: ĐỒNG BỘ từ tab "Đơn hoàn thành" qua htWarehouseSummary()
-  // (cùng hàm tab đó dùng để đếm các thẻ Chờ nhập kho / Đã nhập kho) → hai nơi
-  // luôn khớp số. Xác nhận nhập kho ở tab Đơn hoàn thành thì Tổng quan tự cập nhật.
-  const wh = (typeof htWarehouseSummary==='function') ? htWarehouseSummary(orders)
-           : {wait:[], inWh:[], inToday:[], kgIn:0};
+  // Bước 6 — Nhập kho: đơn đã HOÀN THÀNH = đã nhập kho. Số ở đây = tổng đơn hoàn thành (không tính đơn hoàn trả),
+  // lấy từ htWarehouseSummary() (cùng nguồn tab "Đơn hoàn thành") nên hoàn thành thêm mã nào là Tổng quan tự tăng theo.
+  const doneList = whAll.all.filter(o=>!o.returned);
+  const doneKg = doneList.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
+  const doneToday = doneList.filter(o=>typeof htIsToday==='function' && htIsToday(o.doneAt));
   nodes.push({
-    key:'kho', icon:OVP_ICONS.kho, label:'Nhập Kho', active: wh.inWh.length>0 || wh.wait.length>0, tone: wh.wait.length>0?'run':(wh.inWh.length>0?'ok':'idle'),
-    on: wh.wait.length ? `${wh.wait.length} đơn chờ nhập` : 'Đã nhập kho', off:'Chưa có đơn',
-    big: wh.inWh.length, unit:'đơn đã nhập kho',
-    stats:[['Chờ nhập', wh.wait.length+' đơn'], ['Nhập hôm nay', wh.inToday.length+' đơn'], ['Khối lượng', fmt(wh.kgIn)+' kg']],
-    // bấm → mở tab Đơn hoàn thành, lọc đúng nhóm: có đơn chờ nhập thì xem nhóm chờ, không thì xem đã nhập
-    click:`ovGoWarehouse('${wh.wait.length?'new':'wh_all'}')`
+    key:'kho', icon:OVP_ICONS.kho, label:'Nhập Kho', active: doneList.length>0, tone: doneList.length>0?'ok':'idle',
+    on:'Đã nhập kho', off:'Chưa có đơn',
+    big: doneList.length, unit:'đơn đã nhập kho',
+    stats:[['Hoàn thành hôm nay', doneToday.length+' đơn'], ['Khối lượng', fmt(doneKg)+' kg']],
+    click:"ovGoWarehouse('all')"
   });
 
   const html = nodes.map((n,i)=>{
