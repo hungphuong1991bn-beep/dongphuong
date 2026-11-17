@@ -46,7 +46,7 @@ function hrSalaryGet(wid){
   return hrSalaryNum(DB.hrSalary[wid]);
 }
 function hrSalaryFmt(n){ return n ? Number(n).toLocaleString('vi-VN') + ' VNĐ' : '—'; }
-// Tổng quỹ lương cơ bản của nhân viên chưa nghỉ việc (Admin)
+// Tổng quỹ MỨC LƯƠNG HIỆN TẠI của nhân viên chưa nghỉ việc (Admin)
 function hrSalaryTotalActive(){
   if(!hrSalaryCan()) return 0;
   return (DB.workers || []).reduce((s, w) => s + ((w.trangThai || 'Đang làm') === 'Đã nghỉ việc' ? 0 : hrSalaryGet(w.id)), 0);
@@ -225,7 +225,9 @@ function hrRaiseLast(wid){          // lần tăng đã áp dụng gần nhất 
 function hrRaiseSave(r){
   const p = hrSalaryPendingLoad(); p['r:' + r.id] = r; hrSalaryPendingSave(p); hrSalaryLsSave();
 }
-// Thêm 1 lần tăng lương. o = {workerId, date, to, reason}. Trả {ok, error?, raise?}
+// Cập nhật mức lương theo NGÀY HIỆU LỰC (v2.11.0: đây là cách DUY NHẤT đổi mức lương hiện tại — hồ sơ nhân viên chỉ xem).
+// o = {workerId, date, to, reason, adjust}. Mặc định chỉ cho TĂNG; muốn giảm / sửa sai phải tích adjust=true
+// (lưu kind:'adjust'). Bằng mức trước đó thì từ chối vì không có gì thay đổi. Trả {ok, error?, raise?}
 function hrRaiseAdd(o){
   if(!hrSalaryCan()) return {ok: false, error: 'Chỉ Admin mới được ghi nhận tăng lương'};
   const w = (DB.workers || []).find(x => x.id === o.workerId);
@@ -236,9 +238,11 @@ function hrRaiseAdd(o){
   const hist = hrRaiseList(w.id);
   const earlier = hist.filter(r => r.date <= o.date), later = hist.filter(r => r.date > o.date);
   const from = earlier.length ? earlier[earlier.length - 1].to : (later.length ? later[0].from : hrSalaryGet(w.id));
-  if(from && to <= from) return {ok: false, error: 'Mức lương mới phải cao hơn mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ)'};
+  const adjust = o.adjust === true || o.adjust === 'true';
+  if(from && to === from) return {ok: false, error: 'Mức lương mới đang bằng mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ) — không có gì để cập nhật'};
+  if(from && to < from && !adjust) return {ok: false, error: 'Mức lương mới thấp hơn mức trước đó (' + from.toLocaleString('vi-VN') + ' VNĐ). Nếu là giảm lương hoặc sửa nhập sai, hãy tích "Điều chỉnh / giảm lương"'};
   const r = {id: 'rs' + Date.now() + Math.random().toString(36).slice(2, 5), workerId: w.id, workerName: w.name || '', date: o.date,
-    from: from || 0, to, reason: String(o.reason || '').trim(), applied: false,
+    from: from || 0, to, kind: (from && to < from) ? 'adjust' : 'raise', reason: String(o.reason || '').trim(), applied: false,
     by: (typeof actorName === 'function') ? actorName() : '', createdAt: hrToday()};
   if(!DB.hrRaises) DB.hrRaises = [];
   DB.hrRaises.push(r); hrRaiseSave(r);

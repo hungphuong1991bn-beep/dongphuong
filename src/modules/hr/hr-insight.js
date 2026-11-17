@@ -105,7 +105,7 @@ function renderWorkerHistoryHtml(w){
   let raiseBlock = '';
   if(typeof hrSalaryCan === 'function' && hrSalaryCan()){
     const rs = hrRaiseList(w.id).slice().reverse();
-    raiseBlock = `<div style="margin-top:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><div style="font-size:11.5px;font-weight:700;color:#7c3aed;flex:1">🔒 Lịch sử tăng lương (${rs.length})</div><button class="ns-chip" onclick="nsOpenRaiseForm('${nsEsc(w.id)}')">📈 Ghi nhận tăng lương</button></div>${rs.slice(0, 5).map(r => `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px"><b style="white-space:nowrap">${fmtDate(r.date)}</b><span style="flex:1;color:var(--text3)">${r.from ? r.from.toLocaleString('vi-VN') + ' → ' : ''}<b style="color:var(--text)">${r.to.toLocaleString('vi-VN')}</b>${r.reason ? ' · ' + nsEsc(r.reason) : ''}</span>${r.date > hrToday() ? '<span class="ns-badge" style="background:#fef3c7;color:#b45309">chờ hiệu lực</span>' : ''}</div>`).join('')}</div>`;
+    raiseBlock = `<div style="margin-top:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><div style="font-size:11.5px;font-weight:700;color:#7c3aed;flex:1">🔒 Lịch sử tăng lương (${rs.length})</div><button class="ns-chip" onclick="nsOpenRaiseForm('${nsEsc(w.id)}')">📈 Cập nhật lương</button></div>${rs.slice(0, 5).map(r => `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px"><b style="white-space:nowrap">${fmtDate(r.date)}</b><span style="flex:1;color:var(--text3)">${r.from ? r.from.toLocaleString('vi-VN') + ' → ' : ''}<b style="color:var(--text)">${r.to.toLocaleString('vi-VN')}</b>${r.reason ? ' · ' + nsEsc(r.reason) : ''}</span>${r.date > hrToday() ? '<span class="ns-badge" style="background:#fef3c7;color:#b45309">chờ hiệu lực</span>' : ''}</div>`).join('')}</div>`;
   }
   return `<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
     <div style="font-size:12px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📋 Tóm tắt & lịch sử</div>
@@ -122,7 +122,7 @@ function renderWorkerHistoryHtml(w){
 }
 
 // ── Xuất Excel danh sách nhân viên (theo đúng bộ lọc + sắp xếp đang chọn) ──
-// Cột Lương cơ bản CHỈ có khi người xuất là Admin. Không xuất CCCD / số tài khoản.
+// Cột Lương hiện tại CHỈ có khi người xuất là Admin. Không xuất CCCD / số tài khoản.
 async function exportWorkersExcel(){
   if(guardViewer()) return;
   const list = (typeof nsFilteredWorkers === 'function') ? nsFilteredWorkers() : (DB.workers || []);
@@ -131,7 +131,7 @@ async function exportWorkersExcel(){
   try{
     const admin = hrSalaryCan();
     const head = ['STT','Mã NV','Họ và tên','Giới tính','Ngày sinh','SĐT','Chức vụ','Bộ phận','Ngày vào làm','Thâm niên','Loại hợp đồng','Trạng thái'];
-    if(admin) head.push('Lương cơ bản (VNĐ)');
+    if(admin) head.push('Lương hiện tại (VNĐ)');
     const rows = [['DANH SÁCH NHÂN VIÊN'], ['Xuất ngày ' + fmtDate(todayStr()) + ' · ' + list.length + ' người'], head];
     list.forEach((w, i) => {
       const r = [i + 1, w.maNV || '', w.name || '', w.gioiTinh || '', w.ngaySinh ? fmtDate(w.ngaySinh) : '', w.sdt || '', w.chucVu || '', w.boPhan || '',
@@ -144,7 +144,7 @@ async function exportWorkersExcel(){
     const ws = attAddSheet(wb, 'Nhan_vien', rows, {widths, mergeRows:[1, 2], freezeY:3, hdr:3, last:rows.length, leftCols:[3, 6, 7, 8]});
     if(admin){ const c = widths.length; for(let r = 4; r <= rows.length; r++) ws.getCell(r, c).numFmt = '#,##0'; }
     await attDownloadWb(wb, 'Danh_sach_nhan_vien_' + todayStr() + '.xlsx');
-    log('Xuất danh sách nhân sự', list.length + ' nhân viên' + (admin ? ' (kèm lương cơ bản)' : ''), '');
+    log('Xuất danh sách nhân sự', list.length + ' nhân viên' + (admin ? ' (kèm lương hiện tại)' : ''), '');
     showToast('✅ Đã xuất ' + list.length + ' nhân viên');
   }catch(e){ console.error(e); showToast('❌ Xuất Excel lỗi: ' + (e && e.message || e), true); }
 }

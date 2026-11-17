@@ -66,7 +66,9 @@ document.write(`<!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / 
       </div>
     </div>
     <div class="modal-row">
-      <div class="field" id="wpSalaryField" style="display:none"><div class="field-lbl">🔒 Lương cơ bản (VNĐ) <span style="font-weight:500;font-size:10.5px;color:#7c3aed">· chỉ Admin thấy</span></div><input id="wpLuongCoBan" class="field-inp" type="number" min="0" inputmode="numeric" placeholder="VD: 6000000" autocomplete="off"></div>
+      <div class="field" id="wpSalaryField" style="display:none"><div class="field-lbl">🔒 Mức lương hiện tại (VNĐ) <span style="font-weight:500;font-size:10.5px;color:#7c3aed">· chỉ Admin thấy</span></div>
+        <div style="display:flex;gap:6px;align-items:center"><input id="wpLuongCoBan" class="field-inp" type="text" readonly tabindex="-1" placeholder="Chưa có mức lương" autocomplete="off" style="flex:1;min-width:0;font-weight:700;background:var(--bg)"><button type="button" id="wpSalaryUpdBtn" class="ns-chip" style="white-space:nowrap" onclick="nsOpenRaiseForm(document.getElementById('wpId').value)">📈 Cập nhật</button></div>
+        <div style="font-size:10.5px;color:var(--text4);margin-top:3px">Đổi mức lương ở tab 📈 Tăng lương (có lưu lịch sử theo ngày hiệu lực)</div></div>
       <div class="field"><div class="field-lbl">Trạng thái</div>
         <select id="wpTrangThai" class="field-inp">
           <option value="Đang làm">🟢 Đang làm</option>
