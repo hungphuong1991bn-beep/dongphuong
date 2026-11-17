@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [2.10.0] Tăng lương theo ngày hiệu lực (17/11/2026)
+- Tab mới **📈 Tăng lương** trong Quản lý nhân sự — **chỉ Admin thấy** (tài khoản khác không có nút tab, panel hay dữ liệu; `goNsTab('tangluong')` bị chặn).
+- Mỗi lần tăng ghi: **ngày/tháng/năm hiệu lực**, lương cũ (tự tính theo lịch sử), lương mới, % tăng, lý do. Chặn mức mới ≤ mức trước. Lọc theo **năm** và theo nhân viên; xuất Excel.
+- Ngày hiệu lực đã qua → lương hiện tại cập nhật ngay. Ngày hiệu lực tương lai → "⏳ Chờ hiệu lực", tự áp dụng khi Admin mở app sau ngày đó. Nhập bù ngày cũ vẫn xếp đúng thứ tự.
+- Hồ sơ nhân viên (Admin) có lịch sử tăng lương + nút "Ghi nhận tăng lương"; bảng Danh sách hiện "↑ ngày tăng gần nhất".
+- Dữ liệu ở `/hrPrivate/raises/{id}` (cùng vùng riêng với lương), có hàng đợi bền khi mất mạng, xoá khi đăng xuất; nhật ký không ghi số tiền. Xoá 1 bản ghi lịch sử KHÔNG đổi lại lương hiện tại.
+- Test: `hr-salary.test.js` 19 nhóm, `hr-view.test.js` 17 nhóm.
+
+## [2.9.0] Nâng cấp tab Quản lý nhân sự + Mức lương CHỈ ADMIN xem (17/11/2026)
+
+### 🔒 Mức lương cơ bản chỉ Admin xem / sửa
+- **Lỗi bảo mật cũ:** lương nằm trong hồ sơ (`/data/workers[].luongCoBan`) nên đồng bộ về MỌI tài khoản, và **trang QR công khai "Danh sách nhân sự" hiển thị lương (kèm CCCD, số tài khoản) cho bất kỳ ai quét mã**.
+- **Cách mới:** lương lưu riêng tại `/hrPrivate/salary/{workerId}` (ngoài `/data`) — không đi theo cache chung, đồng bộ `/data`, trang QR công khai. Chỉ Admin tải/ghi (`src/modules/hr/hr-salary.js`). Tài khoản khác: `hrSalaryGet()` luôn 0, giao diện không dựng ô/cột/thẻ lương, `saveWorkerProfile` từ chối ghi lương.
+- **Tự di trú:** khi Admin đăng nhập, lương cũ được chép sang nhánh riêng rồi gỡ khỏi hồ sơ chung (chỉ gỡ SAU khi đã gửi thành công; mất mạng thì giữ nguyên, thử lại lần sau). `saveWorkers()` ở mọi vai trò đều gỡ `luongCoBan` để máy cũ không đẩy ngược lên.
+- Hàng đợi bền khi mất mạng; đăng xuất xoá lương khỏi bộ nhớ + localStorage; nhật ký thao tác KHÔNG ghi số tiền; trang QR công khai đã bỏ dòng lương; bảng hiển thị lương mặc định che `••••` (bấm 👁 để hiện).
+- **Giới hạn cần biết:** app dùng Firebase Anonymous Auth dùng chung, "Admin" chỉ tồn tại ở tầng ứng dụng. Người rành kỹ thuật có API key vẫn có thể đọc thẳng `/hrPrivate` qua REST/SSE. Chặn tuyệt đối cần Firebase Rules + custom claims (Cloud Function cấp token cho Admin), ví dụ: `"hrPrivate": {".read": "auth.token.admin === true", ".write": "auth.token.admin === true"}`. Việc này cần backend nên chưa làm trong bản này.
+- Còn lộ ở trang QR công khai: CCCD, số tài khoản ngân hàng, địa chỉ, ngày sinh (chưa đổi vì có thể là chủ ý) — nên cân nhắc ẩn.
+
+### 👥 Nâng cấp Quản lý nhân sự
+- **Danh sách NV:** lọc theo bộ phận / chức vụ / trạng thái; lọc nhanh (thiếu thông tin · sinh nhật tháng này · nghỉ phép hôm nay); sắp xếp cột (tên theo kiểu Việt, bộ phận, ngày vào làm, công, lương); thâm niên; cảnh báo hồ sơ thiếu; nhãn "đang nghỉ phép"; **Xuất Excel** theo đúng bộ lọc (cột lương chỉ Admin, không xuất CCCD/STK).
+- **Thẻ tổng quan:** thêm Đang làm, Nghỉ phép hôm nay, Đơn chờ duyệt, Sinh nhật tháng, 🔒 Quỹ lương (Admin).
+- **Hồ sơ:** bắt buộc họ tên, chặn trùng Mã NV, tự ghi/bỏ ngày nghỉ việc, tóm tắt thâm niên/công/nghỉ phép/kỷ luật + lịch sử gần đây.
+- **Nghỉ phép:** lọc (trạng thái/tháng/từ khoá), cột số ngày, tổng ngày đã duyệt, cảnh báo trùng ngày với đơn khác.
+- **Kỷ luật:** thêm chức năng SỬA, lọc theo hình thức/tháng/từ khoá, form thêm mới luôn sạch; thêm/xoá cập nhật lại thẻ thống kê.
+- **Thống kê:** thêm bảng theo bộ phận.
+- Kiểm thử: `tests/static/hr-salary.test.js` (15 nhóm), `tests/static/hr-view.test.js` (14 nhóm, cần jsdom).
+
 ## [Chưa phát hành] Sửa nhấp nháy bất thường + hiệu ứng không chạy trên máy bật "giảm chuyển động" (16/11/2026)
 - **Triệu chứng (1 máy tính xưởng):** hiệu ứng (hạt sáng đường ống, xung trạng thái...) không chạy; chấm "Đồng bộ" trên thanh trên nhấp nháy rất nhanh. Các máy khác bình thường.
 - **Nguyên nhân:** máy đó bật `prefers-reduced-motion: reduce` của hệ điều hành. Rule toàn cục trong `design-system.css` chỉ đặt `animation-duration:.01ms` mà không đặt `animation-iteration-count` → hiệu ứng lặp vô hạn (vd. `sync-blink`) lặp ~100.000 lần/giây (nhấp nháy), còn hiệu ứng chạy 1 lần thì kết thúc ngay (trông như không hoạt động).
