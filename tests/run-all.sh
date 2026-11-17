@@ -28,3 +28,5 @@ node tests/static/attendance-view.test.js   # GĐ1: giao diện chấm công
 node tests/static/hr-delete-sync.test.js    # GĐ1: xoá nhân viên giữ lịch sử + lỗi xoá sống lại
 node tests/static/schedule-data.test.js     # GĐ2: dữ liệu lịch theo ngày (ca, nhân lực, hàng loạt, 2 thiết bị, mất mạng)
 node tests/static/schedule-view.test.js     # GĐ2: giao diện lịch ngày/tuần/tháng/ca
+node tests/static/hr-salary.test.js         # v2.9.0: lương chỉ Admin (Firebase giả lập)
+node tests/static/hr-view.test.js           # v2.9.0: giao diện Quản lý nhân sự (jsdom)
