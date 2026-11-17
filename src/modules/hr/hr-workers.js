@@ -27,7 +27,7 @@ function addWorker(){if(guardViewer())return;
   DB.workers.push({
     id, name:'', maNV: nextWorkerCode(), gioiTinh:'', ngaySinh:'', sdt:'', cccd:'',
     diaChi:'', chucVu:'', boPhan:'', ngayVaoLam: todayStr(), loaiHopDong:'',
-    luongCoBan:'', nganHang:'', soTaiKhoan:'', trangThai:'Đang làm', ghiChu:''
+    nganHang:'', soTaiKhoan:'', trangThai:'Đang làm', ghiChu:''
   });
   saveWorkers();
   log('Thêm người lao động', `Đã thêm 1 người lao động mới vào bảng chấm công (chưa đặt tên)`, '', null, {workerId:id});
@@ -75,6 +75,7 @@ function deleteWorker(id){if(guardViewer())return;
   }
   confirm2('Xóa hồ sơ trống', `Xóa "${w.name||'(chưa có tên)'}" khỏi hệ thống? Hồ sơ này chưa có công, nghỉ phép hay kỷ luật nào.`, ()=>{
     DB.workers = DB.workers.filter(x=>x.id!==id);
+    try{ if(hrSalaryCan() && hrSalaryGet(id)) hrSalarySet(id, 0); }catch(e){}   // dọn luôn mức lương của hồ sơ đã xoá
     saveWorkers();
     log('Xóa người lao động', `${w.name||'(chưa có tên)'} · hồ sơ trống (chưa có lịch sử)`, '', {workerId:id,name:w.name}, null);
     refreshWorkerViews();
@@ -112,7 +113,11 @@ function openWorkerProfile(id){
   setSelectKeepCustom('wpBoPhan', w.boPhan||'');
   $('wpNgayVaoLam').value = w.ngayVaoLam||'';
   $('wpLoaiHopDong').value = w.loaiHopDong||'';
-  $('wpLuongCoBan').value = w.luongCoBan||'';
+  // v2.9.0: LƯƠNG chỉ Admin. Tài khoản khác: ẩn hẳn ô, KHÔNG nạp giá trị nào vào DOM.
+  const _canSal = hrSalaryCan();
+  if(_canSal){ try{ hrSalaryCaptureLegacy(); }catch(e){} }   // lương cũ còn trong hồ sơ → hiện đúng cho Admin
+  const _salBox = document.getElementById('wpSalaryField'); if(_salBox) _salBox.style.display = _canSal ? '' : 'none';
+  $('wpLuongCoBan').value = _canSal ? (hrSalaryGet(w.id) || '') : '';
   $('wpNganHang').value = w.nganHang||'';
   $('wpSoTaiKhoan').value = w.soTaiKhoan||'';
   $('wpTrangThai').value = w.trangThai||'Đang làm';
@@ -121,15 +126,24 @@ function openWorkerProfile(id){
   document.querySelectorAll('#workerProfileModal input, #workerProfileModal select, #workerProfileModal textarea').forEach(el=>{ el.disabled = viewer; });
   const saveBtn = document.getElementById('wpSaveBtn');
   if(saveBtn) saveBtn.style.display = viewer ? 'none' : '';
+  const _hist = document.getElementById('wpHistory'); if(_hist) _hist.innerHTML = renderWorkerHistoryHtml(w);
   openModal('workerProfileModal');
+}
+// Đóng hồ sơ: xoá giá trị lương khỏi ô nhập (không để sót trong DOM sau khi đóng)
+function closeWorkerProfile(){
+  const el = document.getElementById('wpLuongCoBan'); if(el) el.value = '';
+  closeModal('workerProfileModal');
 }
 function saveWorkerProfile(){
   if(guardViewer())return;
   if(!isAdmin()){ showToast('🔒 Chỉ Admin mới có quyền sửa hồ sơ nhân viên', true); return; }
   const id = $('wpId').value;
   const w = DB.workers.find(x=>x.id===id); if(!w) return;
-  w.name = $('wpName').value.trim();
-  w.maNV = $('wpMaNV').value.trim();
+  const _name = $('wpName').value.trim(), _ma = $('wpMaNV').value.trim();
+  if(!_name){ showToast('⚠️ Vui lòng nhập họ và tên nhân viên', true); return; }
+  if(_ma && DB.workers.some(x=>x.id!==id && (x.maNV||'').trim().toLowerCase()===_ma.toLowerCase())){ showToast('⚠️ Mã nhân viên "'+_ma+'" đã có người khác dùng', true); return; }
+  w.name = _name;
+  w.maNV = _ma;
   w.gioiTinh = $('wpGioiTinh').value;
   w.ngaySinh = $('wpNgaySinh').value;
   w.sdt = $('wpSdt').value.trim();
@@ -139,13 +153,24 @@ function saveWorkerProfile(){
   w.boPhan = $('wpBoPhan').value.trim();
   w.ngayVaoLam = $('wpNgayVaoLam').value;
   w.loaiHopDong = $('wpLoaiHopDong').value;
-  w.luongCoBan = $('wpLuongCoBan').value;
   w.nganHang = $('wpNganHang').value.trim();
   w.soTaiKhoan = $('wpSoTaiKhoan').value.trim();
   w.trangThai = $('wpTrangThai').value;
+  // Ngày nghỉ việc: tự ghi khi chuyển sang "Đã nghỉ việc" (dùng tính thâm niên), bỏ khi quay lại làm việc
+  if(w.trangThai==='Đã nghỉ việc'){ if(!w.ngayNghiViec) w.ngayNghiViec = todayStr(); } else { delete w.ngayNghiViec; }
   w.ghiChu = $('wpGhiChu').value.trim();
+  // v2.9.0: lương lưu riêng (chỉ Admin) — KHÔNG ghi vào hồ sơ chung, KHÔNG đưa số tiền vào nhật ký
+  let _salChanged = false;
+  if(hrSalaryCan()){
+    try{ hrSalaryCaptureLegacy(); }catch(e){}
+    delete w.luongCoBan;   // không bao giờ để lương trong hồ sơ chung
+    const _before = hrSalaryGet(id), _after = hrSalaryNum($('wpLuongCoBan').value);
+    if(_before !== _after){ hrSalarySet(id, _after); _salChanged = true; }
+  }
   saveWorkers();
   log('Sửa hồ sơ nhân viên', `${w.name||'(chưa có tên)'} · ${w.chucVu||''} ${w.boPhan?('· '+w.boPhan):''}`, '', null, {workerId:id});
+  if(_salChanged) log('Cập nhật mức lương', `${w.name||'(chưa có tên)'} · (số tiền không ghi vào nhật ký)`, '', null, {workerId:id});
+  const _se = document.getElementById('wpLuongCoBan'); if(_se) _se.value = '';
   closeModal('workerProfileModal');
   showToast('✅ Đã lưu hồ sơ nhân viên');
   refreshWorkerViews();

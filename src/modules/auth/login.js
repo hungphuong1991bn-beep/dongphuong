@@ -93,7 +93,7 @@ async function doLogin(){
         updateOnline();
         // Load announce đang active từ Firebase
         if(fbOk()) checkAnnounce();
-
+        if(typeof hrSalaryOnLogin === 'function') hrSalaryOnLogin();   // v2.9.0: lương chỉ Admin
       });
       requestNotif();
       updateBellBadge();
@@ -120,6 +120,7 @@ function doLogout(){
   log('Đăng xuất','','');
   if(fbOk()) navigator.sendBeacon(fbAppendAuthSync(fbUrl()+'/presence/'+_devId+'.json'),JSON.stringify(null));
   clearInterval(_pollTimer); _pollTimer=null;
+  try{ if(typeof hrSalaryOnLogout === 'function') hrSalaryOnLogout(); }catch(e){}   // v2.9.0: xoá lương khỏi bộ nhớ trước khi đổi tài khoản
   currentUser=null; currentTab='dashboard';
   document.body.classList.remove('sl-fullscreen');
   closeAiChatWindow();

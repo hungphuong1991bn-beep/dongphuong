@@ -10,6 +10,9 @@
 // sang dùng chung cơ chế merge-theo-id (mergeAndSaveArrField) như các nhánh
 // còn lại để nhất quán và an toàn khi nhiều người cùng thao tác.
 function saveWorkers(){if(guardViewer())return;
+  // v2.9.0: lương KHÔNG được nằm trong hồ sơ chung (/data/workers). Admin: chép lương cũ còn sót sang nhánh riêng
+  // trước; mọi vai trò: gỡ luongCoBan để máy cũ không đẩy ngược lương lên vùng ai cũng đọc được.
+  try{ if(typeof hrSalaryCaptureLegacy === 'function') hrSalaryCaptureLegacy(); if(typeof hrSalaryStripWorkers === 'function') hrSalaryStripWorkers(); }catch(e){ console.error('hrSalary', e); }
   // v2.8.0: HR là nguồn duy nhất → tự đồng bộ sang Lịch làm việc (Chấm công đọc thẳng DB.workers)
   try{ if(typeof hrLinkSyncSchedule === 'function') hrLinkSyncSchedule({prune:true}); }catch(e){ console.error('hrLinkSync', e); }
   lsSave();

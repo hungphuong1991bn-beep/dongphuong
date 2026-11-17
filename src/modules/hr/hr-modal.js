@@ -66,7 +66,7 @@ document.write(`<!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / 
       </div>
     </div>
     <div class="modal-row">
-      <div class="field"><div class="field-lbl">Lương cơ bản (VNĐ)</div><input id="wpLuongCoBan" class="field-inp" type="number" placeholder="VD: 6000000"></div>
+      <div class="field" id="wpSalaryField" style="display:none"><div class="field-lbl">🔒 Lương cơ bản (VNĐ) <span style="font-weight:500;font-size:10.5px;color:#7c3aed">· chỉ Admin thấy</span></div><input id="wpLuongCoBan" class="field-inp" type="number" min="0" inputmode="numeric" placeholder="VD: 6000000" autocomplete="off"></div>
       <div class="field"><div class="field-lbl">Trạng thái</div>
         <select id="wpTrangThai" class="field-inp">
           <option value="Đang làm">🟢 Đang làm</option>
@@ -80,8 +80,9 @@ document.write(`<!-- Hồ sơ nhân viên đầy đủ (dùng chung cho Thêm / 
       <div class="field"><div class="field-lbl">Số tài khoản</div><input id="wpSoTaiKhoan" class="field-inp" placeholder="Số tài khoản ngân hàng"></div>
     </div>
     <div class="field"><div class="field-lbl">Ghi chú thêm</div><textarea id="wpGhiChu" class="field-inp" style="min-height:55px;resize:vertical" placeholder="Ghi chú khác (nếu có)"></textarea></div>
+    <div id="wpHistory"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('workerProfileModal')">Đóng</button>
+      <button class="btn btn-ghost" onclick="closeWorkerProfile()">Đóng</button>
       <button class="btn btn-primary" id="wpSaveBtn" onclick="saveWorkerProfile()">💾 Lưu hồ sơ</button>
     </div>
   </div>
