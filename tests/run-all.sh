@@ -31,3 +31,4 @@ node tests/static/schedule-view.test.js     # GĐ2: giao diện lịch ngày/tu�
 node tests/static/hr-salary.test.js         # v2.9.0: lương chỉ Admin (Firebase giả lập)
 node tests/static/hr-view.test.js           # v2.9.0: giao diện Quản lý nhân sự (jsdom)
 node tests/static/molds-export.test.js   # v2.10.1: xuất Excel Tổng hợp Khuôn không bỏ sót chủng loại
+node tests/static/solieu-export-sync.test.js   # v2.13.2: tab Số liệu — xuất Excel đủ dòng/cột + xoá đồng bộ mọi thiết bị (Firebase giả lập, ExcelJS thật)
