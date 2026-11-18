@@ -58,6 +58,33 @@ function roleBreakdownTxt(list){
 let _clockOffset = 0;
 function nowSrv(){ return Date.now() + _clockOffset; }
 
+// ── v2.13.1: SỬA LỖI "1 máy chỉ thấy mỗi tài khoản của chính mình" ──────────
+// Nguyên nhân: ts của mỗi thiết bị trước đây là GIỜ ĐỒNG HỒ CỦA MÁY ĐÓ (đã bù bằng
+// header Date, độ phân giải 1s, có thể bị proxy/cache làm lệch). Máy nào tự tính giờ
+// lệch > 30s so với các máy khác sẽ thấy ts của mọi người khác là "quá cũ" → lọc hết,
+// chỉ còn dòng của chính mình (vừa ghi xong nên luôn "mới"). Cách sửa:
+//  (1) ghi ts bằng GIỜ MÁY CHỦ Firebase ({".sv":"timestamp"}) → mọi máy dùng cùng 1 đồng hồ;
+//  (2) tính độ lệch giờ từ chính ts máy chủ trả về trong phản hồi PUT (chính xác ms),
+//      lấy điểm giữa lượt gửi-nhận để bù độ trễ mạng;
+//  (3) nới thời hạn 30s → 75s (heartbeat 20s/lần, timer nền có thể bị trình duyệt
+//      giãn cách → 30s quá sát, chỉ cần 1 lượt chậm là người đó "biến mất");
+//  (4) dòng của chính thiết bị này luôn được giữ lại và không bao giờ mất người khác
+//      chỉ vì 1 bản ghi hỏng (ts không phải số).
+const PRESENCE_TTL_MS = 75000;
+function presenceOnlineList(p){
+  if(!p || typeof p!=='object') return [];
+  const now = nowSrv();
+  return Object.entries(p)
+    .filter(([id,u])=>{
+      if(!u || typeof u!=='object') return false;
+      const ts = Number(u.ts);
+      if(!isFinite(ts)) return false;
+      return Math.abs(now-ts) < PRESENCE_TTL_MS; // abs: máy khác "ở tương lai" (lệch giờ) vẫn hiện
+    })
+    .map(([id,u])=>({...u,ts:Number(u.ts),_id:id}))
+    .sort((a,b)=>b.ts-a.ts);
+}
+
 function showFbNotConfigured(){
   const ss0 = document.getElementById('sbScanStats');
   if(ss0){ ss0.style.display='none'; ss0.innerHTML=''; }
@@ -74,11 +101,7 @@ async function refreshOnlineListOnly(){
   if(!currentUser || !fbOk()) return;
   try{
     const p = await fbRead('/presence');
-    const now = nowSrv();
-    const online = p
-      ? Object.entries(p).filter(([id,u])=>u&&(now-u.ts)<30000).map(([id,u])=>({...u,_id:id})).sort((a,b)=>b.ts-a.ts)
-      : [];
-    renderPresenceLists(online);
+    renderPresenceLists(presenceOnlineList(p));
   }catch(e){ console.warn('[refreshOnlineListOnly] lỗi:', e); }
 }
 
@@ -102,20 +125,31 @@ async function updateOnline(){
   }
   try{
     const dev = deviceInfo();
-    // Bắt giờ máy chủ từ header Date để bù trừ lệch đồng hồ máy khách
+    const t0 = Date.now();
     const wRes = await fetch(await fbAppendAuth(fbUrl()+'/presence/'+_devId+'.json'), {
       method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type})
+      // ts = giờ MÁY CHỦ Firebase (không phụ thuộc đồng hồ máy này)
+      body: JSON.stringify({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:{'.sv':'timestamp'},since:_sessionStart+_clockOffset,device:dev.type})
     });
     if(!wRes.ok) throw new Error('HTTP '+wRes.status+' khi ghi presence');
-    _lastHeartbeatAt = Date.now();
-    const srvDate = wRes.headers.get('date');
-    if(srvDate){ const t=Date.parse(srvDate); if(!isNaN(t)) _clockOffset = t - Date.now(); }
+    const t1 = Date.now();
+    _lastHeartbeatAt = t1;
+    // Phản hồi PUT trả về đúng dữ liệu đã ghi, trong đó ts đã được máy chủ thay bằng số ms thật
+    try{
+      const w = await wRes.json();
+      const srvTs = w && Number(w.ts);
+      if(srvTs && isFinite(srvTs)) _clockOffset = srvTs - Math.round((t0+t1)/2);
+      else throw new Error('no ts');
+    }catch(_e){
+      const srvDate = wRes.headers.get('date'); // phương án dự phòng: header Date (độ phân giải 1s)
+      if(srvDate){ const t=Date.parse(srvDate); if(!isNaN(t)) _clockOffset = t - Date.now(); }
+    }
     const p = await fbRead('/presence');
-    const now = nowSrv();
-    const online = p
-      ? Object.entries(p).filter(([id,u])=>u&&(now-u.ts)<30000).map(([id,u])=>({...u,_id:id})).sort((a,b)=>b.ts-a.ts)
-      : [];
+    let online = presenceOnlineList(p);
+    // Luôn có dòng của chính mình, kể cả khi lượt đọc trả về dữ liệu cũ/thiếu
+    if(!online.some(u=>u._id===_devId)){
+      online.unshift({name:currentUser.name,role:currentUser.role,uid:currentUser.username,tab:currentTab,ts:nowSrv(),since:_sessionStart,device:dev.type,_id:_devId});
+    }
     renderPresenceLists(online);
   }catch(e){ console.warn('[updateOnline] lỗi khi tải danh sách đang truy cập:', e); }
 }

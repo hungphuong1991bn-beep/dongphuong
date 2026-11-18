@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [2.13.1] Sửa lỗi "Đang truy cập" — 1 máy chỉ thấy mỗi tài khoản của chính nó (18/11/2026)
+- **Triệu chứng:** các máy khác đều thấy đủ người đang truy cập (vd. 5 tài khoản), riêng 1 máy chỉ hiện **1** (chính nó, nhãn "Bạn").
+- **Nguyên nhân:** mốc `ts` của mỗi heartbeat là giờ đồng hồ của từng máy, rồi so với giờ máy đang xem với ngưỡng cứng 30s. Máy nào tự tính giờ lệch (đồng hồ sai, header Date bị cache/độ phân giải 1s, timer nền chậm) sẽ coi mọi người khác là "đã hết hạn" và lọc hết, chỉ còn dòng của mình (vừa ghi nên luôn mới).
+- **Sửa (`presence.js`):**
+  - `ts` ghi bằng **giờ máy chủ Firebase** (`{".sv":"timestamp"}`) → mọi máy dùng chung 1 đồng hồ; độ lệch tính từ chính `ts` máy chủ trả về trong phản hồi PUT (bù độ trễ mạng), header Date chỉ là dự phòng.
+  - `since` (thời gian online) cũng quy về giờ máy chủ → số "giờ phút" hiển thị không còn lệch giữa các máy.
+  - Ngưỡng online **30s → 75s** (heartbeat 20s), so sánh theo giá trị tuyệt đối nên máy khác "ở tương lai" vẫn hiện; bản ghi hỏng không làm mất cả danh sách.
+  - Hàm dùng chung `presenceOnlineList()` cho cả lần ghi+đọc lẫn lần làm mới do SSE; dòng của chính máy luôn có mặt.
+- Test mới: `tests/static/presence-clock.test.js`.
+
 ## [2.13.0] Cột lương ẨN HẲN / HIỆN được — chỉ Admin (17/11/2026)
 - **Danh sách nhân viên:** cột **🔒 Lương / ngày** mặc định **ẩn hẳn** (không còn tiêu đề cột, không còn ô, bảng thu hẹp lại) — trước đây chỉ che số bằng dấu chấm. Nút **👁 Hiện cột lương / 🙈 Ẩn cột lương** (cũng bấm được từ thẻ Tổng lương ngày) bật/tắt cả cột. Ẩn cột thì tự bỏ sắp xếp theo lương. Đăng xuất / đăng nhập lại luôn bắt đầu ở trạng thái ẨN.
 - **Chỉ Admin:** tài khoản khác (Nhân viên, Xem, Số liệu) không có cột, không có nút, không có số trong DOM — kể cả khi cố bật cờ hiện lương (đã thêm test). Dữ liệu lương vẫn chỉ tải về máy Admin.
