@@ -268,7 +268,7 @@ function buildOvBusbarFlow(orders){
                            : orders.filter(o=>isRun(o) && (o.stage||'dun')===prevKey);
     const kg = running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
     nodes.push({
-      key:d.key, icon:OVP_ICONS[d.key], label:d.label, active: running.length>0, tone: running.length>0?'run':'idle', photo: (d.key==='dun'||d.key==='rut'||d.key==='danhbong') ? `src/assets/stage-${d.key}.jpg` : '',
+      key:d.key, icon:OVP_ICONS[d.key], label:d.label, active: running.length>0, tone: running.length>0?'run':'idle', photo: (d.key==='dun'||d.key==='rut'||d.key==='danhbong'||d.key==='cat') ? `src/assets/stage-${d.key}.jpg` : '',
       on:'Đang chạy', off:'Đang chờ',
       big: running.length, unit:'đơn đang chạy',
       stats:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
