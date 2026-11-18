@@ -43,7 +43,8 @@ assert.strictEqual((h.match(/class="ovp-pipe /g)||[]).length,5,'5 đường dẫ
 assert.strictEqual((h.match(/class="ovp-p"/g)||[]).length,5,'1 hạt chính / đường dẫn');
 assert.strictEqual((h.match(/class="ovp-p ovp-p2"/g)||[]).length,5,'+1 hạt lệch pha / đường dẫn (tổng 2)');
 assert(/<b>1<\/b><small>đơn đã nhập kho/.test(h),'Nhập Kho = số đơn hoàn thành');
-assert.strictEqual((h.match(/<svg /g)||[]).length,4,'4 node dùng icon SVG');
+assert.strictEqual((h.match(/<svg /g)||[]).length,3,'3 node dùng icon SVG');
+assert(/class="ovp-photo" src="src\/assets\/stage-danhbong\.jpg" alt="Đánh Bóng"/.test(h)&&/OVP_ICONS\.danhbong/.test(h),'node Đánh Bóng dùng ảnh máy + icon dự phòng');
 assert(/class="ovp-photo" src="src\/assets\/stage-rut\.jpg" alt="Rút"/.test(h)&&/OVP_ICONS\.rut/.test(h),'node Rút dùng ảnh tủ điều khiển + icon dự phòng');
 assert(/<div class="ovp-icon has-photo"><img class="ovp-photo" src="src\/assets\/stage-dun\.jpg" alt="Đùn"/.test(h),'node Đùn dùng ảnh máy đùn thay icon');
 assert(/this\.outerHTML=OVP_ICONS\.dun/.test(h),'có icon dự phòng khi ảnh lỗi');
