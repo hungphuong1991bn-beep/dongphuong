@@ -18,9 +18,9 @@ let _slEditId = null;
 // Mỗi sổ 1 màu riêng để nổi bật, hiện đại: Nguyên liệu = xanh lá (Emerald),
 // Máy Rút = xanh dương (Blue), Đánh bóng + Cắt = tím (Violet).
 const SL_META = {
-  nguyenLieu:  {field:'nguyenLieuLog', save:'saveNguyenLieuLog', label:'Sổ máy đùn',                icon:'🏭', code:'TC-02', color:'#059669', colorLight:'#ECFDF5', congDoan:null},
-  mayRut:      {field:'mayRutLog',     save:'saveMayRutLog',     label:'Sổ máy Rút',                 icon:'↘️', code:'TC-03', color:'#2563EB', colorLight:'#EFF6FF', congDoan:['Rút']},
-  mayDanhBong: {field:'mayDanhBongLog',save:'saveMayDanhBongLog',label:'Sổ máy Đánh bóng + Cắt',      icon:'✨', code:'TC-04', color:'#7C3AED', colorLight:'#F5F3FF', congDoan:['Đánh bóng','Cắt']}
+  nguyenLieu:  {field:'nguyenLieuLog', save:'saveNguyenLieuLog', label:'Nhật ký đùn',                icon:'🏭', code:'TC-02', color:'#059669', colorLight:'#ECFDF5', congDoan:null},
+  mayRut:      {field:'mayRutLog',     save:'saveMayRutLog',     label:'Nhật ký rút',                 icon:'↘️', code:'TC-03', color:'#2563EB', colorLight:'#EFF6FF', congDoan:['Rút']},
+  mayDanhBong: {field:'mayDanhBongLog',save:'saveMayDanhBongLog',label:'Nhật ký đánh bóng + cắt',      icon:'✨', code:'TC-04', color:'#7C3AED', colorLight:'#F5F3FF', congDoan:['Đánh bóng','Cắt']}
 };
 
 function slArr(tab){ return DB[SL_META[tab].field] || (DB[SL_META[tab].field]=[]); }
@@ -186,6 +186,7 @@ function renderSoLieu(){
       <input class="khm-search" style="flex:2;min-width:180px" placeholder="🔎 Tìm theo mọi trường..." value="${(_slSearch||'').replace(/"/g,'&quot;')}" oninput="slSetSearch(this.value)">
       <input type="date" value="${_slFrom}" onchange="slSetFrom(this.value)" title="Từ ngày">
       <input type="date" value="${_slTo}" onchange="slSetTo(this.value)" title="Đến ngày">
+      <button class="khm-add-btn" style="background:#475569" onclick="slManualSync()" title="Đối chiếu lại với máy chủ: lấy dòng mới và bỏ dòng đã bị xoá ở thiết bị khác">🔄 Đồng bộ</button>
       <button class="khm-add-btn" style="background:${SL_META[_slTab].color}" onclick="exportSlExcel('${_slTab}')">📥 Xuất Excel</button>
       <button class="khm-add-btn" style="background:#334155" onclick="slPrintExport('${_slTab}')">🖨️ In / Xuất PDF</button>
       ${isSlEditor()?`<button class="khm-add-btn" style="background:${SL_META[_slTab].color}" onclick="slOpenAdd()">+ Thêm dòng</button>`:''}
@@ -405,7 +406,7 @@ function nlTPPack(){ return _nlTPItems.map(x=>String(x||'').trim()).filter(Boole
 function nlOpenAdd(){
   if(guardSlEdit())return;
   _slEditId = null;
-  $('nlModalTitle').textContent = 'Thêm dòng Sổ máy đùn';
+  $('nlModalTitle').textContent = 'Thêm dòng Nhật ký đùn';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   ['nlNguyenLieu','nlHeatLot','nlDoDanDien','nlSoLuong','nlSoMet','nlDonHang','nlPO','nlWO','nlGhiChu'].forEach(id=>$(id).value='');
   $('nlNgay').value = todayStr();
@@ -423,7 +424,7 @@ function nlOpenEdit(id){
   if(guardSlEdit())return;
   const r = slArr('nguyenLieu').find(x=>x.id===id); if(!r) return;
   _slEditId = id;
-  $('nlModalTitle').textContent = 'Sửa dòng Sổ máy đùn';
+  $('nlModalTitle').textContent = 'Sửa dòng Nhật ký đùn';
   $('nlErr').style.display='none'; $('nlErr').textContent='';
   $('nlNgay').value=r.ngay||''; $('nlNguyenLieu').value=r.nguyenLieu||''; $('nlHeatLot').value=r.heatLot||'';
   $('nlDoDanDien').value=r.doDanDien||''; $('nlSoLuong').value=r.soLuong??''; _nlTPItems = nlTPFromRecord(r); nlTPRender();
@@ -475,7 +476,7 @@ function nlSave(){
   nlLastKhuSet(khuMay); slLastMaySet(khuMay, may); // nhớ khu máy + máy vừa dùng
   saveNguyenLieuLog();
   const logLabel = nl || (phe?`Phế/đầu mẩu ${fmtNum(phe)}kg`:'') || (phoi?`Phoi ${fmtNum(phoi)}kg`:'') || '(dòng trống)';
-  log('Sổ máy đùn', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
+  log('Nhật ký đùn', `${_slEditId?'Sửa':'Thêm'} dòng ${logLabel} (${rec.heatLot||'—'})`, rec.id, null, null);
   closeModal('nlModal');
   renderSoLieu();
   showToast(_slEditId?'✅ Đã cập nhật':'✅ Đã thêm dòng mới');
@@ -636,3 +637,22 @@ function mcSave(){
 // theo tab hiện tại (Nguyên liệu dùng form riêng, Rút/Đánh bóng+Cắt dùng chung).
 function slOpenAdd(){ if(_slTab==='nguyenLieu') nlOpenAdd(); else mcOpenAdd(); }
 function slOpenEdit(id){ if(_slTab==='nguyenLieu') nlOpenEdit(id); else mcOpenEdit(id); }
+
+
+// Đối chiếu 3 nhật ký với máy chủ khi mở tab (tối đa 1 lần / 15 giây) và khi bấm "🔄 Đồng bộ" — để dù lỡ mất
+// sự kiện realtime thì dòng đã xoá ở thiết bị khác vẫn biến mất, dòng mới vẫn hiện.
+let _slLastReconcile = 0;
+async function slReconcileOnOpen(){
+  if(Date.now()-_slLastReconcile < 15000) return;
+  _slLastReconcile = Date.now();
+  const r = await slReconcileAll();
+  if(r.ok && r.changed && currentTab==='soLieu') renderSoLieu();
+}
+async function slManualSync(){
+  showToast('⏳ Đang đồng bộ với máy chủ...', false);
+  _slLastReconcile = Date.now();
+  const r = await slReconcileAll();
+  if(!r.ok){ showToast('⚠️ Chưa đồng bộ được ('+(r.reason||'lỗi mạng')+') — dữ liệu đang hiển thị là bản trên máy này', true); return; }
+  if(currentTab==='soLieu') renderSoLieu();
+  showToast(r.changed ? '✅ Đã cập nhật theo máy chủ' : '✅ Đã khớp với máy chủ');
+}

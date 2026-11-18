@@ -50,9 +50,9 @@ document.write(`  <!-- Sidebar Overlay -->
         Điều hành SX
       </button>
       <div class="sb-section" data-g="kho">Số liệu và kho</div>
-      <button class="sb-item" title="Số liệu: Sổ máy đùn, Sổ máy rút, Sổ máy đánh bóng" data-g="kho" id="sbi-soLieu" onclick="goTab('soLieu')">
+      <button class="sb-item" title="Nhật ký đùn, rút, đánh bóng" data-g="kho" id="sbi-soLieu" onclick="goTab('soLieu')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3v18h18" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 15l4-4 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Sổ máy đùn &amp; máy
+        Nhật ký đùn, rút, đánh bóng
       </button>
       <div class="sb-section" data-g="chatLuong">Chất lượng</div>
       <button class="sb-item" title="Truy xuất &amp; Khiếu nại" data-g="chatLuong" id="sbi-truyXuat" onclick="goTab('truyXuat')">

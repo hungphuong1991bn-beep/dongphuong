@@ -10,6 +10,32 @@
 // dd/mm/yyyy, AutoFilter, Freeze Header, dòng tổng cộng, chữ ký Người lập/
 // Người kiểm tra/QA, Print Area khổ A4 ngang, lặp dòng tiêu đề khi in.
 // ════════════════════════════════════════════════════════════════════
+// Làm sạch chuỗi trước khi ghi vào Excel: ký tự điều khiển (dán từ Zalo/PDF/máy quét…) là ký tự BỊ CẤM trong XML
+// của .xlsx — Excel gặp là báo "file lỗi, cần sửa" rồi BỎ dòng/ô đó. Ô > 32.000 ký tự cũng bị Excel cắt.
+function xlsClean(v){
+  if(typeof v!=='string') return v;
+  v = v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g,'');
+  return v.length>32000 ? v.slice(0,32000) : v;
+}
+// ĐỌC LẠI file vừa tạo (như Excel sẽ đọc) và đối chiếu: đủ số dòng, đúng thứ tự STT, không dòng nào trống.
+// Chỉ khi khớp mới cho tải về / cho phép dọn dữ liệu gốc.
+async function xlsVerifyBuffer(buf, firstRow, rows, cols){
+  const chk = new ExcelJS.Workbook();
+  await chk.xlsx.load(buf);
+  const ws = chk.worksheets[0];
+  if(!ws) throw new Error('File tạo ra không có trang tính');
+  const sttIdx = cols.findIndex(c=>c.key==='stt');
+  for(let i=0;i<rows.length;i++){
+    const row = ws.getRow(firstRow+i);
+    let filled = false;
+    for(let c=1;c<=cols.length;c++){ const v = row.getCell(c).value; if(v!==null && v!==undefined && v!==''){ filled = true; break; } }
+    if(!filled) throw new Error(`Kiểm tra lại file: thiếu dữ liệu ở dòng ${i+1}/${rows.length}`);
+    if(sttIdx>=0 && Number(row.getCell(sttIdx+1).value)!==i+1) throw new Error(`Kiểm tra lại file: sai STT ở dòng ${i+1}`);
+  }
+  const after = ws.getRow(firstRow+rows.length).getCell(1).value;
+  if(typeof after==='number' && sttIdx===0) throw new Error('Kiểm tra lại file: số dòng trong file nhiều hơn dữ liệu nguồn');
+}
+
 async function exportProfessionalExcel(opts){
   // opts = {docTitle, docCode, sheetName, columns:[{header,key,width,numFmt}], rows, totalsCols:[key,...], filename}
   showToast('⏳ Đang tạo file Excel...', false);
@@ -65,7 +91,7 @@ async function exportProfessionalExcel(opts){
     const headerRow = 6;
     cols.forEach((c,i)=>{
       const cell = ws.getCell(headerRow, i+1);
-      cell.value = c.header;
+      cell.value = xlsClean(c.header);
       cell.font = {bold:true, size:10.5, name:'Arial', color:{argb:'FFFFFFFF'}};
       cell.alignment = {horizontal:'center', vertical:'middle', wrapText:true};
       cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF1D3FAE'}};
@@ -87,14 +113,14 @@ async function exportProfessionalExcel(opts){
         if(c.numFmt==='date' && v){
           // Ngày hợp lệ → ô ngày dd/mm/yyyy; ngày lạ/hỏng → ghi nguyên văn thay vì làm hỏng cả file
           const d = xlsSafeDate(v);
-          if(d){ cell.value = d; cell.numFmt = 'dd/mm/yyyy'; } else { cell.value = String(v); }
+          if(d){ cell.value = d; cell.numFmt = 'dd/mm/yyyy'; } else { cell.value = xlsClean(String(v)); }
         }
         else if(c.numFmt==='num'){
           const n = (v===undefined||v===null||v==='') ? null : Number(v);
-          cell.value = (n===null) ? '' : (isFinite(n) ? n : String(v));
+          cell.value = (n===null) ? '' : (isFinite(n) ? n : xlsClean(String(v)));
           cell.numFmt = '#,##0.##';
         }
-        else { cell.value = (v===undefined||v===null)?'':v; }
+        else { cell.value = (v===undefined||v===null)?'':xlsClean(typeof v==='object'?JSON.stringify(v):v); }
         cell.font = {size:10, name:'Arial'};
         cell.alignment = {horizontal: c.numFmt==='num'||c.numFmt==='date'?'center':'left', vertical:'middle', wrapText:true};
         cell.border = borderAll;
@@ -145,6 +171,7 @@ async function exportProfessionalExcel(opts){
     ws.pageSetup.printArea = `A1:${ws.getColumn(nCols).letter}${r}`;
 
     const buf = await wb.xlsx.writeBuffer();
+    await xlsVerifyBuffer(buf, headerRow+2, opts.rows||[], cols); // đọc lại file vừa tạo — sai là dừng, không tải, không cho xoá dữ liệu gốc
     const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -201,11 +228,29 @@ async function exportSlExcel(tab){
   const fresh = await slRefreshFromServer(tab);
   if(!fresh.ok) showToast('⚠️ Không đọc được dữ liệu mới nhất từ máy chủ ('+fresh.reason+') — file được xuất theo dữ liệu đang có trên máy này', true);
 
+  // ĐỐI CHIẾU ĐỦ DÒNG: so danh sách ID đang có trên máy chủ với bản đã tải về; thiếu ID nào thì tải lại 1 lần nữa.
+  // Còn thiếu sau lần thử lại → báo rõ (không im lặng xuất file thiếu).
+  let missingCount = 0;
+  if(fresh.ok){
+    try{
+      const field = meta.field;
+      const missing = async()=>{
+        const have = new Set(slArr(tab).map(r=>r&&r.id)); const del = new Set(slQueueLoad()[field].del);
+        return (await slServerIds(field)).filter(id=>!have.has(id) && !del.has(id));
+      };
+      let miss = await missing();
+      if(miss.length){ await slRefreshFromServer(tab); miss = await missing(); }
+      missingCount = miss.length;
+    }catch(e){ /* không kiểm tra được thì thôi — vẫn còn kiểm đếm sau khi ghi file */ }
+    if(missingCount) showToast(`⚠️ Máy chủ còn ${missingCount} dòng chưa tải về được — hãy bấm xuất lại sau vài giây`, true);
+  }
+  const incomplete = !fresh.ok || missingCount>0;
+
   // Chốt đúng tập dòng đưa vào file lần này. Chỉ đúng các dòng này mới được xoá sau đó — không xoá theo
   // "toàn bộ mảng hiện tại" phòng trường hợp có dòng mới được thêm vào đúng lúc hộp thoại xác nhận đang mở.
   const srcRows = slSortRows(slArr(tab).filter(Boolean));
   const exportedIds = srcRows.map(r=>r.id).filter(Boolean);
-  const onExported = ()=> slConfirmClearAfterExport(tab, exportedIds, srcRows, !fresh.ok);
+  const onExported = ()=> slConfirmClearAfterExport(tab, exportedIds, srcRows, incomplete);
   const common = r=>({...r,
     donHangLabel: slOrderLabelPlain(r.donHangId),
     createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'',
@@ -326,6 +371,8 @@ async function slClearAfterExport(tab, exportedIds, exportedRows){
   try{ synced = await slDoSave(tab, {removedIds: ids}); }catch(e){ synced = false; }
   let leftover = null;
   if(synced){ leftover = await slVerifyDeleted(field, ids); }
+  // Đối chiếu lại với máy chủ: xác nhận máy này hiển thị đúng thực tế, kéo về mọi thay đổi của thiết bị khác
+  if(synced){ try{ await slReconcileAll(); }catch(e){} }
   log(meta.label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
   if(currentTab==='soLieu') renderSoLieu();
   if(synced && leftover===0) showToast(`🗑️ Đã xoá ${removed} dòng khỏi phần mềm và máy chủ — các thiết bị khác sẽ tự cập nhật`);

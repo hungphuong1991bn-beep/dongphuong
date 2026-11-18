@@ -5,7 +5,7 @@ document.write(`<!-- 📊 Số liệu — Thêm/Sửa Sổ nguyên liệu -->
 <div class="modal" id="nlModal">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="nlModalTitle">Thêm dòng Sổ máy đùn</div>
+    <div class="modal-title" id="nlModalTitle">Thêm dòng Nhật ký đùn</div>
     <div id="nlErr" class="modal-err"></div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Ngày *</div><input id="nlNgay" type="date" class="field-inp"></div>
@@ -64,7 +64,7 @@ document.write(`<!-- 📊 Số liệu — Thêm/Sửa Sổ nguyên liệu -->
 <div class="modal" id="mcModal">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="mcModalTitle">Thêm dòng Sổ máy</div>
+    <div class="modal-title" id="mcModalTitle">Thêm dòng Nhật ký</div>
     <div id="mcErr" class="modal-err"></div>
     <div class="modal-row">
       <div class="field"><div class="field-lbl">Ngày *</div><input id="mcNgay" type="date" class="field-inp"></div>

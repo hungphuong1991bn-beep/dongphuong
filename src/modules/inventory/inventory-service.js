@@ -337,17 +337,31 @@ async function syncSlFieldPerRecord(field, opts){
 //  • giữ bản cục bộ của các dòng đang chờ ghi (không bị bản server cũ ghi đè)
 // raw = null/undefined nghĩa là server KHÔNG còn dòng nào → trả mảng rỗng
 // (trước đây trường hợp này bị bỏ qua nên các máy khác giữ mãi dữ liệu cũ).
+// Chuẩn hoá giá trị đọc từ máy chủ thành mảng dòng, KHOÁ (key) trên máy chủ là nguồn sự thật cho "id":
+//  • dạng object-theo-id: id := key. Trước đây dòng KHÔNG có trường id (hoặc id lệch key) bị giữ lại
+//    vĩnh viễn ở máy này nhưng không thể xoá (lệnh xoá nhắm sai đường dẫn) → "còn sót lại" mãi.
+//  • dạng mảng cũ (trước khi di trú): dòng thiếu id được gán id cố định 'lg<chỉ số>' để mọi thiết bị
+//    ra cùng một id và di trú/xoá được.
+function slRowsFromRaw(raw){
+  if(raw==null) return [];
+  const out = [];
+  if(Array.isArray(raw)){
+    raw.forEach((r,i)=>{ if(r && typeof r==='object' && !Array.isArray(r)) out.push(r.id ? r : Object.assign({}, r, {id:'lg'+i})); });
+  } else if(typeof raw==='object'){
+    Object.keys(raw).forEach(k=>{ const r = raw[k]; if(r && typeof r==='object' && !Array.isArray(r)) out.push(r.id===k ? r : Object.assign({}, r, {id:k})); });
+  }
+  return out;
+}
 function slApplyServerList(field, raw){
-  const fresh = raw==null ? [] : (Array.isArray(raw) ? raw : Object.values(raw));
-  const rows = fresh.filter(r=>r && typeof r==='object');
+  const rows = slRowsFromRaw(raw);
   const q = slQueueLoad()[field];
   if(!q || (!q.put.length && !q.del.length)) return rows;
   const delSet = new Set(q.del);
-  const byId = new Map(); const noId = [];
-  rows.forEach(r=>{ if(r.id){ if(!delSet.has(r.id)) byId.set(r.id, r); } else noId.push(r); });
+  const byId = new Map();
+  rows.forEach(r=>{ if(!delSet.has(r.id)) byId.set(r.id, r); });
   const local = {}; (DB[field]||[]).forEach(o=>{ if(o && o.id) local[o.id]=o; });
   q.put.forEach(id=>{ if(local[id]) byId.set(id, local[id]); });
-  return [...byId.values(), ...noId];
+  return [...byId.values()];
 }
 // Áp bản đọc toàn bộ /data cho cả 3 sổ. Trả true nếu có sổ nào thay đổi.
 function slApplySnapshotAll(data){
@@ -371,10 +385,10 @@ async function slServerIds(field){
 async function slVerifyDeleted(field, ids){
   try{
     const idSet = new Set(ids||[]);
-    for(let round=0; round<2; round++){
+    for(let round=0; round<3; round++){
       const left = (await slServerIds(field)).filter(id=>idSet.has(id));
       if(!left.length) return 0;
-      if(round===1) return left.length;
+      if(round===2) return left.length;
       slQueueDel(field, left);
       await slFlushField(field);
     }
@@ -400,10 +414,14 @@ async function slRefreshFromServer(tab){
 // Nhận cập nhật realtime cho ĐÚNG 1 dòng của 1 trong 3 sổ (SSE báo path
 // /data/<field>/{id}) — áp thẳng vào DB[field] và làm mới ảnh chụp đồng bộ.
 function applySingleSlItemChange(field, id, val){
-  if(_pendingSaves>0) return; // đang có lượt ghi cục bộ dở dang — bản đọc đầy đủ ở endSave()/poll sẽ bù
+  // KHÔNG bỏ qua sự kiện khi _pendingSaves>0 (trước đây làm mất lệnh xoá/sửa từ thiết bị khác nếu máy này đang
+  // ghi dở, và vì SSE đang sống nên không có vòng poll nào bù lại → dòng đã xoá còn mãi). Sự kiện theo từng ID
+  // là chính xác; các thay đổi cục bộ chưa lên máy chủ đã được hàng đợi bền bảo vệ ở 2 dòng kiểm tra dưới.
   const q = slQueueLoad()[field];
   if(val!=null && q.del.indexOf(id)>=0) return; // dòng đang chờ xoá trên server → không cho "sống lại"
   if(q.put.indexOf(id)>=0) return;              // bản cục bộ mới hơn đang chờ đẩy lên → không ghi đè
+  if(val!=null && (typeof val!=='object' || Array.isArray(val))) return;
+  if(val!=null && val.id!==id) val = Object.assign({}, val, {id});
   const arr = DB[field] || (DB[field]=[]);
   const idx = arr.findIndex(x=>x && x.id===id);
   if(val==null){ if(idx>=0) arr.splice(idx,1); }
@@ -411,6 +429,30 @@ function applySingleSlItemChange(field, id, val){
   if(Object.prototype.hasOwnProperty.call(_lastSyncedArrSnap, field)) _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
   lsSave();
   if(currentTab==='soLieu') renderSoLieu();
+}
+
+// Đối chiếu lại CẢ 3 sổ với máy chủ (đọc từng nhánh, áp hàng đợi chưa lên server). Dùng khi mở tab, bấm
+// "Đồng bộ" và sau khi xoá — để dù lỡ mất sự kiện realtime thì dòng đã xoá ở máy khác vẫn biến mất ở đây.
+let _slReconciling = null;
+async function slReconcileAll(){
+  if(_slReconciling) return _slReconciling;
+  _slReconciling = (async()=>{
+    if(!fbOk()) return {ok:false, changed:false, reason:'Chế độ offline'};
+    if(typeof navigator!=='undefined' && navigator.onLine===false) return {ok:false, changed:false, reason:'Mất mạng'};
+    try{
+      if(slQueueAny()) await slFlushAll();
+      const raws = await Promise.all(SL_FIELDS.map(f=>fbRead('/data/'+f)));
+      let changed = false;
+      SL_FIELDS.forEach((f,i)=>{
+        const list = slApplyServerList(f, raws[i]);
+        if(JSON.stringify(list)!==JSON.stringify(DB[f]||[])){ DB[f] = list; changed = true; }
+        _lastSyncedArrSnap[f] = snapshotArrById(DB[f]);
+      });
+      if(changed) lsSave();
+      return {ok:true, changed};
+    }catch(e){ return {ok:false, changed:false, reason:String(e&&e.message||e)}; }
+  })();
+  try{ return await _slReconciling; } finally { _slReconciling = null; }
 }
 
 // DI TRÚ DỮ LIỆU CŨ 1 LẦN: 3 sổ này trước đây lưu NGUYÊN 1 MẢNG tại
@@ -428,7 +470,7 @@ async function migrateSlLogIfArray(field, path, rawValue){
   _slMigratedField[field] = true;
   try{
     const obj = {};
-    rawValue.forEach(r=>{ if(r && r.id) obj[r.id]=r; });
+    slRowsFromRaw(rawValue).forEach(r=>{ obj[r.id]=r; }); // kể cả dòng cũ thiếu id (đã gán 'lg<n>') — không để mất dòng nào
     await fbWrite(path, obj, 'PUT');
   }catch(e){ _slMigratedField[field] = false; /* mạng lỗi — tự thử lại ở lần mở app sau */ }
 }

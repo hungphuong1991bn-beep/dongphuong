@@ -66,7 +66,7 @@ function goTab(tab){
   document.querySelectorAll('.bn').forEach(x=>x.classList.remove('active'));
   const bn=$('bn-'+tab); if(bn) bn.classList.add('active');
   // Title
-  const titles={controlPlan:'🛡️ ControlPlan – Chất lượng',dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Số liệu',truyXuat:'🔎 Truy xuất & Khiếu nại'};
+  const titles={controlPlan:'🛡️ ControlPlan – Chất lượng',dashboard:'Tổng quan',dorDang:'Đơn Hàng',keHoach:'Kế hoạch SX',dieuHanh:'🏭 Điều hành SX',hoanThanh:'Đơn hoàn thành',baoCao:'Báo cáo',khachHang:'🧑\u200d🤝\u200d🧑 Khách hàng',nhanSu:'Quản lý nhân sự',chamCong:'Chấm công',baoTriMay:'Bảo trì máy',khuon:'Quản lý Khuôn',checkSheet:'📋 Check Sheet Thiết bị',lichLamViec:'Lịch làm việc',nhatKy:'Nhật ký thao tác',settings:'Cài đặt',qrCode:'Quản lý mã QR',soLieu:'📊 Nhật ký đùn, rút, đánh bóng',truyXuat:'🔎 Truy xuất & Khiếu nại'};
   $('pageTitle').textContent=titles[tab]||tab;
   { const _pm=$('pageTitleMobile'); if(_pm) _pm.textContent=titles[tab]||tab; } // tên tab trên Global Header mobile
   // Badge "Realtime" + nút "Làm mới" trên Global Header: chỉ hiện ở tab
@@ -96,6 +96,7 @@ function goTab(tab){
     if(nav&&btn){ const bLeft=btn.offsetLeft; const bW=btn.offsetWidth; const nW=nav.offsetWidth; nav.scrollTo({left:bLeft-(nW/2-bW/2),behavior:'smooth'}); }
   },50);
   renderTab(tab);
+  if(tab==='soLieu' && typeof slReconcileOnOpen==='function') slReconcileOnOpen(); // đối chiếu lại 3 nhật ký với máy chủ khi mở tab
   updateBadges();
   if(typeof tbUpdateFilterBtn==='function') tbUpdateFilterBtn(tbFilterTab());
   if(tab==='nhatKy'){ actLog.forEach(l=>l.read=true); logSave(); updateLogBadge(); }
