@@ -21,7 +21,7 @@ w.eval(`var DB={orders:[],users:[],nguyenLieuLog:[],mayRutLog:[],mayDanhBongLog:
 ['src/utils/helpers.js','src/utils/date.js','src/utils/format.js'].forEach(f=>run(R(f),f));
 // dashboard-factory dùng nhiều hàm khác khi gọi; chỉ cần dpDrawer/dpOrderRows lúc nạp → thử nạp thật
 run(R('src/modules/dashboard/dashboard-factory.js'),'dashboard-factory');
-['src/components/shared/ModuleEnhance.js','src/modules/orders/orders-insight.js','src/modules/planning/planning-insight.js','src/modules/inventory/inventory-insight.js','src/modules/trace/trace-export.js'].forEach(f=>run(R(f),f));
+['src/components/shared/ModuleEnhance.js','src/modules/orders/orders-insight.js','src/modules/inventory/inventory-insight.js','src/modules/trace/trace-export.js'].forEach(f=>run(R(f),f));
 const $=id=>w.document.getElementById(id); const txt=id=>($(id)||{}).textContent||'';
 let n=0; const ok=m=>{n++;console.log('✓',m);};
 // ── dữ liệu mẫu
@@ -45,15 +45,8 @@ assert.strictEqual(by('nocust'),'a3','chưa có khách');
 ok('Đơn hàng: 4 nhóm đếm đúng, không lẫn đơn done/trễ/xa');
 w.renderDorDang(); assert.strictEqual(w.document.querySelectorAll('#ordInsight').length,1); ok('Render lại không tạo dải trùng');
 w.ordOpenAttention('soon'); assert(/2\)/.test($('dpDrawer').textContent)||$('dpDrawer').classList.contains('open')); assert($('dpDrawer').classList.contains('open')); ok('Bấm chip mở ngăn danh sách');
-// 2. Kế hoạch
-w.renderKeHoach(); assert($('plnInsight'));
-const m=w.plnLoadModel();
-assert.strictEqual(m.days[0].list.map(o=>o.id).join(),'a2'); assert.strictEqual(m.days[2].list.map(o=>o.id).join(),'a1');
-assert.strictEqual(m.days[2].kg,100); assert.strictEqual(m.late.map(o=>o.id).join(),'a4'); assert.strictEqual(m.later.map(o=>o.id).join(),'a6'); assert.strictEqual(m.noDue.map(o=>o.id).join(),'a3');
-assert.strictEqual(m.days[3].list.length,0,'đơn done không tính (a5 hạn +1)'); assert.strictEqual(m.days[1].list.length,0);
-assert.strictEqual(m.days.reduce((s,d)=>s+d.noKg,0),0);
-ok('Kế hoạch: gán đúng ngày, trễ/sau 7 ngày/không hạn, bỏ đơn done');
-w.eval('DB.orders.push({id:"a7",customer:"Z",status:"pending",deliveryDate:"'+day(2)+'"})'); assert.strictEqual(w.plnLoadModel().days[2].noKg,1); ok('Đơn thiếu kg được đếm riêng, không cộng bừa');
+// 2. Kế hoạch: đã bỏ dải "Tải giao hàng 7 ngày tới" → tab không còn dải plnInsight
+w.renderKeHoach(); assert(!$('plnInsight'),'Kế hoạch không còn dải Tải giao hàng 7 ngày'); ok('Kế hoạch: đã bỏ dải Tải giao hàng 7 ngày tới');
 // 3. Sổ liệu
 w.eval(`DB.nguyenLieuLog=[{id:'n1',ngay:'2026-11-01',heatLot:'H1',donHangId:'a1',maLoSX:'L1'},{id:'n2',ngay:'2026-11-02',heatLot:'H2'},{id:'n3',ngay:'2026-11-03',nguyenLieu:'Cu',donHangId:' '}]`);
 w.renderSoLieu(); assert($('slInsight')); assert($('mc').children[0].className==='sl-tabs' && $('mc').children[1].id==='slInsight','dải ngay sau .sl-tabs');
@@ -79,7 +72,7 @@ w.eval('DB.orders='+JSON.stringify(JSON.parse(snap).orders));
 const before=w.eval('JSON.stringify(DB)');
 w._slTab='nguyenLieu'; w._trQ='H1';
 w.renderDorDang(); w.renderKeHoach(); w.renderSoLieu(); w.trRun();
-['soon','urgent','nodue','nocust'].forEach(k=>w.ordOpenAttention(k)); [0,1,2,3,4,5,6].forEach(i=>w.plnOpenDay(i)); ['late','later','nodue'].forEach(k=>w.plnOpenGroup(k)); w.slOpenUnlinked();
+['soon','urgent','nodue','nocust'].forEach(k=>w.ordOpenAttention(k)); w.slOpenUnlinked();
 w.trExportCsv();
 assert.strictEqual(w.eval('JSON.stringify(DB)'),before,'DB không bị đổi'); ok('Chỉ đọc: DB y nguyên sau khi chạy toàn bộ dải/ngăn/xuất CSV');
 assert.strictEqual(w.dpEnhanceRender('renderDorDang',()=>{}),false,'không bọc hai lần'); ok('Không bọc 2 lần');

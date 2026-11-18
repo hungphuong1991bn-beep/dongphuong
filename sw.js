@@ -143,7 +143,6 @@ const ASSETS = [
   './src/modules/trace/trace-view.js',
   './src/components/shared/ModuleEnhance.js',
   './src/modules/orders/orders-insight.js',
-  './src/modules/planning/planning-insight.js',
   './src/modules/inventory/inventory-insight.js',
   './src/modules/trace/trace-export.js',
   './src/modules/admin/manual-cleanup.js',
