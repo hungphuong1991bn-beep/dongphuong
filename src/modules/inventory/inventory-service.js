@@ -47,7 +47,28 @@ function slSoonExpireInfo(tab){
 // Banner cảnh báo hiển thị NGAY TRÊN đầu tab 📊 Số liệu (luôn đúng thời
 // điểm thực tế vì tính lại mỗi lần render, không phụ thuộc thông báo
 // có bị bỏ lỡ hay không) — kèm nút xuất Excel nhanh cho đúng sổ đó.
-function slRemindBannerHTML(){ return ''; } // tự xoá đã tắt (xoá thủ công bởi Admin) — không còn banner cảnh báo
+// Banner trên đầu tab Số liệu: CHỈ hiện khi còn thay đổi (ghi/xoá) CHƯA lên được máy chủ — để người dùng
+// biết ngay vì sao dữ liệu còn nguyên trên thiết bị khác (thường do mất mạng) và bấm đồng bộ lại.
+// (Tự xoá theo ngày đã tắt — xoá thủ công bởi Admin — nên không còn banner nhắc hạn như trước.)
+function slRemindBannerHTML(){
+  if(typeof slQueueAny!=='function' || !slQueueAny()) return '';
+  let put=0, del=0; SL_FIELDS.forEach(f=>{ const e=slQueueLoad()[f]; put+=e.put.length; del+=e.del.length; });
+  const parts = [];
+  if(del) parts.push(`<b>${del}</b> dòng chờ xoá`);
+  if(put) parts.push(`<b>${put}</b> dòng chờ lưu`);
+  return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:10px;background:#FFF7ED;border:1px solid #FDBA74;margin-bottom:8px">
+    <span style="flex:1;min-width:220px;font-size:12.5px;color:#9A3412;line-height:1.5">⏳ Còn ${parts.join(' và ')} chưa đồng bộ lên máy chủ (thường do mất mạng) — các thiết bị khác chỉ thấy thay đổi sau khi đồng bộ xong. Hệ thống tự thử lại khi có mạng.</span>
+    <button class="khm-add-btn" style="background:#C2410C;flex:0 0 auto" onclick="slRetryPendingNow()">🔄 Đồng bộ ngay</button>
+  </div>`;
+}
+async function slRetryPendingNow(){
+  showToast('⏳ Đang đồng bộ...', false);
+  let ok = false;
+  try{ ok = await slFlushAll(); }catch(e){ ok = false; }
+  if(ok){ showToast('✅ Đã đồng bộ xong lên máy chủ'); try{ await doPoll(); }catch(e){} }
+  else showToast('⚠️ Chưa đồng bộ được — kiểm tra kết nối mạng rồi thử lại', true);
+  if(currentTab==='soLieu') renderSoLieu();
+}
 function _slRemindBannerHTML_legacy(){
   const parts = Object.keys(SL_META).map(k=>{
     const info = slSoonExpireInfo(k);
@@ -162,6 +183,48 @@ async function autoCleanupSoLieu(){
 // như cũ vì không có thao tác xoá hàng loạt tương tự.
 // ════════════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════════════
+// HÀNG ĐỢI BỀN (localStorage) — mọi lệnh GHI / XOÁ chưa lên được server
+// ────────────────────────────────────────────────────────────────────
+// LỖI GỐC (đã sửa): trước đây lệnh xoá chỉ được suy ra từ "ảnh chụp đồng bộ"
+// trong RAM. Nếu lúc bấm xoá/xuất Excel mà mất mạng, hoặc app bị đóng trước
+// khi ghi xong, thì lệnh xoá BIẾN MẤT (ảnh chụp rỗng ở lần mở app sau → "không
+// có gì để xoá"), bản server cũ lại được tải về → dòng đã xoá "sống lại" trên
+// máy này và vẫn còn trên các thiết bị khác.
+// CÁCH SỬA: mỗi thay đổi được ghi vào hàng đợi lưu trong localStorage NGAY
+// khi phát sinh (put = dòng thêm/sửa chưa lên server, del = dòng cần xoá trên
+// server). Hàng đợi chỉ được xoá khỏi khi server xác nhận OK, nên dù mất mạng
+// hay tắt app, lần mở sau vẫn tự thử lại cho tới khi xong.
+// ════════════════════════════════════════════════════════════════════
+const SL_FIELDS = ['nguyenLieuLog','mayRutLog','mayDanhBongLog'];
+const SL_QUEUE_KEY = 'sx_sl_pending_v1';
+let _slQueue = null;
+function slQueueLoad(){
+  if(_slQueue) return _slQueue;
+  let q = null;
+  try{ q = JSON.parse(localStorage.getItem(SL_QUEUE_KEY)||'null'); }catch(e){}
+  if(!q || typeof q!=='object') q = {};
+  SL_FIELDS.forEach(f=>{
+    const e = q[f] || {};
+    q[f] = {put: Array.isArray(e.put)?e.put:[], del: Array.isArray(e.del)?e.del:[]};
+  });
+  _slQueue = q; return q;
+}
+function slQueueSave(){ try{ localStorage.setItem(SL_QUEUE_KEY, JSON.stringify(_slQueue||{})); }catch(e){} }
+function slQueueCount(field){ const e = slQueueLoad()[field]; return e ? e.put.length + e.del.length : 0; }
+function slQueueAny(){ return SL_FIELDS.some(f=>slQueueCount(f)>0); }
+function slQueuePut(field, ids){
+  const e = slQueueLoad()[field]; const put = new Set(e.put), del = new Set(e.del);
+  (ids||[]).forEach(id=>{ if(!id) return; put.add(id); del.delete(id); });
+  e.put = [...put]; e.del = [...del]; slQueueSave();
+}
+function slQueueDel(field, ids){
+  const e = slQueueLoad()[field]; const put = new Set(e.put), del = new Set(e.del);
+  (ids||[]).forEach(id=>{ if(!id) return; del.add(id); put.delete(id); });
+  e.put = [...put]; e.del = [...del]; slQueueSave();
+}
+function _slEndSaveQuiet(){ _pendingSaves = Math.max(0, _pendingSaves-1); } // như endSave() nhưng KHÔNG tự gọi doPoll (tránh vòng lặp khi mất mạng)
+
 // Ghi (PUT) hoặc xoá (DELETE, khi recordOrNull=null) ĐÚNG 1 dòng tại
 // /data/<field>/{id}. Có thử lại tối đa vài lần nếu mạng chập chờn.
 async function writeSlLogRecord(field, id, recordOrNull, maxRetry){
@@ -178,51 +241,169 @@ async function writeSlLogRecord(field, id, recordOrNull, maxRetry){
   }
 }
 
-// So sánh trạng thái cục bộ hiện tại với "ảnh chụp lần đồng bộ gần nhất"
-// (_lastSyncedArrSnap[field] — luôn được làm mới đúng lúc mỗi khi có cập
-// nhật realtime, xem applyFieldChange/applySingleSlItemChange/applyDataSnapshot)
-// để biết CHÍNH XÁC dòng nào vừa thêm/sửa (PUT) hay vừa xoá (DELETE),
-// rồi gửi từng lệnh riêng lẻ — dùng chung cho thêm/sửa 1 dòng, xoá 1
-// dòng, và xoá hàng loạt sau khi xuất Excel.
-async function syncSlFieldPerRecord(field){
-  if(!fbOk()) return;
+// Đẩy toàn bộ hàng đợi của 1 sổ lên server (xoá + ghi theo từng ID, lô nhỏ).
+// Trả true nếu hàng đợi đã sạch. Dùng chung cho: lưu thường, xoá sau khi xuất
+// Excel, mở lại app, có mạng trở lại, vòng poll.
+const _slFlushing = {};
+async function slFlushField(field){
+  if(!fbOk()) return false;
+  if(typeof navigator!=='undefined' && navigator.onLine===false) return false; // biết chắc đang offline → khỏi chờ thử lại
+  if(_slFlushing[field]) return _slFlushing[field];
+  const job = (async()=>{
+    let ok = true;
+    for(let pass=0; pass<3; pass++){
+      const e = slQueueLoad()[field];
+      if(!e.put.length && !e.del.length) break;
+      const byId = {}; (DB[field]||[]).forEach(o=>{ if(o && o.id) byId[o.id]=o; });
+      const ops = [];
+      e.del.forEach(id=>ops.push({kind:'del', id}));
+      e.put.forEach(id=>ops.push({kind:'put', id, row:byId[id]}));
+      beginSave(); setSyncDot('saving');
+      try{
+        const chunkSize = 15; // lô nhỏ, tránh dội quá nhiều request cùng lúc khi xoá hàng loạt
+        for(let i=0;i<ops.length;i+=chunkSize){
+          const chunk = ops.slice(i, i+chunkSize);
+          const results = await Promise.allSettled(chunk.map(op=>{
+            if(op.kind==='put' && !op.row) return Promise.resolve('skip'); // dòng đã không còn ở máy → bỏ qua
+            return writeSlLogRecord(field, op.id, op.kind==='del'?null:op.row);
+          }));
+          let okCount = 0;
+          results.forEach((r,k)=>{
+            const op = chunk[k];
+            if(r.status==='fulfilled'){
+              okCount++;
+              const q = slQueueLoad()[field];
+              if(op.kind==='del'){ q.del = q.del.filter(x=>x!==op.id); }
+              else {
+                // Chỉ gỡ khỏi hàng đợi nếu dòng KHÔNG bị sửa tiếp trong lúc đang gửi
+                const cur = (DB[field]||[]).find(o=>o && o.id===op.id);
+                if(!op.row || !cur || JSON.stringify(cur)===JSON.stringify(op.row)) q.put = q.put.filter(x=>x!==op.id);
+              }
+            } else ok = false;
+          });
+          slQueueSave();
+          if(okCount===0){ ok = false; break; } // cả lô lỗi (mất mạng) → dừng sớm, đừng treo đồng bộ
+        }
+      }catch(err){ ok = false; }
+      _slEndSaveQuiet();
+      if(!ok) break;
+    }
+    const clean = slQueueCount(field)===0;
+    if(clean){ clearDirty(field); setSyncDot('ok'); } else { markDirty(field); setSyncDot('error'); }
+    return clean;
+  })();
+  _slFlushing[field] = job;
+  try{ return await job; } finally { delete _slFlushing[field]; }
+}
+async function slFlushAll(){
+  let ok = true;
+  for(const f of SL_FIELDS){ if(slQueueCount(f)>0){ try{ if(!(await slFlushField(f))) ok = false; }catch(e){ ok = false; } } }
+  return ok;
+}
+
+// So sánh trạng thái cục bộ với "ảnh chụp lần đồng bộ gần nhất" để biết dòng
+// nào vừa thêm/sửa/xoá, GHI VÀO HÀNG ĐỢI BỀN trước (kể cả khi đang offline),
+// rồi mới đẩy lên server. opts.removedIds: các ID PHẢI xoá trên server dù
+// ảnh chụp có đúng hay không (dùng cho "Dọn dữ liệu sau khi xuất Excel").
+async function syncSlFieldPerRecord(field, opts){
+  opts = opts || {};
   const localSnap = snapshotArrById(DB[field]);
   const lastSnap = _lastSyncedArrSnap[field] || {};
-  const byId = {}; (DB[field]||[]).forEach(o=>{ if(o && o.id) byId[o.id]=o; });
   const changedIds = Object.keys(localSnap).filter(id=>localSnap[id]!==lastSnap[id]);
   const removedIds = Object.keys(lastSnap).filter(id=>!localSnap[id]);
-  if(!changedIds.length && !removedIds.length) return;
-
-  setSyncDot('saving'); markDirty(field); beginSave();
-  let hasFailure = false;
+  const forced = Array.isArray(opts.removedIds) ? opts.removedIds : [];
+  slQueuePut(field, changedIds);
+  slQueueDel(field, removedIds.concat(forced));
+  _lastSyncedArrSnap[field] = localSnap; // từ đây hàng đợi bền là nguồn sự thật cho phần chưa lên server
+  if(slQueueCount(field)===0) return true;
+  markDirty(field);
+  if(!fbOk()) return false;
+  let ok = false;
   try{
-    const ops = changedIds.map(id=>({id, val:byId[id]})).concat(removedIds.map(id=>({id, val:null})));
-    const chunkSize = 15; // gửi theo lô nhỏ, tránh dội quá nhiều request cùng lúc khi xoá hàng loạt
-    for(let i=0;i<ops.length;i+=chunkSize){
-      const chunk = ops.slice(i, i+chunkSize);
-      const results = await Promise.allSettled(chunk.map(op=>writeSlLogRecord(field, op.id, op.val)));
-      results.forEach(r=>{ if(r.status==='rejected') hasFailure = true; });
-    }
-  }catch(e){ hasFailure = true; }
-
-  if(!hasFailure){
-    _lastSyncedArrSnap[field] = snapshotArrById(DB[field]);
-    clearDirty(field); setSyncDot('ok');
+    ok = await slFlushField(field);
+    // Có thể đã có thay đổi mới chen vào hàng đợi đúng lúc lượt đẩy trước đang chạy → đẩy nốt
+    if(slQueueCount(field)>0 && !_slFlushing[field]) ok = await slFlushField(field);
+  }catch(e){ ok = false; }
+  if(ok){
+    setTimeout(()=>{ if(typeof currentUser!=='undefined' && currentUser && fbOk()) doPoll(); }, 500); // đối chiếu lại 1 lần cho chắc
   } else {
-    // Giữ nguyên dấu "dirty" — lần mở app sau (initAndStartSync) sẽ tự
-    // dùng mergeAndSaveArrField làm lưới an toàn đọc-lại-và-đối-chiếu để
-    // đẩy nốt phần còn thiếu lên server, không mất dữ liệu.
-    setSyncDot('error');
-    showToast('⚠️ Một vài dòng chưa đồng bộ được lên máy chủ do lỗi mạng — sẽ tự thử lại khi mở app.', true);
+    showToast('⚠️ Một vài dòng chưa đồng bộ được lên máy chủ do lỗi mạng — sẽ tự thử lại khi có mạng / mở lại app.', true);
   }
-  endSave();
+  return ok;
+}
+
+// Chuẩn hoá giá trị server trả về cho 1 sổ + ÁP LẠI hàng đợi chưa lên server:
+//  • bỏ các dòng đang chờ xoá (không cho "sống lại" do bản server cũ)
+//  • giữ bản cục bộ của các dòng đang chờ ghi (không bị bản server cũ ghi đè)
+// raw = null/undefined nghĩa là server KHÔNG còn dòng nào → trả mảng rỗng
+// (trước đây trường hợp này bị bỏ qua nên các máy khác giữ mãi dữ liệu cũ).
+function slApplyServerList(field, raw){
+  const fresh = raw==null ? [] : (Array.isArray(raw) ? raw : Object.values(raw));
+  const rows = fresh.filter(r=>r && typeof r==='object');
+  const q = slQueueLoad()[field];
+  if(!q || (!q.put.length && !q.del.length)) return rows;
+  const delSet = new Set(q.del);
+  const byId = new Map(); const noId = [];
+  rows.forEach(r=>{ if(r.id){ if(!delSet.has(r.id)) byId.set(r.id, r); } else noId.push(r); });
+  const local = {}; (DB[field]||[]).forEach(o=>{ if(o && o.id) local[o.id]=o; });
+  q.put.forEach(id=>{ if(local[id]) byId.set(id, local[id]); });
+  return [...byId.values(), ...noId];
+}
+// Áp bản đọc toàn bộ /data cho cả 3 sổ. Trả true nếu có sổ nào thay đổi.
+function slApplySnapshotAll(data){
+  let changed = false;
+  SL_FIELDS.forEach(f=>{
+    const list = slApplyServerList(f, data ? data[f] : null);
+    if(JSON.stringify(list)!==JSON.stringify(DB[f]||[])){ DB[f] = list; changed = true; }
+    _lastSyncedArrSnap[f] = snapshotArrById(DB[f]);
+  });
+  return changed;
+}
+// Danh sách ID đang có trên server (shallow — rất nhẹ, không tải nội dung dòng).
+async function slServerIds(field){
+  const r = await fetch(await fbAppendAuth(fbUrl()+'/data/'+field+'.json?shallow=true'), {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const v = await r.json();
+  return v && typeof v==='object' ? Object.keys(v) : [];
+}
+// Kiểm tra lại trên server: các ID đã yêu cầu xoá còn sót không? Còn thì xoá lại.
+// Trả số ID vẫn còn sau khi thử lại (0 = sạch hoàn toàn); null nếu không kiểm tra được.
+async function slVerifyDeleted(field, ids){
+  try{
+    const idSet = new Set(ids||[]);
+    for(let round=0; round<2; round++){
+      const left = (await slServerIds(field)).filter(id=>idSet.has(id));
+      if(!left.length) return 0;
+      if(round===1) return left.length;
+      slQueueDel(field, left);
+      await slFlushField(field);
+    }
+  }catch(e){ return null; }
+  return null;
+}
+// Làm mới 1 sổ từ server (dùng TRƯỚC khi xuất Excel để file luôn đầy đủ,
+// không phụ thuộc bản cục bộ có thể còn thiếu dòng do thiết bị khác vừa ghi).
+async function slRefreshFromServer(tab){
+  const field = SL_META[tab].field;
+  if(!fbOk()) return {ok:false, reason:'Chế độ offline'};
+  try{
+    for(let i=0; i<10 && _pendingSaves>0; i++) await new Promise(r=>setTimeout(r,300)); // chờ lượt ghi đang dở
+    if(slQueueCount(field)>0) await slFlushField(field);                                 // đẩy phần chưa lên trước
+    const raw = await fbRead('/data/'+field);
+    const list = slApplyServerList(field, raw);
+    DB[field] = list; _lastSyncedArrSnap[field] = snapshotArrById(list);
+    lsSave();
+    return {ok:true};
+  }catch(e){ return {ok:false, reason:String(e&&e.message||e)}; }
 }
 
 // Nhận cập nhật realtime cho ĐÚNG 1 dòng của 1 trong 3 sổ (SSE báo path
-// /data/<field>/{id}) — áp thẳng vào DB[field] và làm mới ảnh chụp đồng
-// bộ, y hệt applySingleOrderChange nhưng dùng chung cho cả 3 sổ.
+// /data/<field>/{id}) — áp thẳng vào DB[field] và làm mới ảnh chụp đồng bộ.
 function applySingleSlItemChange(field, id, val){
-  if(_pendingSaves>0) return; // đang có lượt ghi cục bộ dở dang — để lượt đó tự lo, poll/lượt sau bù phần còn thiếu
+  if(_pendingSaves>0) return; // đang có lượt ghi cục bộ dở dang — bản đọc đầy đủ ở endSave()/poll sẽ bù
+  const q = slQueueLoad()[field];
+  if(val!=null && q.del.indexOf(id)>=0) return; // dòng đang chờ xoá trên server → không cho "sống lại"
+  if(q.put.indexOf(id)>=0) return;              // bản cục bộ mới hơn đang chờ đẩy lên → không ghi đè
   const arr = DB[field] || (DB[field]=[]);
   const idx = arr.findIndex(x=>x && x.id===id);
   if(val==null){ if(idx>=0) arr.splice(idx,1); }
@@ -258,15 +439,15 @@ async function migrateSlLogIfArray(field, path, rawValue){
 // NÂNG CẤP: dùng cơ chế đồng bộ TỪNG DÒNG THEO ID (syncSlFieldPerRecord ở
 // trên) — giống hệt tab Đơn hoàn thành — thay cho mergeAndSaveArrField
 // (ghi đè nguyên cả mảng) như baoTri/lichLamViec ở trên.
-function saveNguyenLieuLog(){if(guardViewer())return;
+function saveNguyenLieuLog(opts){if(guardViewer())return;
   lsSave();
-  syncSlFieldPerRecord('nguyenLieuLog');
+  return syncSlFieldPerRecord('nguyenLieuLog', opts);
 }
-function saveMayRutLog(){if(guardViewer())return;
+function saveMayRutLog(opts){if(guardViewer())return;
   lsSave();
-  syncSlFieldPerRecord('mayRutLog');
+  return syncSlFieldPerRecord('mayRutLog', opts);
 }
-function saveMayDanhBongLog(){if(guardViewer())return;
+function saveMayDanhBongLog(opts){if(guardViewer())return;
   lsSave();
-  syncSlFieldPerRecord('mayDanhBongLog');
+  return syncSlFieldPerRecord('mayDanhBongLog', opts);
 }

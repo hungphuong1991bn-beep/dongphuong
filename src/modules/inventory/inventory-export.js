@@ -84,8 +84,17 @@ async function exportProfessionalExcel(opts){
       cols.forEach((c,i)=>{
         const cell = ws.getCell(r, i+1);
         let v = row[c.key];
-        if(c.numFmt==='date' && v){ cell.value = new Date(v); cell.numFmt = 'dd/mm/yyyy'; }
-        else { cell.value = (v===undefined||v===null)?'':v; if(c.numFmt==='num') cell.numFmt = '#,##0.##'; }
+        if(c.numFmt==='date' && v){
+          // Ngày hợp lệ → ô ngày dd/mm/yyyy; ngày lạ/hỏng → ghi nguyên văn thay vì làm hỏng cả file
+          const d = xlsSafeDate(v);
+          if(d){ cell.value = d; cell.numFmt = 'dd/mm/yyyy'; } else { cell.value = String(v); }
+        }
+        else if(c.numFmt==='num'){
+          const n = (v===undefined||v===null||v==='') ? null : Number(v);
+          cell.value = (n===null) ? '' : (isFinite(n) ? n : String(v));
+          cell.numFmt = '#,##0.##';
+        }
+        else { cell.value = (v===undefined||v===null)?'':v; }
         cell.font = {size:10, name:'Arial'};
         cell.alignment = {horizontal: c.numFmt==='num'||c.numFmt==='date'?'center':'left', vertical:'middle', wrapText:true};
         cell.border = borderAll;
@@ -93,6 +102,12 @@ async function exportProfessionalExcel(opts){
       r++;
     });
     const lastDataRow = r-1;
+    // KIỂM ĐẾM: số dòng đã ghi vào sheet PHẢI bằng số dòng dữ liệu đầu vào — nếu lệch thì dừng,
+    // tuyệt đối không tải về file thiếu dòng rồi cho phép xoá dữ liệu gốc.
+    const writtenRows = lastDataRow - (headerRow+1);
+    if(writtenRows !== (opts.rows||[]).length){
+      throw new Error(`Số dòng ghi vào file (${writtenRows}) khác số dòng dữ liệu (${(opts.rows||[]).length})`);
+    }
 
     if(opts.totalsCols && opts.totalsCols.length && (opts.rows||[]).length){
       cols.forEach((c,i)=>{
@@ -136,39 +151,71 @@ async function exportProfessionalExcel(opts){
     a.href = url; a.download = opts.filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('✅ Đã xuất file Excel '+opts.docTitle);
+    showToast(`✅ Đã xuất file Excel ${opts.docTitle} (${writtenRows} dòng)`);
     // Chỉ gọi callback sau khi file ĐÃ thực sự được tạo & tải về thành công —
     // để các nơi gọi (VD dọn dữ liệu sau khi xuất) không bao giờ xoá nhầm
     // dữ liệu khi việc xuất file thất bại ở trên.
-    if(typeof opts.onExported==='function') opts.onExported();
+    if(typeof opts.onExported==='function') opts.onExported(writtenRows);
+    return {ok:true, count:writtenRows};
   }catch(err){
     console.error(err);
     showToast('❌ Xuất Excel thất bại: '+(err&&err.message||err), true);
+    return {ok:false, count:0};
   }
+}
+
+// Ngày → Date UTC 00:00 (ExcelJS ghi theo UTC nên ngày hiển thị luôn đúng, không lệch múi giờ).
+// 'YYYY-MM-DD…' lấy thẳng 3 thành phần; kiểu khác (timestamp/Date) dùng ngày theo giờ địa phương.
+function xlsSafeDate(v){
+  if(v instanceof Date){ if(isNaN(v)) return null; return new Date(Date.UTC(v.getFullYear(), v.getMonth(), v.getDate())); }
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(v));
+  if(m){ const d = new Date(Date.UTC(+m[1], +m[2]-1, +m[3])); return isNaN(d) ? null : d; }
+  const d = new Date(v);
+  return isNaN(d) ? null : new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
 function nlDetailText(items){
   if(!Array.isArray(items) || !items.length) return '';
   return items.map(it=>`${it.ma?it.ma+': ':''}${fmtNum(it.kg)}kg`).join('; ');
 }
-function exportSlExcel(tab){
+// Nhãn đơn hàng liên kết dạng TEXT THUẦN cho Excel (slOrderLabel trả HTML đã escape nên không dùng được).
+function slOrderLabelPlain(id){
+  if(!id) return '';
+  const o = (DB.orders||[]).find(x=>x.id===id);
+  return o ? `${o.customer||'?'} · PO ${o.po||'—'} · ${o.type||''}` : `(Đơn không còn trong danh sách: ${id})`;
+}
+function slSortRows(list){
+  return list.slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
+}
+// XUẤT EXCEL cho 3 sổ. Luôn xuất TOÀN BỘ sổ và:
+//  1) ĐỌC LẠI bản mới nhất từ máy chủ trước khi xuất (không phụ thuộc bản cục bộ có thể còn thiếu dòng
+//     do thiết bị khác vừa ghi) — mất mạng thì báo rõ và xuất theo dữ liệu đang có trên máy;
+//  2) Xuất ĐẦY ĐỦ cột (gồm Đơn hàng liên kết, Mã lô SX, Heat-Lot nguồn — trước đây có lưu nhưng không ra file);
+//  3) Chỉ cho dọn dữ liệu sau khi file đã tạo xong và số dòng ghi ra khớp số dòng nguồn.
+async function exportSlExcel(tab){
   const meta = SL_META[tab];
   const now = new Date(); const pad=n=>String(n).padStart(2,'0');
   const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
-  // Ghi lại đúng tập ID các dòng đang được xuất ra file lần này — dùng để,
-  // SAU KHI file đã tải về thành công, hỏi người dùng có muốn xoá đúng các
-  // dòng này (dữ liệu vừa xuất + mọi dữ liệu cũ hơn đang có trong sổ, vì
-  // exportSlExcel luôn xuất TOÀN BỘ sổ) khỏi hệ thống hay không, để giảm
-  // dung lượng lưu trữ. Chỉ xoá đúng các ID đã chốt tại thời điểm bấm xuất —
-  // không xoá theo "toàn bộ mảng hiện tại" phòng trường hợp có dòng mới
-  // được thêm vào đúng lúc hộp thoại xác nhận đang mở.
-  const exportedIds = slArr(tab).map(r=>r.id).filter(Boolean);
-  const onExported = ()=> slConfirmClearAfterExport(tab, exportedIds);
+
+  showToast('⏳ Đang lấy dữ liệu mới nhất trước khi xuất...', false);
+  const fresh = await slRefreshFromServer(tab);
+  if(!fresh.ok) showToast('⚠️ Không đọc được dữ liệu mới nhất từ máy chủ ('+fresh.reason+') — file được xuất theo dữ liệu đang có trên máy này', true);
+
+  // Chốt đúng tập dòng đưa vào file lần này. Chỉ đúng các dòng này mới được xoá sau đó — không xoá theo
+  // "toàn bộ mảng hiện tại" phòng trường hợp có dòng mới được thêm vào đúng lúc hộp thoại xác nhận đang mở.
+  const srcRows = slSortRows(slArr(tab).filter(Boolean));
+  const exportedIds = srcRows.map(r=>r.id).filter(Boolean);
+  const onExported = ()=> slConfirmClearAfterExport(tab, exportedIds, srcRows, !fresh.ok);
+  const common = r=>({...r,
+    donHangLabel: slOrderLabelPlain(r.donHangId),
+    createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'',
+    updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''});
 
   if(tab==='nguyenLieu'){
-    exportProfessionalExcel({
+    return exportProfessionalExcel({
       docTitle: 'SỔ GHI NGUYÊN LIỆU PHẾ PHOI VÀ CHẠY CÁC KÍCH CỠ', docCode: meta.code, sheetName:'SoNguyenLieu',
       columns:[
+        {header:'STT', key:'stt', width:6, numFmt:'num'},
         {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
         {header:'Giờ nhập', key:'createdAtText', width:16},
         {header:'Nguyên liệu', key:'nguyenLieu', width:16},
@@ -186,43 +233,47 @@ function exportSlExcel(tab){
         {header:'Khách hàng', key:'khachHang', width:16},
         {header:'PO', key:'po', width:12},
         {header:'WO', key:'wo', width:12},
+        {header:'Đơn hàng liên kết', key:'donHangLabel', width:30},
+        {header:'Mã lô SX', key:'maLoSX', width:16},
         {header:'Ghi chú', key:'ghiChu', width:22},
         {header:'Người cập nhật', key:'updatedBy', width:16},
         {header:'Cập nhật lúc', key:'updatedAtText', width:16}
       ],
-      rows: slArr('nguyenLieu').slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0))
-        .map(r=>({...r, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems), createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''})),
+      rows: srcRows.map((r,i)=>({...common(r), stt:i+1, pheDetail: nlDetailText(r.pheItems), phoiDetail: nlDetailText(r.phoiItems)})),
       totalsCols:['soLuong','phe','phoi'],
       filename:`So_nguyen_lieu_${stamp}.xlsx`,
-      onExported
-    });
-  } else {
-    const sorted = slArr(tab).slice().sort((a,b)=> String(a.ngay||'').localeCompare(String(b.ngay||'')) || (a.updatedAt||0)-(b.updatedAt||0));
-    const rows = sorted.map((r,i)=>({...r, stt:i+1, caLabel: r.ca?('Ca '+r.ca):'', createdAtText: (r.createdAt||r.updatedAt)?fmtDateTime(r.createdAt||r.updatedAt):'', updatedAtText: r.updatedAt?fmtDateTime(r.updatedAt):''}));
-    exportProfessionalExcel({
-      docTitle: 'SỔ GHI THÀNH PHẨM '+(tab==='mayRut'?'RÚT':'ĐÁNH BÓNG + CẮT'), docCode: meta.code, sheetName: tab==='mayRut'?'SoMayRut':'SoMayDanhBongCat',
-      columns:[
-        {header:'STT', key:'stt', width:6, numFmt:'num'},
-        {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
-        {header:'Giờ nhập', key:'createdAtText', width:16},
-        {header:'Quy cách', key:'quyCach', width:16},
-        {header:'Loại NL', key:'loaiNL', width:12},
-        {header:'Hàng', key:'hang', width:12},
-        {header:'Số thanh', key:'soThanh', width:10, numFmt:'num'},
-        {header:'Công đoạn', key:'congDoan', width:12},
-        {header:'Máy', key:'may', width:18},
-        {header:'Ca SX', key:'caLabel', width:9},
-        {header:'Người SX', key:'nguoiSanXuat', width:16},
-        {header:'Khách hàng', key:'khachHang', width:16},
-        {header:'Ghi chú', key:'ghiChu', width:20},
-        {header:'Người cập nhật', key:'updatedBy', width:16},
-        {header:'Cập nhật lúc', key:'updatedAtText', width:16}
-      ],
-      rows, totalsCols:['soThanh'],
-      filename:`So_may_${tab==='mayRut'?'rut':'danh_bong_cat'}_${stamp}.xlsx`,
+      subtitle: fresh.ok ? '' : '(dữ liệu theo bản trên máy — chưa đối chiếu được với máy chủ)',
       onExported
     });
   }
+  return exportProfessionalExcel({
+    docTitle: 'SỔ GHI THÀNH PHẨM '+(tab==='mayRut'?'RÚT':'ĐÁNH BÓNG + CẮT'), docCode: meta.code, sheetName: tab==='mayRut'?'SoMayRut':'SoMayDanhBongCat',
+    columns:[
+      {header:'STT', key:'stt', width:6, numFmt:'num'},
+      {header:'Ngày', key:'ngay', width:12, numFmt:'date'},
+      {header:'Giờ nhập', key:'createdAtText', width:16},
+      {header:'Quy cách', key:'quyCach', width:16},
+      {header:'Loại NL', key:'loaiNL', width:12},
+      {header:'Hàng', key:'hang', width:12},
+      {header:'Số thanh', key:'soThanh', width:10, numFmt:'num'},
+      {header:'Công đoạn', key:'congDoan', width:12},
+      {header:'Máy', key:'may', width:18},
+      {header:'Ca SX', key:'caLabel', width:9},
+      {header:'Người SX', key:'nguoiSanXuat', width:16},
+      {header:'Khách hàng', key:'khachHang', width:16},
+      {header:'Heat-Lot nguồn', key:'heatLot', width:18},
+      {header:'Đơn hàng liên kết', key:'donHangLabel', width:30},
+      {header:'Mã lô SX', key:'maLoSX', width:16},
+      {header:'Ghi chú', key:'ghiChu', width:20},
+      {header:'Người cập nhật', key:'updatedBy', width:16},
+      {header:'Cập nhật lúc', key:'updatedAtText', width:16}
+    ],
+    rows: srcRows.map((r,i)=>({...common(r), stt:i+1, caLabel: r.ca?('Ca '+r.ca):''})),
+    totalsCols:['soThanh'],
+    filename:`So_may_${tab==='mayRut'?'rut':'danh_bong_cat'}_${stamp}.xlsx`,
+    subtitle: fresh.ok ? '' : '(dữ liệu theo bản trên máy — chưa đối chiếu được với máy chủ)',
+    onExported
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -243,28 +294,44 @@ function exportSlExcel(tab){
 // TỨC qua SSE, không còn tình trạng "xoá ở máy mình nhưng máy khác vẫn
 // còn dữ liệu cũ".
 // ════════════════════════════════════════════════════════════════════
-function slConfirmClearAfterExport(tab, exportedIds){
+function slConfirmClearAfterExport(tab, exportedIds, exportedRows, notVerified){
   if(!isSlEditor()) return; // Viewer: chỉ xem/xuất, không có quyền xoá dữ liệu
-  if(!exportedIds || !exportedIds.length) return; // sổ trống, không có gì để dọn
+  const n = (exportedRows && exportedRows.length) || (exportedIds && exportedIds.length) || 0;
+  if(!n) return; // sổ trống, không có gì để dọn
   const meta = SL_META[tab];
+  const warn = notVerified ? ' ⚠️ Lưu ý: máy này chưa đối chiếu được với máy chủ, nên chỉ xoá đúng các dòng có trong file vừa xuất.' : '';
   confirm2(
     '🗑️ Dọn dữ liệu sau khi xuất?',
-    `Đã xuất ${exportedIds.length} dòng của "${meta.label}" ra file Excel. Dữ liệu đã được lưu đầy đủ trong file vừa tải về — bạn có muốn xoá các dòng này khỏi hệ thống để giảm dung lượng lưu trữ không? Không thể hoàn tác.`,
-    ()=> slClearAfterExport(tab, exportedIds)
+    `Đã xuất ${n} dòng của "${meta.label}" ra file Excel. Dữ liệu đã được lưu đầy đủ trong file vừa tải về — bạn có muốn xoá các dòng này khỏi phần mềm VÀ khỏi mọi thiết bị khác để giảm dung lượng lưu trữ không? Không thể hoàn tác.${warn}`,
+    ()=> slClearAfterExport(tab, exportedIds, exportedRows)
   );
 }
-function slClearAfterExport(tab, exportedIds){
-  const field = SL_META[tab].field;
-  const idSet = new Set(exportedIds);
+// Xoá ĐÚNG các dòng đã xuất: cục bộ + máy chủ + (qua SSE) mọi thiết bị khác.
+//  • Lệnh xoá cho TỪNG ID được ghi vào hàng đợi bền rồi mới gửi — mất mạng/tắt app vẫn tự xoá tiếp khi có mạng.
+//  • Sau khi gửi, đọc lại danh sách ID trên máy chủ để KIỂM TRA không còn sót; còn thì xoá lại.
+//  • Dòng không có ID (dữ liệu rất cũ) cũng được dọn khỏi máy này (không thể có trên máy chủ theo từng dòng).
+async function slClearAfterExport(tab, exportedIds, exportedRows){
+  if(!isSlEditor()) return;
+  const meta = SL_META[tab], field = meta.field;
+  const ids = (exportedIds||[]).filter(Boolean);
+  const idSet = new Set(ids);
+  const objSet = new Set(exportedRows||[]);
   const arr = DB[field]||[];
-  const kept = arr.filter(r=> !(r && idSet.has(r.id)));
+  const kept = arr.filter(r=> !(r && (idSet.has(r.id) || objSet.has(r))));
   const removed = arr.length - kept.length;
-  if(removed<=0) return;
+  if(removed<=0 && !ids.length) return;
   DB[field] = kept;
-  slDoSave(tab); // syncSlFieldPerRecord tự nhận ra đúng các ID vừa biến mất và gửi lệnh xoá riêng từng dòng lên server
-  log(SL_META[tab].label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
+  // removedIds: gửi lệnh xoá cho TẤT CẢ ID đã xuất, kể cả ID không còn ở máy này nhưng có thể còn trên máy chủ
+  let synced = false;
+  try{ synced = await slDoSave(tab, {removedIds: ids}); }catch(e){ synced = false; }
+  let leftover = null;
+  if(synced){ leftover = await slVerifyDeleted(field, ids); }
+  log(meta.label, `Dọn dữ liệu sau khi xuất Excel — đã xoá ${removed} dòng (đã lưu trong file Excel vừa tải về)`, null, null, {deletedBy:'AFTER_EXPORT'});
   if(currentTab==='soLieu') renderSoLieu();
-  showToast(`🗑️ Đã dọn ${removed} dòng dữ liệu — sổ đã gọn nhẹ hơn`);
+  if(synced && leftover===0) showToast(`🗑️ Đã xoá ${removed} dòng khỏi phần mềm và máy chủ — các thiết bị khác sẽ tự cập nhật`);
+  else if(synced && leftover>0) showToast(`⚠️ Đã xoá ${removed} dòng nhưng máy chủ còn sót ${leftover} dòng — hãy bấm xoá/xuất lại`, true);
+  else if(synced) showToast(`🗑️ Đã xoá ${removed} dòng (chưa kiểm tra lại được trên máy chủ)`);
+  else showToast(`⚠️ Đã xoá ${removed} dòng trên máy này nhưng CHƯA xoá được trên máy chủ (mất mạng/lỗi) — sẽ tự xoá tiếp khi có mạng`, true);
 }
 
 

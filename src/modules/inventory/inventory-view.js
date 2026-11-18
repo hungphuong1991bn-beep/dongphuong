@@ -24,7 +24,7 @@ const SL_META = {
 };
 
 function slArr(tab){ return DB[SL_META[tab].field] || (DB[SL_META[tab].field]=[]); }
-function slDoSave(tab){ window[SL_META[tab].save](); }
+function slDoSave(tab, opts){ return window[SL_META[tab].save](opts); }
 
 // ── Cột "Máy" — nhớ theo khu máy (nhóm máy trong MACHINES) ────────────
 // Mỗi Công đoạn (Rút/Đánh bóng/Cắt) khớp đúng 1 khu máy (group) trong
