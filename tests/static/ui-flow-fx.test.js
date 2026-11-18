@@ -43,7 +43,9 @@ assert.strictEqual((h.match(/class="ovp-pipe /g)||[]).length,5,'5 đường dẫ
 assert.strictEqual((h.match(/class="ovp-p"/g)||[]).length,5,'1 hạt chính / đường dẫn');
 assert.strictEqual((h.match(/class="ovp-p ovp-p2"/g)||[]).length,5,'+1 hạt lệch pha / đường dẫn (tổng 2)');
 assert(/<b>1<\/b><small>đơn đã nhập kho/.test(h),'Nhập Kho = số đơn hoàn thành');
-assert.strictEqual((h.match(/<svg /g)||[]).length,6,'mỗi node 1 icon SVG');
+assert.strictEqual((h.match(/<svg /g)||[]).length,5,'5 node dùng icon SVG');
+assert(/<div class="ovp-icon has-photo"><img class="ovp-photo" src="src\/assets\/stage-dun\.jpg" alt="Đùn"/.test(h),'node Đùn dùng ảnh máy đùn thay icon');
+assert(/this\.outerHTML=OVP_ICONS\.dun/.test(h),'có icon dự phòng khi ảnh lỗi');
 assert(/dpOpenStageList\('dun'\)/.test(h)&&/dpOpenStageList\('cat'\)/.test(h)&&/goTab\('soLieu'\)/.test(h),'bấm node vẫn mở đúng chi tiết');
 assert(/tone-run/.test(h)&&/tone-idle/.test(h),'màu: đang chạy xanh dương / chờ trung tính');
 console.log('OK ui-flow-fx');

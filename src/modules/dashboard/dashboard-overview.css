@@ -298,6 +298,11 @@
   background:linear-gradient(150deg,#fff,var(--tcBg));border:1px solid color-mix(in srgb,var(--tc) 22%,#fff);
   box-shadow:inset 0 1px 0 #fff,0 8px 16px -10px color-mix(in srgb,var(--tc) 60%,transparent)}
 .ovp-icon svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ovp-icon.has-photo{padding:0;overflow:hidden;background:#fff;border-color:color-mix(in srgb,var(--tc) 35%,#fff)}
+.ovp-photo{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.ovp-node:hover .ovp-photo{transform:scale(1.08)}
+.ovp-icon.has-photo::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 -10px 14px -10px rgba(15,23,42,.25)}
+.ovp-node.tone-idle .ovp-photo{filter:saturate(.6)}
 .ovp-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.1px}
 .ovp-metric{margin:8px 0 10px;line-height:1}
 .ovp-metric b{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--tcTx);font-variant-numeric:tabular-nums}

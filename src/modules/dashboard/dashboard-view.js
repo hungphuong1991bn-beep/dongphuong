@@ -268,7 +268,7 @@ function buildOvBusbarFlow(orders){
                            : orders.filter(o=>isRun(o) && (o.stage||'dun')===prevKey);
     const kg = running.reduce((t,o)=>t+(parseFloat(o.kg)||0),0);
     nodes.push({
-      key:d.key, icon:OVP_ICONS[d.key], label:d.label, active: running.length>0, tone: running.length>0?'run':'idle',
+      key:d.key, icon:OVP_ICONS[d.key], label:d.label, active: running.length>0, tone: running.length>0?'run':'idle', photo: d.key==='dun' ? 'src/assets/stage-dun.jpg' : '',
       on:'Đang chạy', off:'Đang chờ',
       big: running.length, unit:'đơn đang chạy',
       stats:[['Chờ vào', incoming.length+' đơn'], ['Khối lượng', fmt(kg)+' kg']],
@@ -296,7 +296,7 @@ function buildOvBusbarFlow(orders){
           <span class="ovp-step">0${i+1}</span>
           <span class="ovp-pill"><i></i>${n.active?n.on:n.off}</span>
         </div>
-        <div class="ovp-icon"><span>${n.icon}</span></div>
+        <div class="ovp-icon${n.photo?' has-photo':''}">${n.photo?`<img class="ovp-photo" src="${n.photo}" alt="${n.label}" loading="lazy" decoding="async" draggable="false" onerror="this.parentNode.classList.remove('has-photo');this.outerHTML=OVP_ICONS.${n.key}">`:`<span>${n.icon}</span>`}</div>
         <div class="ovp-name">${n.label}</div>
         <div class="ovp-metric"><b>${n.big}</b><small>${n.unit}</small></div>
         <div class="ovp-stats">${n.stats.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>
