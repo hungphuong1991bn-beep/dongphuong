@@ -84,9 +84,9 @@ function applyDataSnapshot(data){
   if(data.khuonQty && JSON.stringify(data.khuonQty)!==JSON.stringify(DB.khuonQty)){ DB.khuonQty = data.khuonQty; _lastSyncedArrSnap.khuonQty=snapshotArrById(DB.khuonQty); changed = true; }
   if(data.csTemplates && JSON.stringify(data.csTemplates)!==JSON.stringify(DB.csTemplates)){ DB.csTemplates = data.csTemplates; _lastSyncedArrSnap.csTemplates=snapshotArrById(DB.csTemplates); changed = true; }
   if(data.csData && JSON.stringify(data.csData)!==JSON.stringify(DB.csData)){ DB.csData = data.csData; _lastSyncedCsDataSnapshot = flattenCsData(DB.csData); changed = true; }
-  if(data.nguyenLieuLog){ const fresh=Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.nguyenLieuLog)){ DB.nguyenLieuLog=fresh; _lastSyncedArrSnap.nguyenLieuLog=snapshotArrById(DB.nguyenLieuLog); changed=true; } }
-  if(data.mayRutLog){ const fresh=Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayRutLog)){ DB.mayRutLog=fresh; _lastSyncedArrSnap.mayRutLog=snapshotArrById(DB.mayRutLog); changed=true; } }
-  if(data.mayDanhBongLog){ const fresh=Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); if(JSON.stringify(fresh)!==JSON.stringify(DB.mayDanhBongLog)){ DB.mayDanhBongLog=fresh; _lastSyncedArrSnap.mayDanhBongLog=snapshotArrById(DB.mayDanhBongLog); changed=true; } }
+  // 3 sổ Số liệu: áp CẢ khi server không còn dòng nào (trước đây `if(data.xxx)` bỏ qua → máy khác giữ mãi
+  // dữ liệu đã xoá) và áp lại hàng đợi chưa lên server để không làm mất/sống lại dòng.
+  if(slApplySnapshotAll(data)) changed = true;
   if(typeof cpOnSnapshot==='function' && data.cpRecords && cpOnSnapshot(data.cpRecords)) changed = true;   // ControlPlan
   if(data.qrProducts){
     const freshQr = Array.isArray(data.qrProducts)?data.qrProducts:Object.values(data.qrProducts);
@@ -113,6 +113,8 @@ async function doPoll(retry){
   if(!currentUser || !fbOk()) return;
   if(_pendingSaves>0) return; // đang ghi dở dang → chờ endSave() tự gọi lại
   try{
+    if(typeof slQueueAny==='function' && slQueueAny()) await slFlushAll(); // lệnh xoá/ghi 3 sổ còn tồn → đẩy trước khi đọc
+    if(_pendingSaves>0) return;
     const seq = _rtSeq;
     const data = await fbRead('/data');
     if(seq===_rtSeq) applyDataSnapshot(data);
@@ -176,7 +178,7 @@ function applyFieldChange(field, val){
     // đang coi đây là mảng (slArr, .filter, .find...).
     const SL_LOG_FIELDS = {nguyenLieuLog:1, mayRutLog:1, mayDanhBongLog:1};
     let fresh = val || (Array.isArray(DB[field])?[]:{});
-    if(SL_LOG_FIELDS[field] && fresh && !Array.isArray(fresh)) fresh = Object.values(fresh);
+    if(SL_LOG_FIELDS[field]) fresh = slApplyServerList(field, val); // chuẩn hoá + áp lại hàng đợi chưa lên server
     if(JSON.stringify(fresh)===JSON.stringify(DB[field])) return;
     DB[field] = fresh;
     if(field==='attendance') _lastSyncedAttendanceSnapshot = flattenAttendance(DB.attendance);

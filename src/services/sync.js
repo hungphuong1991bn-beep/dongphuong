@@ -114,7 +114,7 @@ let _lastSyncedArrSnap = { lichLamViec:{}, kyLuat:{}, nghiPhep:{}, baoTri:{}, wo
 // khi có lần LƯU hoặc sự kiện realtime đầu tiên → thao tác XOÁ đầu tiên trong phiên không được tính là
 // "dòng vừa xoá" nên bản server (còn dòng đó) được ghi lại → dòng đã xoá "sống lại" sau khi tải lại.
 function initArrSnapshots(){
-  ['workers','kyLuat','nghiPhep','lichLamViec','baoTri','qrProducts','khuonCatalog','khuonQty','csTemplates'].forEach(function(f){
+  ['workers','kyLuat','nghiPhep','lichLamViec','baoTri','qrProducts','khuonCatalog','khuonQty','csTemplates','nguyenLieuLog','mayRutLog','mayDanhBongLog'].forEach(function(f){
     _lastSyncedArrSnap[f] = snapshotArrById(DB[f]);
   });
 }
@@ -236,12 +236,15 @@ async function initAndStartSync(){
             else if(f==='attendance'){ beginSave(); await mergeAndSaveAttendance(); }
             else if(f==='csData'){ beginSave(); await mergeAndSaveCsData(); }
             else if(f==='ordersTrash'){ beginSave(); await mergeAndSaveOrdersTrash(); }
-            else if(SL_LOG_FIELDS[f]){ await syncSlFieldPerRecord(f); }
+            else if(SL_LOG_FIELDS[f]){ await slFlushField(f); }
             else if(ARR_FIELD_PATHS[f]){ beginSave(); await mergeAndSaveArrField(f, ARR_FIELD_PATHS[f]); }
             else { await fbWrite('/data/'+f, DB[f], 'PUT'); clearDirty(f); }
           }catch(e){}
         }));
       }
+      // Hàng đợi bền của 3 sổ Số liệu (dòng thêm/sửa/xoá chưa lên server): đẩy nốt TRƯỚC khi
+      // tải bản server về, để lệnh xoá của phiên trước không bị bản server cũ làm "sống lại".
+      if(typeof slQueueAny==='function' && slQueueAny()){ try{ await slFlushAll(); }catch(e){} }
       const data = await fbRead('/data');
       // SỬA LỖI QUAN TRỌNG: đọc /data lúc khởi động có thể mất một khoảng
       // thời gian (mạng chậm/wifi xưởng chập chờn). Nếu người dùng thao tác
@@ -293,9 +296,11 @@ async function initAndStartSync(){
           syncArrFieldToServer('csTemplates', '/data/csTemplates');
         }
         if(data.csData){ DB.csData = data.csData; }
-        if(data.nguyenLieuLog){ DB.nguyenLieuLog = Array.isArray(data.nguyenLieuLog)?data.nguyenLieuLog:Object.values(data.nguyenLieuLog); migrateSlLogIfArray('nguyenLieuLog','/data/nguyenLieuLog',data.nguyenLieuLog); }
-        if(data.mayRutLog){ DB.mayRutLog = Array.isArray(data.mayRutLog)?data.mayRutLog:Object.values(data.mayRutLog); migrateSlLogIfArray('mayRutLog','/data/mayRutLog',data.mayRutLog); }
-        if(data.mayDanhBongLog){ DB.mayDanhBongLog = Array.isArray(data.mayDanhBongLog)?data.mayDanhBongLog:Object.values(data.mayDanhBongLog); migrateSlLogIfArray('mayDanhBongLog','/data/mayDanhBongLog',data.mayDanhBongLog); }
+        // 3 sổ Số liệu: server là nguồn đúng. Nếu server KHÔNG còn dòng nào (đã xoá hết) thì máy này
+        // cũng phải xoá sạch dữ liệu cũ cục bộ — trước đây `if(data.nguyenLieuLog)` bỏ qua trường hợp
+        // này nên dữ liệu đã xoá vẫn nằm mãi trên máy. Có áp lại hàng đợi chưa lên server (xem slApplyServerList).
+        slApplySnapshotAll(data);
+        ['nguyenLieuLog','mayRutLog','mayDanhBongLog'].forEach(f=>{ if(Array.isArray(data[f])) migrateSlLogIfArray(f,'/data/'+f,data[f]); }); // dữ liệu cũ dạng mảng → chuyển sang object theo id (1 lần)
         if(typeof cpOnBoot==='function') cpOnBoot(data.cpRecords);   // ControlPlan: nạp /data/cpRecords (không ghi đè)
         lsSave();
         _lastHash = hashOrders(DB.orders);
@@ -363,5 +368,5 @@ document.addEventListener('visibilitychange', ()=>{
 // tải lại trang — bản thân từng hàm tự bỏ qua nếu chưa tới hạn 24h/thiết
 // bị hoặc đồng bộ chưa ổn định (xem canRunAutoClean()/canRunSlAutoClean()).
 setInterval(()=>{ if(currentUser && fbOk()){ /* Tự xoá ĐÃ TẮT — Admin dọn thủ công (modules/admin/manual-cleanup.js) */ } }, 60*60*1000);
-window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); doPoll(); updateOnline(); } });
+window.addEventListener('online', ()=>{ if(currentUser && fbOk()){ startRealtimeStream(); (typeof slFlushAll==='function'?slFlushAll():Promise.resolve()).catch(()=>{}).then(()=>doPoll()); updateOnline(); } });
 window.addEventListener('offline', ()=>{ setSyncDot('offline'); });
