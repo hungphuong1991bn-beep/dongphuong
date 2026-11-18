@@ -255,7 +255,7 @@ function buildOvBusbarFlow(orders){
   const doneCnt = whAll.all.filter(o=>!o.returned).length;
   const defs = [{key:'dun',icon:'🔧',label:'Đùn'},{key:'rut',icon:'🔩',label:'Rút'},{key:'danhbong',icon:'✨',label:'Đánh Bóng'},{key:'cat',icon:'✂️',label:'Cắt Ngắn'}];
   const nodes = [{
-    key:'nl', icon:OVP_ICONS.nl, label:'Nguyên Liệu', active: nlToday.length>0, tone: nlToday.length>0?'ok':'idle',
+    key:'nl', icon:OVP_ICONS.nl, label:'Nguyên Liệu', active: nlToday.length>0, tone: nlToday.length>0?'ok':'idle', photo:'src/assets/stage-nl.jpg',
     on:'Đã nhập', off:'Chưa nhập',
     big: nlToday.length, unit:'lô nhập hôm nay',
     stats:[['Khối lượng', fmt(nlKg)+' kg']],

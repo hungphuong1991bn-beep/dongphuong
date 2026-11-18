@@ -365,6 +365,7 @@
 @container (min-width:1500px){.ovp-icon{height:124px;border-radius:16px}.ovp-icon svg{width:40px;height:40px}}
 @container (max-width:800px){.ovp-icon{height:150px;border-radius:14px}.ovp-icon svg{width:38px;height:38px}}
 .ovp-photo{object-position:center 40%}
+.ovp-node:first-child .ovp-photo{object-position:center 66%}
 
 /* Tab ẩn / người dùng giảm chuyển động: dừng hoạt ảnh lặp */
 .fx-paused .ovp-p,.fx-paused .ovp-node::after,.fx-paused .ovp-live i,.fx-paused .ovp-pill i::after{animation-play-state:paused!important}
