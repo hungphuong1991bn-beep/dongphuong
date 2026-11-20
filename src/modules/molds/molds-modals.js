@@ -58,4 +58,16 @@ document.write(`<!-- Quản lý Khuôn — Thêm/Sửa mục Tổng hợp Khuôn
       <button class="btn btn-primary" onclick="khQtySave()">💾 Lưu</button>
     </div>
   </div>
+</div>
+
+<!-- Quản lý Khuôn — chọn chế độ xuất Excel khi đang có bộ lọc/tìm kiếm (toàn bộ / theo bộ lọc) -->
+<div class="modal" id="khExportModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Xuất Excel Tổng hợp Khuôn</div>
+    <div id="khExportModeBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('khExportModal')">Huỷ</button>
+    </div>
+  </div>
 </div>`);

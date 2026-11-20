@@ -110,6 +110,24 @@ let _khQtyEditId = null;
 // Tập id kích thước đang được tick chọn ở tab "Tổng hợp Khuôn" (xóa hàng loạt)
 let _khCatSel = new Set();
 
+// ── DANH SÁCH DANH MỤC KHUÔN — MỘT NGUỒN DUY NHẤT cho giao diện và xuất Excel ──
+// Trước đây giao diện tự lọc ở renderKhuonCatalog() còn hàm xuất Excel dùng danh sách/điều
+// kiện riêng → hai nơi có thể lệch nhau. Nay cả hai cùng gọi 3 hàm dưới đây.
+// khCatalogRecords: bản ghi HỢP LỆ (object) của DB.khuonCatalog — bỏ phần tử null/không phải
+//   object do đồng bộ Firebase có thể để lại (không phải khuôn, giao diện cũng không vẽ được).
+// _khCatKey: khoá nhóm của 1 bản ghi; thiếu/null/undefined → '' (nhóm "Chưa phân nhóm").
+// khCatalogVisible: đúng danh sách sau bộ lọc nhóm + ô tìm kiếm đang hiển thị.
+// khCatalogFilterInfo: bộ lọc nào đang bật (để xuất Excel hỏi rõ "toàn bộ" hay "theo bộ lọc").
+function khCatalogRecords(){ return (DB.khuonCatalog||[]).filter(x=>x && typeof x==='object'); }
+function _khCatKey(x){ return (x && x.category!=null) ? String(x.category) : ''; }
+function khCatalogVisible(catalog, catFilter, search){
+  return (catalog||[]).filter(x=> (catFilter==='all'||_khCatKey(x)===catFilter) && khuonMatchesSearch(x, search));
+}
+function khCatalogFilterInfo(){
+  const search = String(_khSearch||'').trim();
+  return {catFilter:_khCatFilter, search, active: _khCatFilter!=='all' || !!normalizeKhuonSearch(search)};
+}
+
 function khGoSubTab(tab){
   _khTab = tab; _khSearch=''; _khCatFilter='all'; _khQtyFilter='all'; _khQtyTypeFilter='all';
   _khCatSel.clear(); // bỏ mọi mục đang tick chọn khi đổi tab con
@@ -186,13 +204,13 @@ function sortKhuonByNgayMuaDesc(list){
 
 function renderKhuon(){
   const admin = isAdmin();
-  const catalog = DB.khuonCatalog||[];
+  const catalog = khCatalogRecords();
   const qty = DB.khuonQty||[];
   const totalQty = qty.reduce((s,r)=>s+(Number(r.qty)||0),0);
   const lowStock = qty.filter(r=>Number(r.qty)<=1).length;
   const outStock = qty.filter(r=>Number(r.qty)<=0).length;
 
-  const catCats = [...new Set(catalog.map(x=>x.category))];
+  const catCats = [...new Set(catalog.map(_khCatKey))];
   const qtyCats = [...new Set(qty.map(x=>x.category))];
 
   $('mc').innerHTML = `
@@ -217,9 +235,9 @@ function renderKhuon(){
 
 function renderKhuonCatalog(catalog, cats, admin){
   const q = _khSearch;
-  let list = catalog.filter(x=> (_khCatFilter==='all'||x.category===_khCatFilter) && khuonMatchesSearch(x, q));
+  let list = khCatalogVisible(catalog, _khCatFilter, q);
   const groups = {};
-  list.forEach(x=>{ (groups[x.category]=groups[x.category]||[]).push(x); });
+  list.forEach(x=>{ const k=_khCatKey(x); (groups[k]=groups[k]||[]).push(x); });
   Object.keys(groups).forEach(g=>{ groups[g] = sortKhuonList(groups[g], 'size'); });
   const groupNames = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'vi'));
 
@@ -242,18 +260,18 @@ function renderKhuonCatalog(catalog, cats, admin){
     </div>`:''}
     <div class="khm-chip-row">
       <button class="khm-chip ${_khCatFilter==='all'?'active':''}" onclick="khSetCatFilter('all')">Tất cả (${catalog.length})</button>
-      ${cats.map(c=>`<button class="khm-chip ${_khCatFilter===c?'active':''}" onclick="khSetCatFilter('${c.replace(/'/g,"\\'")}')">${c} (${catalog.filter(x=>x.category===c).length})</button>`).join('')}
+      ${cats.map(c=>`<button class="khm-chip ${_khCatFilter===c?'active':''}" onclick="khSetCatFilter('${c.replace(/'/g,"\\'")}')">${c||'(Chưa phân nhóm)'} (${catalog.filter(x=>_khCatKey(x)===c).length})</button>`).join('')}
     </div>
     ${groupNames.length===0?`<div class="empty"><div class="empty-icon">🗂️</div>Không tìm thấy kích thước khuôn nào phù hợp</div>`:
       groupNames.map(g=>`
         <div class="khm-cat-section">
-          <div class="khm-cat-title">${g} <span class="khm-cat-count">${groups[g].length} kích thước</span>${admin?` <span class="khm-item-del" style="position:static;padding:2px 6px;font-size:11px;font-weight:700" title="Xóa toàn bộ nhóm này" onclick="khCatDeleteGroup('${g.replace(/'/g,"\\'")}')">🗑 Xóa nhóm</span>`:''}</div>
+          <div class="khm-cat-title">${g||'(Chưa phân nhóm)'} <span class="khm-cat-count">${groups[g].length} kích thước</span>${admin?` <span class="khm-item-del" style="position:static;padding:2px 6px;font-size:11px;font-weight:700" title="Xóa toàn bộ nhóm này" onclick="khCatDeleteGroup('${g.replace(/'/g,"\\'")}')">🗑 Xóa nhóm</span>`:''}</div>
           <div class="khm-item-grid">
             ${groups[g].map(it=>`
               <div class="khm-item-chip${_khCatSel.has(it.id)?' khm-sel':''}">
                 ${admin?`<span class="khm-item-del" title="Xóa kích thước này" onclick="khCatDelete('${it.id}')">🗑</span>`:''}
                 ${admin?`<span class="khm-item-edit" onclick="khCatOpenEdit('${it.id}')">✏️</span>`:''}
-                <span class="khm-item-size">${it.size.replace(/</g,'&lt;')}</span>
+                <span class="khm-item-size">${String(it.size==null?'':it.size).replace(/</g,'&lt;')}</span>
                 ${admin?`<input type="checkbox" class="khm-item-chk" title="Chọn để xóa hàng loạt" ${_khCatSel.has(it.id)?'checked':''} onclick="khCatToggleSel('${it.id}',this.checked)">`:''}
               </div>
             `).join('')}

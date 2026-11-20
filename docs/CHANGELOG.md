@@ -39,6 +39,19 @@
 - Không đổi nơi lưu dữ liệu (`/hrPrivate/salary`, `/hrPrivate/raises`), quyền (chỉ Admin) hay cơ chế tự áp dụng lần tăng có ngày hiệu lực tương lai. Xoá 1 bản ghi lịch sử vẫn KHÔNG đổi lại lương hiện tại (muốn đổi: cập nhật mức mới, tích Điều chỉnh nếu thấp hơn).
 - Test: `hr-view.test.js` 19 nhóm, `hr-salary.test.js` 20 nhóm.
 
+## [2.10.2] Sửa tiếp xuất Excel "Tổng hợp Khuôn" — Excel vẫn ít hơn màn hình (20/11/2026)
+- **Triệu chứng:** màn hình đủ danh sách, file Excel thiếu một số khuôn, phần mềm vẫn báo "xuất thành công đủ N/N".
+- **Nguyên nhân gốc (xác định bằng cách ghi file .xlsx thật rồi đọc lại — giao diện 437, file 433, vẫn báo thành công):**
+  1. `khXlsxBuildPlan()` BỎ mọi bản ghi có `size` rỗng/khoảng trắng/null/thiếu trường (`skipped++`). Giao diện vẫn đếm và vẽ các bản ghi này.
+  2. Phép đối chiếu của 2.10.1 so "số ô ghi ra" với `plan.total` — con số đã trừ các bản ghi bị bỏ — nên luôn khớp giả và báo thành công.
+  3. Tên nhóm tùy chỉnh bị regex gộp nhầm vào nhóm mặc định (`Điện cực đặc biệt`→Điện cực, `Khuôn phi 2`→Phi tròn, `Khuôn chuẩn`→Yêu cầu & chuẩn, `Đồng thanh cái`→Đồng thanh dẹt) → sai tên nhóm trong file.
+  4. Xuất luôn lấy cả danh mục, bỏ qua bộ lọc nhóm/tìm kiếm đang bật; không có chế độ xuất rõ ràng.
+- **Sửa (molds-export.js):** mọi bản ghi object đều được xuất đúng 1 lần (thiếu size → ghi `(chưa có kích thước – ID …)`; trùng kích thước, size dạng số, nhóm rỗng đều giữ); nhóm chỉ khớp 5 khối mẫu khi TRÙNG TÊN sau chuẩn hoá hoa/thường/dấu/khoảng trắng — nhóm khác có khối cột riêng đúng tên; **đối chiếu 2 lớp**: (a) trước khi ghi — kế hoạch phải chứa đủ số bản ghi nguồn; (b) sau khi ghi — nạp lại CHÍNH file .xlsx và so từng ô. Lệch → không tải file, báo số liệu + tên khuôn thiếu/thừa. Tách `khXlsxGenerate()` (không đụng DOM) để kiểm thử.
+- **Chế độ xuất (molds-export.js, molds-view.js, molds-modals.js):** không lọc → xuất toàn bộ; đang lọc nhóm/tìm kiếm → hộp chọn "Xuất theo bộ lọc (M)" / "Xuất toàn bộ (N)". Chế độ lọc ghi rõ ở dòng "Cập nhật" trong file, tên file có `_theo_bo_loc`, thông báo nêu chế độ. Giao diện và xuất Excel dùng chung `khCatalogRecords/khCatalogVisible`.
+- **Giao diện (molds-view.js):** chịu được bản ghi thiếu `category`/`size` và phần tử `null` (trước đây có thể làm sập `renderKhuonCatalog`); nhóm thiếu hiện "(Chưa phân nhóm)". Bố cục/chức năng khác giữ nguyên.
+- Không đổi cấu trúc DB/Firebase; dữ liệu gốc không bị sửa/xoá khi xuất.
+- Test: `tests/static/molds-export.test.js` viết lại (69 kiểm tra, ghi file ExcelJS thật rồi đọc lại); `tests/package.json` thêm `exceljs`.
+
 ## [2.10.1] Sửa xuất Excel "Tổng hợp Khuôn" bị thiếu chủng loại (17/11/2026)
 - **Triệu chứng:** trên phần mềm có đủ (vd. 3x60, 3x57, 3x80, 3x100) nhưng file Excel xuất ra thiếu.
 - **Nguyên nhân:** `exportKhuonCatalogExcel()` lọc CỨNG `x.category === 'Bo cạnh'` (và 4 nhóm còn lại của mẫu). Chỉ cần tên nhóm do Admin nhập lệch một chút — hoa/thường (`Bo Cạnh`), thừa dấu cách (`Bo cạnh `), gõ dấu kiểu tổ hợp, hoặc nhóm mới (`Khuôn đặc biệt`…) — là cả nhóm bị bỏ qua IM LẶNG khỏi Excel, trong khi giao diện (gom theo đúng chuỗi) vẫn hiện đủ.
