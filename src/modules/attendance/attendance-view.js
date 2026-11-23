@@ -249,6 +249,7 @@ function attCellChange(el){
     const prev = el.dataset.v||'';
     if(res.reason==='invalid') showToast('⚠️ “'+el.value.trim()+'” sai định dạng — chỉ nhập số: 1, 0.5, 0, 1.2 (1 công + 2 giờ)…', true);
     else if(res.reason==='locked') showToast('🔒 Kỳ chấm công đã chốt — Admin cần mở khoá mới sửa được', true);
+    else if(res.reason==='gate') showToast('🔒 Cần nhập mật khẩu Chấm công để thao tác', true);
     else showToast('⚠️ Không lưu được ô này', true);
     el.value = prev; return;
   }

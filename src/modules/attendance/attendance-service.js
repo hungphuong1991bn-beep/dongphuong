@@ -216,6 +216,7 @@ function attNoteOf(ym, wid){ var m = _attMetaMonth(ym, false); return (m && m.no
 // Trả {ok, changed, reason, old}. reason: viewer | locked | invalid | noworker | badday
 function attSetCell(ym, wid, day, raw){
   if(typeof isViewer === 'function' && isViewer()) return {ok:false, reason:'viewer'};
+  if(typeof attGateOk === 'function' && !attGateOk()) return {ok:false, reason:'gate'};
   if(!attValidYM(ym)) return {ok:false, reason:'badday'};
   day = parseInt(day, 10);
   if(!(day >= 1 && day <= attDaysIn(ym))) return {ok:false, reason:'badday'};
@@ -239,6 +240,7 @@ function attSetCell(ym, wid, day, raw){
 // changes: [{wid, day, new}] — đã được attPlanBulk lập và người dùng đã xác nhận.
 // Trả Promise {ok, applied, pending, error?}; ok=true khi Firebase ĐÃ xác nhận.
 async function attApplyBulk(ym, changes, label){
+  if(typeof attGateOk === 'function' && !attGateOk()) return {ok:false, reason:'gate', applied:0};
   if(typeof isViewer === 'function' && isViewer()) return {ok:false, reason:'viewer', applied:0};
   if(attIsLocked(ym)) return {ok:false, reason:'locked', applied:0};
   var applied = 0, detail = [];
@@ -262,6 +264,7 @@ async function attApplyBulk(ym, changes, label){
 
 // ── Ghi chú theo người-tháng & ngày lễ (cũng đi qua outbox) ──────────
 function attSetNote(ym, wid, text){
+  if(typeof attGateOk === 'function' && !attGateOk()) return {ok:false, reason:'gate'};
   if(typeof isViewer === 'function' && isViewer()) return {ok:false, reason:'viewer'};
   if(attIsLocked(ym)) return {ok:false, reason:'locked'};
   text = String(text||'').trim().slice(0, 300);
@@ -285,6 +288,7 @@ function attSetHoliday(dateStr, name){            // chỉ Admin (kiểm ở gia
 // ── Chốt / mở khoá kỳ ───────────────────────────────────────────────
 // Chốt: bắt buộc mọi thay đổi đã lên Firebase trước (không chốt dữ liệu chưa đồng bộ).
 async function attLockMonth(ym){
+  if(typeof attGateOk === 'function' && !attGateOk()) return {ok:false, reason:'gate'};
   if(typeof isViewer === 'function' && isViewer()) return {ok:false, reason:'viewer'};
   if(attIsLocked(ym)) return {ok:true, already:true};
   var f = await attFlush();

@@ -1,3 +1,8 @@
+## [Chấm công có mật khẩu]
+- Mới: `src/modules/attendance/attendance-gate.js` — tab Chấm công chỉ Admin vào thẳng; tài khoản khác phải nhập mật khẩu chấm công (phiên tối đa 8 giờ, tự khoá khi Admin đổi mật khẩu).
+- Admin đổi mật khẩu ngay trong tab (nút 🔑), lưu băm SHA-256+salt tại `/data/attMeta/pw`.
+- attendance-service.js: attSetCell / attApplyBulk / attSetNote / attLockMonth từ chối khi chưa mở khoá (reason `gate`).
+
 # CHANGELOG
 
 ## [2.13.1] Sửa lỗi "Đang truy cập" — 1 máy chỉ thấy mỗi tài khoản của chính nó (18/11/2026)

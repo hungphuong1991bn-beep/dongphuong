@@ -12,7 +12,7 @@ function attDialog(id, title, bodyHtml, footerHtml){
 function attDlgClose(id){ closeModal(id); }
 function attFail(reason, extra){
   const m = {viewer:'🔒 Tài khoản này chỉ được xem', locked:'🔒 Kỳ chấm công đã chốt — Admin cần mở khoá', noperm:'🔒 Chỉ Admin được thực hiện thao tác này',
-    unsynced:'⚠️ Còn thay đổi chưa đồng bộ lên máy chủ — kiểm tra mạng rồi thử lại', network:'⚠️ Lỗi mạng, chưa thực hiện được', noreason:'⚠️ Vui lòng nhập lý do'};
+    gate:'🔒 Cần nhập mật khẩu Chấm công để thao tác', unsynced:'⚠️ Còn thay đổi chưa đồng bộ lên máy chủ — kiểm tra mạng rồi thử lại', network:'⚠️ Lỗi mạng, chưa thực hiện được', noreason:'⚠️ Vui lòng nhập lý do'};
   showToast((m[reason]||'⚠️ Không thực hiện được') + (extra?(' ('+extra+')'):''), true);
 }
 

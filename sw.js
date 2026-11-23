@@ -122,6 +122,7 @@ const ASSETS = [
   './src/modules/settings/settings-view.js',
   './src/modules/hr/hr-workers.js',
   './src/modules/attendance/attendance-view.js',
+  './src/modules/attendance/attendance-gate.js',
   './src/modules/hr/hr-view.js',
   './src/modules/hr/hr-leave-discipline.js',
   './src/modules/attendance/attendance-export.js',
