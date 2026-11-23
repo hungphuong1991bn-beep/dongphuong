@@ -114,3 +114,13 @@ async function attGateSaveNewPw(){
     }catch(e){}
   };
 })();
+
+// ── Rời tab Chấm công (sang bất kỳ tab nào) → tự khoá lại, quay lại phải nhập mật khẩu ──
+(function(){
+  if(typeof goTab !== 'function') return;
+  var _origGoTab = goTab;
+  goTab = function(tab){
+    try{ if(typeof currentTab !== 'undefined' && currentTab === 'chamCong' && tab !== 'chamCong') attGateLock(); }catch(e){}
+    return _origGoTab.apply(this, arguments);
+  };
+})();
