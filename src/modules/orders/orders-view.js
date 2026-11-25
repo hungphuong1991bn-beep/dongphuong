@@ -32,6 +32,9 @@ function ddStatusMeta(o){
       ? {key:'delivered', label:'Đã giao', color:'#6D28D9', bg:'#F3E8FF', border:'#D8B4FE', dot:'#8B5CF6'}
       : {key:'completed', label:'Hoàn thành', color:'#0C7A54', bg:'#E3F5EE', border:'#86EFAC', dot:'#15966C'};
   }
+  if(s==='paused'){
+    return {key:'paused', label:'Tạm dừng', color:'#B45309', bg:'#FEF3C7', border:'#FCD34D', dot:'#D97706'};
+  }
   if(s==='running'){
     return {key:'producing', label:'Đang sản xuất', color:'#C2700A', bg:'#FCF0DE', border:'#FCD34D', dot:'#F59E0B'};
   }
@@ -216,7 +219,8 @@ function ddViewDetail(id){
       <div><b>Ngày đặt đơn:</b> ${fmtDateTime(o.createdAt)}</div>
       <div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}${o.deliveryDate?` · <span style="font-weight:700">${tInfo.val}</span>`:''}</div>
       ${o.startedAt?`<div><b>Bắt đầu sản xuất:</b> ${fmtDateTime(o.startedAt)}</div>`:''}
-      ${(s==='done'&&o.startedAt&&o.doneAt)?`<div><b>Thời gian sản xuất:</b> ${fmtDuration(o.doneAt-o.startedAt)}</div>`:''}
+      ${(s==='done'&&o.startedAt&&o.doneAt)?`<div><b>Thời gian chạy thực tế:</b> ${rcFmtDur(rcRunMs(o))}</div>`:''}
+      ${(s==='paused')?`<div><b>Tạm dừng:</b> từ ${fmtDateTime(o.pausedAt)} · đã chạy ${rcFmtDur(rcRunMs(o))}</div>`:''}
     </div>
 
     ${o.address?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><b>📍 Địa chỉ giao:</b> ${o.address}</div>`:''}

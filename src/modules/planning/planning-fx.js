@@ -14,18 +14,19 @@ function khStageFlow(o, clickable){
   </div>`;
   const curIdx = STAGES.findIndex(x=>x.key===o.stage);
   const act = s==='done' ? STAGES.length : (curIdx<0 ? 0 : curIdx);
+  const isPaused = s==='paused'; // v2.14: tạm dừng → không còn hạt sáng chạy, đánh dấu công đoạn đang dừng
   const pct = Math.round(act/STAGES.length*100);
-  const canClick = clickable && s!=='done';
+  const canClick = clickable && s!=='done' && !isPaused;
   const cur = STAGES[act];
-  return `<div class="kh-flow${s==='done'?' kh-flow-done':' kh-flow-live'}">
+  return `<div class="kh-flow${s==='done'?' kh-flow-done':(isPaused?' kh-flow-paused':' kh-flow-live')}">
     <div class="kh-flow-hd">
-      <span class="kh-flow-lbl">${s==='done' ? 'Luồng công đoạn' : `<i class="kh-live-dot"></i>Đang ở ${cur?cur.label:''}`}</span>
+      <span class="kh-flow-lbl">${s==='done' ? 'Luồng công đoạn' : (isPaused ? `⏸ Tạm dừng tại ${cur?cur.label:''}` : `<i class="kh-live-dot"></i>Đang ở ${cur?cur.label:''}`)}</span>
       <span class="kh-flow-pct${s==='done'?' is-done':''}">${s==='done' ? '✓ Hoàn tất' : pct+'%'}</span>
     </div>
     <div class="kh-flow-track">${STAGES.map((st,i)=>{
       const state = i<act ? 'st-done' : (i===act && s!=='done' ? 'st-active' : 'st-todo');
       // Đoạn nối i-1 → i: đang chảy nếu công đoạn i-1 là công đoạn hiện tại
-      const link = !i ? '' : (i-1===act && s!=='done'
+      const link = !i ? '' : (i-1===act && s!=='done' && !isPaused
         ? `<div class="kh-link is-flow"><span class="kh-rail"></span><span class="kh-lane" aria-hidden="true"><i class="kh-spark"></i><i class="kh-spark"></i></span></div>`
         : `<div class="kh-link ${i<=act?'is-done':'is-todo'}"><span class="kh-rail"></span></div>`);
       return `${link}<div class="kh-node ${state}" data-clickable="${canClick?1:0}" ${canClick?`onclick="event.stopPropagation();requestSetStage('${o.id}','${st.key}')"`:''} title="${st.label}">

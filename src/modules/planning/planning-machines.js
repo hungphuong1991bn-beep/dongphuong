@@ -93,7 +93,7 @@ function khMachineAssignHTML(o){
     // đơn KHÁC → hiển thị rõ vị trí trong hàng đợi thay vì im lặng hoặc
     // trông như một cảnh báo lỗi.
     let queueNote = '';
-    const notYetHere = o.status==='pending' || (o.status==='running' && (()=>{ const as=orderActiveAssignStage(o); return !as || as.key!==st.key; })());
+    const notYetHere = o.status==='pending' || o.status==='paused' || (o.status==='running' && (()=>{ const as=orderActiveAssignStage(o); return !as || as.key!==st.key; })());
     if(cur && notYetHere && curStatus && curStatus.code==='run' && curStatus.order && curStatus.order.id!==o.id){
       const queue = dhMachineQueue(cur);
       const pos = queue.findIndex(x=>x.id===o.id);

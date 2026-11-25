@@ -9,10 +9,14 @@
 // tổng thời gian đã sản xuất.
 function khTimeInfo(o, s){
   if(s==='running' && o.startedAt){
-    return {cls:'tm-running', id:`clk-${o.id}`, val:'⏱ --:--', lbl:'Đang chạy'};
+    // v2.14: giá trị đầu tính ngay từ timestamp (không còn "--:--"); sau đó rcTickClocks() cập nhật mỗi giây
+    return {cls:'tm-running', id:`clk-${o.id}`, val:rcClockText(o), lbl:'Đang chạy'};
+  }
+  if(s==='paused'){
+    return {cls:'tm-paused', id:'', val:rcClockText(o), lbl:'Đã chạy · tạm dừng'};
   }
   if(s==='done'){
-    const dur = (o.doneAt && o.startedAt) ? fmtDuration(o.doneAt-o.startedAt) : '—';
+    const dur = (o.startedAt && (rcHasModel(o) || o.doneAt)) ? (rcFmtDur(rcRunMs(o)) || '—') : '—';
     return {cls:'tm-done', id:'', val:'✅ '+dur, lbl:'TG sản xuất'};
   }
   if(o.deliveryDate){
@@ -62,18 +66,22 @@ function khPlanCard(o, seq){
     ${o.note?`<div class="card-note">📝 ${o.note}</div>`:''}
     ${khProgressFx(o)}
     ${s!=='pending'?`<div class="kh2-timeinfo ${ti.cls}"><span>${ti.lbl}</span><b${ti.id?` id="${ti.id}"`:''}>${ti.val}</b></div>`:''}
+    ${s==='paused'?rcPausedInfoHTML(o):''}
+    ${rcHistoryChipHTML(o)}
     ${khStageFlow(o, canStatus)}
     ${renderAIWarn(o)}
-    ${canStatus?`<div class="kh-plan-actions" onclick="event.stopPropagation()">
+    ${canStatus?`<div class="kh-plan-actions${s==='running'?' rc-wrap':''}" onclick="event.stopPropagation()">
       ${s==='pending'?`<button class="kh-abtn start" id="kh-start-${o.id}" onclick="khPlanAction('${o.id}','running',this,event)" title="Bắt đầu sản xuất">
         <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">▶️</span><span class="kh-abtn-txt">Bắt đầu sản xuất</span></span>
       </button>`:''}
+      ${s==='paused'?rcResumeBtnHTML(o):''}
       ${s==='running'?`<button class="kh-abtn finish" id="kh-done-${o.id}" onclick="khPlanAction('${o.id}','done',this,event)" title="Hoàn thành">
         <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">✅</span><span class="kh-abtn-txt">Hoàn thành</span></span>
       </button>
       <button class="kh-abtn progress" onclick="khQuickProgress('${o.id}',event)" title="Cập nhật tiến độ chi tiết">
         <span class="kh-abtn-spin"></span><span class="kh-abtn-label"><span class="kh-abtn-ico">📊</span><span class="kh-abtn-txt">Tiến độ</span></span>
-      </button>`:''}
+      </button>
+      ${rcPauseBtnHTML(o)}`:''}
       <button class="kh-util-icon kh-more" title="Thao tác khác" onclick="khToggleMenu('${o.id}',event)">⋯</button>
     </div>`:''}
   </div>`;
@@ -195,6 +203,7 @@ function renderKeHoach(){
 
   const waiting     = allActive.filter(o=>o.status==='pending');
   const running     = allActive.filter(o=>o.status==='running'||o.status==='cutting');
+  const paused      = allActive.filter(o=>o.status==='paused');
   const overdueList = allActive.filter(khIsOverdue);
   const priorityList= allActive.filter(khIsTopPriority);
   const totalKg     = allActive.reduce((s,o)=>s+(Number(o.kg)||0),0);
@@ -210,6 +219,7 @@ function renderKeHoach(){
   if(khSearchQ) list = list.filter(o=>matchSearch(o, khSearchQ));
   if(khFilterStatus==='pending') list = list.filter(o=>o.status==='pending');
   else if(khFilterStatus==='running') list = list.filter(o=>o.status==='running'||o.status==='cutting');
+  else if(khFilterStatus==='paused') list = list.filter(o=>o.status==='paused');
   else if(khFilterStatus==='overdue') list = list.filter(khIsOverdue);
   else if(khFilterStatus==='priority') list = list.filter(khIsTopPriority);
   if(khFilterCustomer!=='all') list = list.filter(o=>o.customer===khFilterCustomer);
@@ -228,6 +238,9 @@ function renderKeHoach(){
     if(aRun && !bRun) return -1;
     if(!aRun && bRun) return 1;
     if(aRun && bRun) return (a.startedAt||0)-(b.startedAt||0);
+    const aP = a.status==='paused', bP = b.status==='paused';   // v2.14: đơn tạm dừng xếp ngay sau đơn đang chạy
+    if(aP && !bP) return -1;
+    if(!aP && bP) return 1;
     return priSort(a,b);
   };
   list = list.slice().sort(khSort);
@@ -235,6 +248,7 @@ function renderKeHoach(){
   const stats = [
     {key:'pending',  icon:'⏳', ic:'#FCF0DE', col:'#C2700A', n:waiting.length,      l:'Chờ sản xuất',  sub:kgSum(waiting).toLocaleString('vi-VN')+' kg'},
     {key:'running',  icon:'⚙️', ic:'#DBEAFE', col:'#2856D6', n:running.length,      l:'Đang sản xuất', sub:kgSum(running).toLocaleString('vi-VN')+' kg'},
+    {key:'paused',   icon:'⏸', ic:'#FEF3C7', col:'#B45309', n:paused.length,       l:'Tạm dừng',      sub:kgSum(paused).toLocaleString('vi-VN')+' kg'},
     {key:'priority', icon:'🚩', ic:'#FEE2E2', col:'#DC2626', n:priorityList.length, l:'Đơn ưu tiên',   sub:kgSum(priorityList).toLocaleString('vi-VN')+' kg'},
     {key:'overdue',  icon:'⚠️', ic:'#FEE2E2', col:'#DC2626', n:overdueList.length,  l:'Trễ tiến độ',   sub:kgSum(overdueList).toLocaleString('vi-VN')+' kg'},
   ];
@@ -244,7 +258,7 @@ function renderKeHoach(){
   // ── Chip tóm tắt bộ lọc đang áp dụng (không đổi logic — chỉ đọc lại các
   // biến bộ lọc đã có sẵn và gọi lại đúng setter + renderKeHoach() khi bấm ✕,
   // giống hệt việc chọn "Tất cả" trong Bottom Sheet bộ lọc hiện tại). ──
-  const KH_STATUS_LABEL = {pending:'Chờ sản xuất', running:'Đang sản xuất', overdue:'Trễ tiến độ', priority:'Đơn ưu tiên'};
+  const KH_STATUS_LABEL = {pending:'Chờ sản xuất', running:'Đang sản xuất', paused:'Tạm dừng', overdue:'Trễ tiến độ', priority:'Đơn ưu tiên'};
   const filterChips = [];
   if(khFilterStatus!=='all') filterChips.push({l:'Trạng thái', v:KH_STATUS_LABEL[khFilterStatus]||khFilterStatus, clear:"setKhFilter('"+khFilterStatus+"')"});
   if(khFilterCustomer!=='all') filterChips.push({l:'Khách hàng', v:khFilterCustomer, clear:"khFilterCustomer='all';renderKeHoach()"});

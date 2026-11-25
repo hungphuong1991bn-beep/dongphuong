@@ -14,7 +14,8 @@ function dhMachineQueue(machineId, excludeOrderId){
   const myStage = m ? ASSIGN_STAGES.find(s=>s.group===m.group) : null;
   if(!myStage) return [];
   return DB.orders
-    .filter(o=>o.id!==excludeOrderId && o.status!=='done' && orderMachineAssign(o)[myStage.key]===machineId)
+    // v2.14: đơn TẠM DỪNG không nằm trong hàng đợi tự chạy — chỉ người dùng bấm "Tiếp tục" mới chạy lại
+    .filter(o=>o.id!==excludeOrderId && o.status!=='done' && o.status!=='paused' && orderMachineAssign(o)[myStage.key]===machineId)
     // Loại trừ đúng đơn ĐANG THỰC SỰ CHẠY tại máy này (hiển thị riêng bởi
     // dhOrderAtMachine, không phải "đơn chạy tiếp") — dùng CHUNG 1 điều kiện
     // duy nhất dhIsOrderRunningAtStage() để không bao giờ lệch với thẻ máy:
@@ -160,9 +161,10 @@ function promoteQueuedOrderToRunning(machineId){
     // đúng máy này (machineActiveAt) — nguồn duy nhất chống 2 đơn cùng
     // "đang chạy" 1 máy (xem dhOrderAtMachine/dhMachineQueue).
     const before = next.status;
+    rcPrep(next); // v2.14: chuẩn hoá mô hình phiên trước khi đổi trạng thái
     next.status = 'running';
-    if(!next.startedAt) next.startedAt = Date.now();
     if(!next.stage) next.stage = myStage.key;
+    rcApplyStart(next, rcNow(), 'start'); // đặt startedAt (lần đầu) + mở phiên chạy (giữ phiên đang mở nếu đơn chỉ đổi từ hàng đợi)
     dhMarkActiveAtMachine(next, myStage.key, machineId);
 
     log('Tự động chạy tiếp', `${next.customer||''} · ${ASSIGN_STAGE_LABEL[myStage.key]||''} → ${m.name}`,
@@ -241,6 +243,7 @@ function assignMachine(orderId, stageKey, machineId){
         queueAfter = conflict; // xếp hàng, không chặn
       }
     }
+    rcPrep(o); // v2.14: chốt phiên cũ theo máy CŨ trước khi đổi máy (không ghi đè lịch sử máy)
     if(!o.machineAssign) o.machineAssign = {};
     if(machineId) o.machineAssign[stageKey] = machineId; else delete o.machineAssign[stageKey];
     // Gán lại công đoạn từng bị nhả → bỏ dòng lịch sử cũ của công đoạn đó
@@ -256,6 +259,8 @@ function assignMachine(orderId, stageKey, machineId){
     if(machineId && o.status==='running' && (o.stage||'dun')===stageKey && !queueAfter){
       dhMarkActiveAtMachine(o, stageKey, machineId);
     }
+    // v2.14: đơn đang chạy đổi máy ở công đoạn hiện tại → đóng phiên máy cũ, mở phiên máy mới
+    if(o.status==='running' && (o.stage||'dun')===stageKey) rcApplyMachine(o, rcNow());
     // Phân công máy tự lưu ngay (saveOrders bên dưới) → không được để drawer
     // bị coi là "biểu mẫu chưa lưu" khi người dùng đóng lại.
     if(window.dpUI && dpUI.modal) dpUI.modal.markClean('khDetailModal');
@@ -264,7 +269,9 @@ function assignMachine(orderId, stageKey, machineId){
     log('Phân công máy', `${o.customer||''} · ${ASSIGN_STAGE_LABEL[stageKey]||stageKey} → ${m?m.name:'(bỏ gán)'}`, orderId, {[stageKey]:old}, {[stageKey]:machineId});
     renderTab(currentTab);
     refreshKhDetailIfOpen(orderId);
-    if(m && queueAfter){
+    if(m && o.status==='paused' && queueAfter){
+      showToast(`🏭 Đã gán ${m.name} — máy đang chạy đơn ${ddCode(queueAfter)}, đơn tạm dừng chỉ tiếp tục được khi máy trống`);
+    } else if(m && queueAfter){
       const pos = dhMachineQueue(machineId).findIndex(x=>x.id===orderId);
       showToast(`🕐 Đã xếp hàng chờ ${m.name} — sẽ chạy tiếp sau đơn ${ddCode(queueAfter)}${pos>0?` (vị trí #${pos+1})`:''}`);
     } else {

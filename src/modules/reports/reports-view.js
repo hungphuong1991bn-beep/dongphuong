@@ -45,6 +45,7 @@ function buildStatusDonut(counts,total){
   const segs=[
     {key:'done',label:'Hoàn thành',color:'#10b981',val:counts.done},
     {key:'running',label:'Đang chạy',color:'#3b82f6',val:counts.running},
+    {key:'paused',label:'Tạm dừng',color:'#d97706',val:counts.paused||0},
     {key:'pending',label:'Chờ SX',color:'#f59e0b',val:counts.pending},
   ];
   let acc=0; const stops=[];
@@ -79,8 +80,8 @@ function renderBaoCao(){
   const customersArr=[...new Set(orders.map(o=>o.customer).filter(Boolean))];
 
   // Thời gian SX trung bình (từ startedAt → doneAt) của các đơn đã xong
-  const withDuration=done.filter(o=>o.startedAt&&o.doneAt&&o.doneAt>o.startedAt);
-  const avgDurMs=withDuration.length? withDuration.reduce((s,o)=>s+(o.doneAt-o.startedAt),0)/withDuration.length : 0;
+  const withDuration=done.filter(o=>o.startedAt&&o.doneAt&&rcRunMs(o)>0);
+  const avgDurMs=withDuration.length? withDuration.reduce((s,o)=>s+rcRunMs(o),0)/withDuration.length : 0; // v2.14: thời gian CHẠY thực tế
 
   // 14 ngày gần nhất — sản lượng KG hoàn thành theo ngày
   const N=14;
@@ -110,7 +111,7 @@ function renderBaoCao(){
   const topCust=custStats.slice(0,5);
   const maxCustKg=Math.max(1,...topCust.map(c=>c.kg));
 
-  const donut=buildStatusDonut({done:done.length,running:running.length,pending:pending.length},orders.length);
+  const donut=buildStatusDonut({done:done.length,running:running.length,paused:orders.filter(o=>o.status==='paused').length,pending:pending.length},orders.length);
   const barChart=buildDailyBarChart(last14);
 
   $('mc').innerHTML=`

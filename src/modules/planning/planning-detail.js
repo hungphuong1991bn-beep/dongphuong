@@ -42,9 +42,13 @@ function khToggleMenu(id, ev){
   const o = DB.orders.find(x=>x.id===id); if(!o) return;
   const s = o.status==='cutting'?'running':o.status;
   const canEdit = isAdmin();
+  const canStatus = isStaff();
   menu.innerHTML = `
     <button onclick="closeAllActionMenus();khViewDetail('${o.id}')">👁 Xem chi tiết</button>
-    ${s==='running'?`<button onclick="closeAllActionMenus();khRevertToPending('${o.id}',event)">⏳ Chuyển về Chờ sản xuất</button>`:''}
+    ${s==='running'&&canStatus?`<button onclick="closeAllActionMenus();rcPauseDialog('${o.id}',event)">⏸ Tạm dừng sản xuất</button>`:''}
+    ${s==='paused'&&canStatus?`<button onclick="closeAllActionMenus();rcResumeOrder('${o.id}',null,event)">▶ Tiếp tục sản xuất</button>`:''}
+    ${(s==='running'||s==='paused')?`<button onclick="closeAllActionMenus();rcOpenHistory('${o.id}')">📜 Lịch sử phiên chạy</button>`:''}
+    ${(s==='running'||s==='paused')?`<button onclick="closeAllActionMenus();khRevertToPending('${o.id}',event)">⏳ Chuyển về Chờ sản xuất</button>`:''}
     ${canEdit?`<button onclick="closeAllActionMenus();khEditRow('${o.id}',event)">✏️ Sửa đơn hàng</button>`:''}
     ${canEdit?`<button class="danger" onclick="closeAllActionMenus();khDeleteRow('${o.id}',event)">🗑 Xóa đơn hàng</button>`:''}
   `;
@@ -134,14 +138,15 @@ function khProductionStats(o){
   const qtyPct = qty ? Math.min(100,Math.round(done/qty*100)) : 0;
   const stagePct = khStageProgressPct(o);
   const unit = o.isCoil ? 'cuộn' : (o.isRound?'cây':'thanh');
-  const elapsedMs = o.startedAt ? (s==='done'&&o.doneAt ? o.doneAt-o.startedAt : Date.now()-o.startedAt) : 0;
+  const elapsedMs = rcRunMs(o); // v2.14: thời gian CHẠY thực tế (không gồm lúc tạm dừng)
   const curStage = STAGES.find(x=>x.key===o.stage);
   return `<div class="kh-detail-grid">
     <div><b>Đã hoàn thành</b><span>${done}/${qty||0} ${unit} (${qtyPct}%)</span></div>
     <div><b>Còn lại</b><span>${remain} ${unit}</span></div>
     <div><b>Tiến độ công đoạn</b><span>${s==='done'?'✓ 100%':stagePct+'%'}</span></div>
     <div><b>Công đoạn hiện tại</b><span>${s==='done'?'Đã hoàn tất':(curStage?curStage.icon+' '+curStage.label:'—')}</span></div>
-    <div><b>Thời gian đã sản xuất</b><span>${elapsedMs?fmtDuration(elapsedMs):'—'}</span></div>
+    <div><b>Thời gian chạy thực tế</b><span>${elapsedMs?rcFmtHMS(elapsedMs,true):'—'}${rcRunSource(o)==='legacy'?' <small>(tính từ ngày bắt đầu — đơn cũ)</small>':''}</span></div>
+    ${rcPauseCount(o)?`<div><b>Tạm dừng</b><span>${rcPauseCount(o)} lần · nghỉ ${rcFmtDur(rcPausedTotalMs(o))}</span></div>`:''}
     <div><b>Ghi chú tiến độ</b><span>${o.progressNote||'—'}</span></div>
   </div>`;
 }
@@ -198,6 +203,8 @@ function khViewDetail(id){
       <div class="kh-detail-sec-title">📊 Tiến độ sản xuất</div>
       ${khProgressFx(o)||'<div class="empty" style="padding:4px 0;font-size:12.5px;color:var(--text4)">Chưa bắt đầu sản xuất</div>'}
       ${khStageFlow(o, isStaff())}
+      ${isStaff()&&(o.status==='running'||o.status==='cutting')?`<div class="rc-drawer-actions">${rcPauseBtnHTML(o)}</div>`:''}
+      ${isStaff()&&o.status==='paused'?`${rcPausedInfoHTML(o)}<div class="rc-drawer-actions">${rcResumeBtnHTML(o)}</div>`:''}
     </div>
     <div class="kh-detail-sec">
       <div class="kh-detail-sec-title">🏭 Phân công máy</div>
@@ -207,6 +214,10 @@ function khViewDetail(id){
       <div class="kh-detail-sec-title">📈 Thống kê sản xuất</div>
       ${khProductionStats(o)}
     </div>
+    ${(o.status!=='pending')?`<div class="kh-detail-sec">
+      <div class="kh-detail-sec-title">⏱ Phiên chạy & tạm dừng</div>
+      ${rcHistoryHTML(o)}
+    </div>`:''}
     <div class="kh-detail-sec">
       <div class="kh-detail-sec-title">🕐 Timeline</div>
       ${khTimeline(o)}

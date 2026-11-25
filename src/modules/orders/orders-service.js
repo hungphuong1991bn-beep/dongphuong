@@ -437,7 +437,9 @@ async function autoCleanupDoneOrders(){
 
 // Hash để detect thay đổi
 function hashOrders(list){
-  return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)).join(';');
+  // v2.14: thêm version + số phiên chạy — tạm dừng / tiếp tục / đổi máy khi trạng thái không đổi vẫn được
+  // nhận ra là "có thay đổi" (mỗi lần ghi đơn đều tăng version, xem stampOrderVersion).
+  return (list||[]).map(o=>o.id+'|'+o.status+'|'+(o.doneAt||0)+'|'+(o.startedAt||0)+'|'+(o.version||0)+'|'+(Array.isArray(o.runSessions)?o.runSessions.length:0)).join(';');
 }
 
 let _savingOrder = false;
@@ -599,6 +601,12 @@ function setStatus(id, newStatus){if(guardViewer())return;
   // DB.orders, nếu không tìm thấy thì dừng lại, không tự tạo mới.
   const o=DB.orders.find(x=>x.id===id); if(!o) return;
 
+  // [v2.14] Đơn đang TẠM DỪNG chỉ được chạy lại qua rcResumeOrder() (khoá + đọc lại server + kiểm tra máy).
+  // Đơn đang chạy mà nhận lệnh "chạy" nữa (bấm đúp / 2 thiết bị) → bỏ qua, không ghi lại lần 2.
+  if(newStatus==='running' && o.status==='paused'){ rcResumeOrder(id); return; }
+  if(newStatus==='running' && (o.status==='running'||o.status==='cutting')) return;
+  if(newStatus==='paused'){ rcPauseDialog(id); return; }
+
   // Bắt đầu chạy: nếu công đoạn hiện tại (mặc định 'dun' nếu đơn chưa từng
   // chạy) đã được phân công máy, và máy đó đang thực sự CHẠY đơn khác →
   // chặn lại, không cho 2 đơn cùng "chạy chồng" trên 1 máy. Đơn bị chặn vẫn
@@ -628,9 +636,11 @@ function setStatus(id, newStatus){if(guardViewer())return;
     ? Array.from(new Set(Object.values(orderMachineAssign(o)).filter(Boolean))) : [];
 
   const before=o.status;
+  const _now = rcNow();                 // [v2.14] mọi mốc giờ theo giờ máy chủ (nowSrv)
+  rcPrep(o);                            // [v2.14] chuẩn hoá mô hình phiên TRƯỚC khi đổi stage/status
   o.status=newStatus;
-  if(newStatus==='running'&&!o.startedAt) o.startedAt=Date.now();
   if(newStatus==='running'&&!o.stage) o.stage='dun';
+  if(newStatus==='running') rcApplyStart(o, _now, 'start');   // đặt startedAt (lần đầu) + mở phiên chạy
   // Bấm "Bắt đầu sản xuất" đã qua kiểm tra không xung đột ở trên → xác nhận
   // NGAY đơn này đang chạy thật tại đúng máy công đoạn hiện tại (nếu có gán
   // máy) — đồng bộ với cơ chế machineActiveAt dùng ở setStage()/
@@ -640,11 +650,13 @@ function setStatus(id, newStatus){if(guardViewer())return;
     const mid = orderMachineAssign(o)[stKey];
     if(mid) dhMarkActiveAtMachine(o, stKey, mid);
   }
-  if(newStatus==='done') o.doneAt=Date.now();
+  if(newStatus==='done') rcApplyDone(o, _now);   // chốt phiên cuối + tổng thời gian chạy (trước khi stage bị đặt lại bên dưới)
+  if(newStatus==='pending') rcApplyRevert(o, _now);
+  if(newStatus==='done') o.doneAt=_now;
   if(newStatus==='done') o.stage='danhbong';
   if(newStatus==='done') o.doneBy=currentUser?.name||'—';
   if(newStatus!=='done') delete o.doneAt;
-  const lb={pending:'Chờ sản xuất',running:'Đang sản xuất',done:'Hoàn thành'};
+  const lb={pending:'Chờ sản xuất',running:'Đang sản xuất',paused:'Tạm dừng',done:'Hoàn thành'};
   log(lb[newStatus]||newStatus,
     `${o.customer} · ${o.priority||''} · ${specStr(o)} · ${qtyLabel(o)}`,
     id,
@@ -660,7 +672,7 @@ function setStatus(id, newStatus){if(guardViewer())return;
   updateBadges();
   refreshKhDetailIfOpen(id); // panel chi tiết (nếu đang mở đúng đơn) cập nhật ngay, không cần đóng/mở lại
   goToOrderCard(id); // Nổi bật + cuộn tới đúng thẻ đơn vừa đổi trạng thái, tránh mất dấu khi đơn đổi vị trí/cột
-  showToast({pending:'⏳ Chờ sản xuất',running:'⚙️ Đang sản xuất!',done:'✅ Hoàn thành!'}[newStatus]||'');
+  showToast({pending:'⏳ Chờ sản xuất',running:'⚙️ Đang sản xuất!',paused:'⏸ Tạm dừng',done:'✅ Hoàn thành!'}[newStatus]||'');
 
   // Firebase
   saveOrders();

@@ -17,7 +17,7 @@ async function htExportExcel(){
   const sorted = rows.slice().sort((a,b)=> (b.doneAt||0)-(a.doneAt||0));
   const data = sorted.map((o,i)=>{
     const st = htStage(o);
-    const dur = (o.startedAt&&o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : '';
+    const dur = (o.startedAt&&o.doneAt) ? rcFmtDur(rcRunMs(o)) : '';
     return {
       stt: i+1, code: htCode(o), customer: o.customer||'', po: o.po||'',
       type: o.type||'', material: ddMaterialLabel(o.material), spec: specStr(o),
@@ -44,7 +44,7 @@ async function htExportExcel(){
       {header:'KL (kg)', key:'kg', width:10, numFmt:'num'},
       {header:'Ngày đặt', key:'createdAt', width:12, numFmt:'date'},
       {header:'Hoàn thành lúc', key:'doneAtText', width:16},
-      {header:'Thời gian SX', key:'duration', width:12},
+      {header:'Thời gian chạy thực tế', key:'duration', width:12},
       {header:'Trạng thái', key:'status', width:14},
       {header:'Xác nhận bởi', key:'confirmedBy', width:16},
       {header:'Ghi chú', key:'note', width:22}

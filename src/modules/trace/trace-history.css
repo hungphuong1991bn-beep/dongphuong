@@ -1,0 +1,40 @@
+/* v2.14.0 — Bảng chi tiết truy xuất sản xuất (tab Đơn hoàn thành) — phong cách MES/ERP */
+.th-box{max-width:min(1040px,97vw);width:100%;max-height:94vh;display:flex;flex-direction:column}
+.th-modal .modal-box #thBody{overflow-y:auto;flex:1 1 auto;padding-right:4px;font-size:13px}
+.th-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.th-tools{display:flex;gap:6px}.th-tool{padding:6px 12px;font-size:12.5px}
+.th-sec{margin:0 0 14px}.th-sec-t{font-weight:800;font-size:13.5px;margin:8px 0 8px;color:var(--brand,#1D3FAE)}.th-sec-t small{font-weight:500;color:#78716C}
+.th-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px}
+.th-grid-2{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin:8px 0}
+.th-grid>div{display:flex;flex-direction:column;border-bottom:1px solid var(--border,#EEF0F3);padding:3px 0;min-width:0}
+.th-grid b{font-size:10.5px;color:#78716C;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+.th-grid span{word-break:break-word}.th-span{grid-column:1/-1}
+.th-big{font-size:18px;font-weight:800;color:var(--brand,#1D3FAE)}
+.th-note,.th-foot{margin-top:6px;font-size:11.5px;color:#78716C}.th-note{padding:6px 9px;background:#FFFBEB;border-left:3px solid #D97706;border-radius:0 8px 8px 0;color:#92400E}
+.th-warn{color:#B45309;font-weight:600}
+/* Timeline */
+.th-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:#667085;margin-bottom:8px}
+.th-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 0;vertical-align:-1px}
+.th-legend i.is-done,.th-node i{--c:#16A34A}
+.th-flow{position:relative;display:flex;flex-direction:column;gap:0;padding-left:6px}
+.th-stage{--c:#94A3B8;--bg:#F8FAFC;position:relative;margin:0 0 12px 22px;border:1px solid var(--border,#E4E7EE);border-left:4px solid var(--c);border-radius:10px;background:var(--bg);padding:0 12px}
+.th-stage::before{content:"";position:absolute;left:-26px;top:100%;height:12px;width:3px;background:var(--c);opacity:.45}
+.th-stage:last-child::before{display:none}
+.th-stage.is-done{--c:#16A34A;--bg:#F3FBF6}.th-stage.is-run{--c:#2563EB;--bg:#EFF6FF}.th-stage.is-paused{--c:#D97706;--bg:#FFFBEB}
+.th-stage.is-missing{--c:#94A3B8;--bg:#F8FAFC;border-style:dashed;border-left-style:solid}.th-stage.is-partial{--c:#EA580C;--bg:#FFF7ED}.th-stage.is-planned{--c:#7C3AED;--bg:#F5F3FF}
+.th-legend i.is-done{background:#16A34A}.th-legend i.is-run{background:#2563EB}.th-legend i.is-paused{background:#D97706}.th-legend i.is-missing{background:#94A3B8}
+.th-stage summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;padding:10px 0}
+.th-stage summary::-webkit-details-marker{display:none}
+.th-node{position:absolute;left:-23px;top:10px;width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--c);display:flex;align-items:center;justify-content:center;font-size:16px;z-index:1}
+.th-node i{font-style:normal}.th-stage.is-run .th-node{animation:thPulse 1.8s ease-out infinite}
+@keyframes thPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}100%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}
+.th-stg-main{display:flex;flex-direction:column;flex:1;min-width:0;padding-left:20px}.th-stg-main b{font-size:13px}.th-stg-main small{color:#667085;font-size:11.5px}
+.th-stg-time{font-weight:800;font-variant-numeric:tabular-nums;color:var(--c)}
+.th-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--c);color:var(--c);background:#fff;white-space:nowrap}
+.th-stage[open] summary{border-bottom:1px solid var(--border,#E4E7EE)}.th-stage>*:last-child{margin-bottom:10px}
+.th-qc{display:inline-block;font-size:11px;font-weight:800;padding:1px 9px;border-radius:999px}
+.th-qc.ok{background:#DCFCE7;color:#166534}.th-qc.ng{background:#FEE2E2;color:#B91C1C}.th-qc.unk{background:#EEF0F3;color:#556072}
+.th-gaps{background:#FFFBEB;border:1px dashed #FCD34D;border-radius:10px;padding:8px 12px}.th-gaps ul{margin:4px 0 0 18px;padding:0;font-size:12px;color:#78350F}
+.th-why{color:#78716C}
+@media(max-width:640px){.th-stg-time{display:none}.th-stage{margin-left:18px}.th-node{left:-21px;width:30px;height:30px}.th-big{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.th-stage.is-run .th-node{animation:none}}

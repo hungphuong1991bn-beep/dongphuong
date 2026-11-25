@@ -199,10 +199,10 @@ function htmPagerHTML(total, page, pageSize){
 // ở đầu thẻ, bấm vào thẻ mở đúng chi tiết như bản desktop (htViewDetail).
 function htmCard(o){
   const st = htStage(o);
-  const dur = (o.startedAt && o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : '—';
+  const dur = (o.startedAt && o.doneAt) ? rcFmtDur(rcRunMs(o)) : '—';
   const expSoon = htIsExpiringSoon(o);
   const purgeDays = expSoon ? htDaysUntilPurge(o) : null;
-  return `<div class="htm-card${expSoon?' ht-expiring':''}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
+  return `<div class="htm-card${expSoon?' ht-expiring':''}" data-order-id="${o.id}" onclick="thOpen('${o.id}')">
     <div class="htm-top">
       <span class="htm-check" style="color:${st.color}">${htStageIcon(st.key)}</span>
       <span class="htm-code">${o.customer||'—'}</span>
@@ -217,7 +217,7 @@ function htmCard(o){
       <div class="htm-cell"><span class="htm-lbl">Quy cách</span><span class="htm-val">${specStr(o)}</span></div>
       <div class="htm-cell"><span class="htm-lbl">Hoàn thành lúc</span><span class="htm-val">${fmtDateTime(o.doneAt)}</span></div>
       <div class="htm-cell"><span class="htm-lbl">Số lượng kế hoạch</span><span class="htm-val">${qtyLabel(o)}</span></div>
-      <div class="htm-cell"><span class="htm-lbl">Thời gian SX</span><span class="htm-val htm-val-dur">${dur}</span></div>
+      <div class="htm-cell"><span class="htm-lbl">Thời gian chạy</span><span class="htm-val htm-val-dur">${dur}</span></div>
       <div class="htm-cell"><span class="htm-lbl">Số lượng hoàn thành</span><span class="htm-val htm-val-done">${qtyLabel(o)}${o.kg?` · ${o.kg}kg`:''}</span></div>
       <div class="htm-cell"><span class="htm-lbl">Nhân viên phụ trách</span><span class="htm-val">${htConfirmedBy(o)}</span></div>
     </div>
@@ -233,7 +233,7 @@ function htRow(o, stt){
   const expSoon = htIsExpiringSoon(o);
   const purgeDays = expSoon ? htDaysUntilPurge(o) : null;
   const rowCls = [fresh?'ht-fresh':'', expSoon?'ht-expiring':''].filter(Boolean).join(' ');
-  return `<tr class="${rowCls}" data-order-id="${o.id}" onclick="htViewDetail('${o.id}')">
+  return `<tr class="${rowCls}" data-order-id="${o.id}" onclick="thOpen('${o.id}')">
     <td><div class="ord-cust-info"><span class="ord-stt-badge" title="STT">${stt!=null?stt:''}</span><div class="ord-cust-info-txt"><span class="ord-cust-name">${o.customer||'—'}</span>${o.po?`<span class="ord-po-sub">PO ${o.po}</span>`:''}</div></div></td>
     <td>${o.type||'—'}</td>
     <td>${ddMaterialLabel(o.material)}</td>
@@ -241,7 +241,7 @@ function htRow(o, stt){
     <td>${qtyLabel(o)}${o.kg?`<div style="font-size:10.5px;color:var(--text4);font-weight:600">⚖️ ${o.kg}kg</div>`:''}</td>
     <td>${fmtDate(o.createdAt)}</td>
     <td style="color:#0C7A54;font-weight:800">${fmtDateTime(o.doneAt)}</td>
-    <td style="color:var(--brand);font-weight:800">${o.startedAt&&o.doneAt?fmtDuration(o.doneAt-o.startedAt):'—'}</td>
+    <td style="color:var(--brand);font-weight:800">${o.startedAt&&o.doneAt?rcFmtDur(rcRunMs(o)):'—'}</td>
     <td>
       <div class="ht-status-cell">
         ${htStatusChip(o,st,fresh)}
@@ -404,7 +404,7 @@ function renderHoanThanh(){
           <th>Số lượng</th>
           <th>Ngày Đặt</th>
           <th>Hoàn thành lúc</th>
-          <th>Thời gian SX</th>
+          <th>Thời gian chạy</th>
           <th>Trạng thái</th>
           <th>Xác nhận</th>
           <th>Thao tác</th>

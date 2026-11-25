@@ -50,7 +50,8 @@ function htToggleMenu(id, ev){
   const canStatus = isStaff();
   const canDel = isAdmin();
   menu.innerHTML = `
-    <button onclick="closeAllActionMenus();htViewDetail('${o.id}')">👁 Xem chi tiết</button>
+    <button onclick="closeAllActionMenus();thOpen('${o.id}')">🔎 Truy xuất sản xuất</button>
+    <button onclick="closeAllActionMenus();htViewDetail('${o.id}')">👁 Nhập kho / giao hàng</button>
     <button onclick="closeAllActionMenus();htPrintOrder('${o.id}',event)">📄 In phiếu</button>
     ${canStatus&&st.key==='new'?`<button onclick="closeAllActionMenus();htMarkWarehouse('${o.id}',event)">📦 Xác nhận nhập kho</button>`:''}
     ${canStatus&&st.key==='shipping'?`<button onclick="closeAllActionMenus();htMarkDelivered('${o.id}',event)">🚚 Xác nhận giao hàng</button>`:''}
@@ -150,6 +151,8 @@ function htRevertToPending(id, ev){
       o.status='pending';
       delete o.doneAt; delete o.doneBy;
       delete o.startedAt; delete o.stage;
+      // v2.14: đơn quay về như chưa từng chạy → xoá luôn dữ liệu phiên chạy / tạm dừng (nếu không, tổng cộng dồn cũ sẽ dính sang lần chạy mới)
+      delete o.runSessions; delete o.pauseHistory; delete o.accumulatedRunMs; delete o.pausedAt; delete o.resumedAt;
       delete o.whIn; delete o.whAt; delete o.whBy; delete o.whLocation;
       delete o.delivered; delete o.deliveredAt; delete o.deliveredBy; delete o.exportSlipNo;
       delete o.returned; delete o.returnedAt;
@@ -180,7 +183,7 @@ function htViewDetail(id){
   }
 
   // Thời gian sản xuất thực tế (bắt đầu → hoàn thành)
-  const prodDuration = (o.startedAt && o.doneAt) ? fmtDuration(o.doneAt-o.startedAt) : null;
+  const prodDuration = (o.startedAt && o.doneAt) ? rcFmtDur(rcRunMs(o)) : null; // v2.14: thời gian CHẠY thực tế
 
   // Số lượng kế hoạch vs thực tế — chỉ hiện dòng riêng khi có sự khác biệt
   // đáng chú ý (đơn thiếu/dư so với kế hoạch ban đầu), tránh lặp thông tin
@@ -207,7 +210,7 @@ function htViewDetail(id){
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
       <div><b>Ngày đặt đơn:</b> ${fmtDateTime(o.createdAt)}${ddOwner(o)!=='—'?` · người tạo: <b>${ddOwner(o)}</b>`:''}</div>
       ${o.deliveryDate?`<div><b>Hạn giao:</b> ${fmtDate(o.deliveryDate)}</div>`:''}
-      ${prodDuration?`<div><b>Thời gian sản xuất:</b> ${prodDuration}${o.startedAt?` (bắt đầu ${fmtDateTime(o.startedAt)})`:''}</div>`:''}
+      ${prodDuration?`<div><b>Thời gian chạy thực tế:</b> ${prodDuration}${o.startedAt?` (bắt đầu ${fmtDateTime(o.startedAt)})`:''}</div>`:''}
       ${o.address?`<div><b>Địa chỉ giao:</b> ${o.address}</div>`:''}
     </div>
     <div class="ht-timeline" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
@@ -259,7 +262,7 @@ function htPrintOrder(id, ev){
     ${o.priority?`<tr><td class="lbl">Mức ưu tiên</td><td>${o.priority}</td></tr>`:''}
     <tr><td class="lbl">Ngày đặt đơn</td><td>${fmtDateTime(o.createdAt)}${ddOwner(o)!=='—'?' · người tạo: '+ddOwner(o):''}</td></tr>
     ${o.deliveryDate?`<tr><td class="lbl">Hạn giao</td><td>${fmtDate(o.deliveryDate)}</td></tr>`:''}
-    ${(o.startedAt&&o.doneAt)?`<tr><td class="lbl">Thời gian sản xuất</td><td>${fmtDuration(o.doneAt-o.startedAt)} (bắt đầu ${fmtDateTime(o.startedAt)})</td></tr>`:''}
+    ${(o.startedAt&&o.doneAt)?`<tr><td class="lbl">Thời gian chạy thực tế</td><td>${rcFmtDur(rcRunMs(o))} (bắt đầu ${fmtDateTime(o.startedAt)})</td></tr>`:''}
     <tr><td class="lbl">Ngày hoàn thành</td><td>${fmtDateTime(o.doneAt)}${o.doneBy?' · '+o.doneBy:''}</td></tr>
     <tr><td class="lbl">Ngày nhập kho</td><td>${o.whIn?fmtDateTime(o.whAt)+(o.whBy?' · '+o.whBy:''):'Chưa nhập kho'}${o.whLocation?' · vị trí: '+o.whLocation:''}</td></tr>
     <tr><td class="lbl">Ngày giao</td><td>${o.delivered?fmtDateTime(o.deliveredAt)+(o.deliveredBy?' · '+o.deliveredBy:''):'Chưa giao'}</td></tr>

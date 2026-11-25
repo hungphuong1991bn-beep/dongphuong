@@ -5,6 +5,7 @@
 function statusInfo(s){
   if(s==='done') return {label:'✅ Hoàn thành',cls:'b-done',btnCls:'active-done'};
   if(s==='running'||s==='cutting') return {label:'⚙️ Đang sản xuất',cls:'b-run',btnCls:'active-run'};
+  if(s==='paused') return {label:'⏸ Tạm dừng',cls:'b-paused',btnCls:'active-paused'};
   return {label:'⏳ Chờ sản xuất',cls:'b-wait',btnCls:'active-wait'};
 }
 

@@ -118,6 +118,8 @@ function setStage(id, stage){if(guardViewer())return;
     if(!isStaff()) return;
     const old = o.stage;
     if(old===stage) return;
+    if(o.status==='paused'){ showToast('⏸ Đơn đang tạm dừng — hãy bấm "Tiếp tục sản xuất" trước khi chuyển công đoạn', true); return; }
+    rcPrep(o); // v2.14: chốt phiên theo công đoạn/máy CŨ trước khi đổi
 
     // SỬA LỖI GỐC (đơn chờ tiếp theo kẹt vĩnh viễn dù máy cũ đã trống thật):
     // TRƯỚC ĐÂY nếu máy của công đoạn MỚI đang bận đơn khác, hàm này CHẶN
@@ -137,6 +139,7 @@ function setStage(id, stage){if(guardViewer())return;
     // tìm thấy đúng đơn này trong hàng đợi và tự đẩy lên RUNNING (đã sửa để
     // không còn bỏ qua đơn có status='running' — xem promoteQueuedOrderToRunning).
     o.stage = stage;
+    rcApplyStage(o, rcNow()); // v2.14: đóng phiên công đoạn cũ, mở phiên công đoạn mới (liền mạch)
     const releasedIds = dhReleaseEarlierMachines(o, stage);
     const releasedNames = releasedIds.map(mid=>machineById(mid)?.name||mid);
 
