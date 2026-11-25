@@ -8,8 +8,8 @@
 
 ## [2.14.1] Hành trình sản xuất theo công đoạn — lấy máy từ phân máy ở Kế hoạch SX (25/11/2026)
 - **Mới — tab Đơn hoàn thành → Truy xuất → Hành trình sản xuất theo công đoạn:** mỗi công đoạn có dòng **"Máy theo Kế hoạch SX (phân máy)"** đọc từ `o.machineAssign` (máy đang gán) và `o.machineHistory` (máy đã lưu vết khi đơn đi qua công đoạn); ghi rõ nguồn "đang gán" / "đã lưu vết". Công đoạn chưa phân máy hiện "CHƯA CÓ DỮ LIỆU", không đoán.
-- **Mới:** dải tổng hợp Đùn → Rút → Đánh bóng → Cắt ngay đầu phần Hành trình; dòng tóm tắt công đoạn hiện "🗂 Kế hoạch: <máy>" khi chưa có phiên chạy.
-- **Mới:** cảnh báo khi máy phân công khác máy ghi ở phiên chạy thực tế (khối "Dữ liệu chưa được ghi nhận"); Excel sheet "Cong doan" thêm cột "Máy theo Kế hoạch SX (phân máy)"; PDF in kèm dải máy.
+- **Mới:** dòng tóm tắt công đoạn hiện "🗂 Kế hoạch: <máy>" khi chưa có phiên chạy.
+- **Mới:** cảnh báo khi máy phân công khác máy ghi ở phiên chạy thực tế (khối "Dữ liệu chưa được ghi nhận"); Excel sheet "Cong doan" thêm cột "Máy theo Kế hoạch SX (phân máy)".
 - Chỉ đọc, không ghi dữ liệu, không đổi cấu trúc DB. Giữ nguyên ngữ nghĩa cũ: chỉ phân công ≠ đã chạy. Sửa: `trace-history.js`, `trace-history-view.js`, `trace-history.css`; thêm TEST 10 vào `tests/static/trace-history.test.js`.
 
 ## [2.14.0] Tạm dừng / Tiếp tục sản xuất + Bảng truy xuất lịch sử sản xuất (25/11/2026)

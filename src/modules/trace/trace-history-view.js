@@ -23,10 +23,6 @@ function thMach(ids){ return ids && ids.length ? ids.map(m=>esc(rcMachineName(m)
 function thQ(v, unit){ return v==null ? TH_NA : `<b>${esc(Number(v).toLocaleString('vi-VN'))}</b> ${esc(unit||'')}`; }
 const TH_PLAN_VIA = {assign:'đang gán trong Kế hoạch SX', history:'đã lưu vết khi đơn đi qua công đoạn'};
 function thPlanHTML(p){ return p ? `<b>${esc(rcMachineName(p.machineId))}</b> <small>(${TH_PLAN_VIA[p.via]||''})</small>` : `${TH_NA} <small>(Kế hoạch SX chưa phân máy)</small>`; }
-function thRouteHTML(model){
-  const chips = (model.routing||[]).map(r=>`<span class="th-route-i ${r.machineId?'':'is-none'} ${r.diff?'is-diff':''}"><i>${r.icon}</i><span><small>${esc(r.label)}</small><b>${r.machineId?esc(rcMachineName(r.machineId)):'Chưa phân máy'}</b></span></span>`).join('<em class="th-route-arrow">→</em>');
-  return `<div class="th-route"><div class="th-route-t">🏭 Máy theo Kế hoạch SX (phân máy) <small>— đọc từ tab Kế hoạch SX</small></div><div class="th-route-row">${chips}</div></div>`;
-}
 const TH_QC_RES = {OK:['Đạt','ok'], NG:['Không đạt','ng'], HOLD:['HOLD','ng'], NCR:['NCR','ng'], UNK:['Chưa kết luận','unk']};
 
 function thEnsureModal(){
@@ -100,7 +96,6 @@ function thRender(){
     <div class="th-sec">
       <div class="th-sec-t">🧭 Hành trình sản xuất theo công đoạn <small>(bấm vào khối để mở rộng)</small></div>
       <div class="th-legend"><i class="is-done"></i>Hoàn thành <i class="is-run"></i>Đang chạy <i class="is-paused"></i>Tạm dừng <i class="is-missing"></i>Thiếu dữ liệu</div>
-      ${thRouteHTML(model)}
       <div class="th-flow">${model.stages.map(thStageHTML).join('')}${thQcHTML(model.qc)}${thFinishHTML(model.finish, model)}</div>
     </div>
 
@@ -282,7 +277,7 @@ function thPrint(){
   table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border:1px solid #c9ced8;padding:4px 6px;text-align:left;font-size:11px}th{background:#eef2fb}
   details{border:1px solid #c9ced8;border-radius:6px;margin:6px 0;padding:6px 8px;page-break-inside:avoid}summary{font-weight:800;list-style:none}
   summary small{color:#646c7c;font-weight:600;margin-left:8px}.th-badge{float:right;font-size:10.5px;border:1px solid #bbb;border-radius:10px;padding:1px 8px}
-  .ds-na{color:#b45309;font-weight:700}.th-route{margin:6px 0 10px}.th-route-t{font-weight:800;font-size:12px;margin-bottom:4px}.th-route-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.th-route-i{border:1px solid #c9ced8;border-radius:6px;padding:3px 8px;display:inline-flex;flex-direction:column}.th-route-i small{color:#646c7c;font-size:10px}.th-route-arrow{font-style:normal;color:#646c7c}.th-tools,.th-legend,.th-sec-t small{display:none}</style></head><body>
+  .ds-na{color:#b45309;font-weight:700}.th-tools,.th-legend,.th-sec-t small{display:none}</style></head><body>
   <h1>BÁO CÁO TRUY XUẤT SẢN XUẤT — ${esc(m.overview.code)}</h1>
   <div class="sub">CÔNG TY CỔ PHẦN CÔNG THƯƠNG ĐÔNG PHƯƠNG · In bởi ${esc(actorName())} · ${esc(fmtDateTime(Date.now()))}</div>${body.innerHTML}</body></html>`);
   w.document.close(); w.focus();

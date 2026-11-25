@@ -88,7 +88,6 @@ const p1=run(`thBuild('P1')`);
 assert.strictEqual(p1.stages[0].plan.machineId,'m_tj400'); assert.strictEqual(p1.stages[0].plan.via,'history');
 assert.strictEqual(p1.stages[1].plan.machineId,'m_rut50'); assert.strictEqual(p1.stages[1].plan.via,'assign');
 assert.strictEqual(p1.stages[2].plan.machineId,'m_danhbong_2'); assert.strictEqual(p1.stages[3].plan,null,'công đoạn chưa phân máy → null, không đoán');
-assert.strictEqual(p1.routing.map(r=>r.machineId).join(),'m_tj400,m_rut50,m_danhbong_2,');
 run(`_thId='P1'; thRender()`); const hp=reg.thBody.innerHTML;
 ['Máy theo Kế hoạch SX (phân máy)','Máy đùn TJ400','Máy rút 50','Máy đánh bóng - 2','Kế hoạch SX chưa phân máy','đã lưu vết khi đơn đi qua công đoạn','đang gán trong Kế hoạch SX','🗂 Kế hoạch: Máy rút 50']
   .forEach(x=>assert(hp.includes(x),'UI thiếu: '+x));

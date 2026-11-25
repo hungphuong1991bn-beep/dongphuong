@@ -193,9 +193,6 @@ function thBuild(orderId, src){
     }
   });
 
-  // ── Sơ đồ công đoạn → máy theo Kế hoạch SX (phân máy) ──
-  const routing = stages.map(st=>({key:st.key, label:st.label, icon:st.icon, machineId: st.plan?st.plan.machineId:'', via: st.plan?st.plan.via:'', diff:st.planDiff}));
-
   // ── Chỗ thiếu dữ liệu (nói rõ, không đoán) ──
   const gaps = [];
   stages.forEach(st=>{
@@ -210,5 +207,5 @@ function thBuild(orderId, src){
   if(overview.runSource==='legacy') gaps.push('Thời gian chạy: đơn hoàn thành trước khi có tính năng tạm dừng — con số là khoảng từ lúc bắt đầu đến hoàn thành (không loại trừ thời gian nghỉ).');
   if(overview.runSource==='legacy-mixed') gaps.push('Thời gian chạy: có phiên khôi phục từ dữ liệu cũ (mốc bắt đầu = giờ bắt đầu đơn) nên chưa loại trừ được thời gian nghỉ trước thời điểm nâng cấp.');
 
-  return {order, overview, stages, routing, qc, finish, runTable, legacyRows, pauses, machineChanges, gaps, qrs};
+  return {order, overview, stages, qc, finish, runTable, legacyRows, pauses, machineChanges, gaps, qrs};
 }
