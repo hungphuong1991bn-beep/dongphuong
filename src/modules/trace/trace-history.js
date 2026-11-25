@@ -23,6 +23,17 @@ const TH_STAGES = [
   {key:'cat',      label:'CẮT',        icon:'✂️', ledger:'cut'}
 ];
 
+// v2.14.1: MÁY THEO KẾ HOẠCH SX (chức năng "Phân công máy" ở tab Kế hoạch SX) — CHỈ ĐỌC.
+// Nguồn: o.machineAssign[công đoạn] (máy đang gán) → o.machineHistory[công đoạn] (máy đã lưu vết khi đơn đi qua công đoạn).
+// Trả null nếu kế hoạch chưa từng gán máy cho công đoạn đó (không đoán).
+function thPlanMachine(order, stageKey){
+  const as = order.machineAssign && order.machineAssign[stageKey];
+  if(as) return {machineId:as, via:'assign', startAt:(order.machineActiveStartAt && order.machineActiveStartAt[stageKey]) || null, endAt:null};
+  const h = order.machineHistory && order.machineHistory[stageKey];
+  if(h && h.machineId) return {machineId:h.machineId, via:'history', startAt:h.startAt||null, endAt:h.endAt||null};
+  return null;
+}
+
 function thUniq(a){ return [...new Set((a||[]).filter(x=>x!=null && String(x).trim()!=='').map(x=>String(x).trim()))]; }
 function thNum(v){ const n = Number(v); return (v===''||v==null||!isFinite(n)) ? null : n; }
 function thSum(rows, key){
@@ -105,8 +116,12 @@ function thBuild(orderId, src){
         qty.note = 'Sổ máy chỉ ghi 1 số lượng (số thanh thực hiện) — hệ thống chưa tách đầu vào / đầu ra cho công đoạn này.';
       }
     }
+    // v2.14.1: máy theo phân công ở Kế hoạch SX + đối chiếu với máy thực tế đã chạy (nếu có phiên chạy)
+    const plan = thPlanMachine(order, def.key);
+    const planDiff = !!(plan && ss.length && machineIds.length && machineIds.indexOf(plan.machineId)<0);
     return {
       key:def.key, label:def.label, icon:def.icon, state, source,
+      plan, planDiff,
       machineIds, ledgerMachines, assignedMachineId: assigned||'',
       startAt, endAt, runMs, spanMs, open:!!openS,
       sessions:ss, operatorsLedger, actors, notes, qty,
@@ -178,6 +193,9 @@ function thBuild(orderId, src){
     }
   });
 
+  // ── Sơ đồ công đoạn → máy theo Kế hoạch SX (phân máy) ──
+  const routing = stages.map(st=>({key:st.key, label:st.label, icon:st.icon, machineId: st.plan?st.plan.machineId:'', via: st.plan?st.plan.via:'', diff:st.planDiff}));
+
   // ── Chỗ thiếu dữ liệu (nói rõ, không đoán) ──
   const gaps = [];
   stages.forEach(st=>{
@@ -185,9 +203,12 @@ function thBuild(orderId, src){
     else if(st.source==='history') gaps.push(`Công đoạn ${st.label}: chỉ có lịch sử máy cũ — không có thời gian chạy thực tế, không có người vận hành.`);
     else if(st.source==='assigned' || (st.state==='partial')) gaps.push(`Công đoạn ${st.label}: chưa có bản ghi chạy thực tế${st.assignedMachineId?' (chỉ có phân công máy, không xác nhận đã chạy)':''}.`);
   });
+  stages.forEach(st=>{
+    if(st.planDiff) gaps.push(`Công đoạn ${st.label}: Kế hoạch SX phân máy ${rcMachineName(st.plan.machineId)} nhưng phiên chạy ghi ${st.machineIds.map(rcMachineName).join(' → ')} — kiểm tra lại phân công / đổi máy.`);
+  });
   if(!qcList.length) gaps.push('Kiểm tra chất lượng: chưa có phiếu QC nào gắn với đơn này bằng ID đơn hàng.');
   if(overview.runSource==='legacy') gaps.push('Thời gian chạy: đơn hoàn thành trước khi có tính năng tạm dừng — con số là khoảng từ lúc bắt đầu đến hoàn thành (không loại trừ thời gian nghỉ).');
   if(overview.runSource==='legacy-mixed') gaps.push('Thời gian chạy: có phiên khôi phục từ dữ liệu cũ (mốc bắt đầu = giờ bắt đầu đơn) nên chưa loại trừ được thời gian nghỉ trước thời điểm nâng cấp.');
 
-  return {order, overview, stages, qc, finish, runTable, legacyRows, pauses, machineChanges, gaps, qrs};
+  return {order, overview, stages, routing, qc, finish, runTable, legacyRows, pauses, machineChanges, gaps, qrs};
 }

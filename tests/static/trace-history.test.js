@@ -80,6 +80,26 @@ run(`_thId='L1'; thRender()`); let h1=reg.thBody.innerHTML; assert(h1.includes('
 run(`_thId='L2'; thRender()`); assert(reg.thBody.innerHTML.includes('CHƯA CÓ DỮ LIỆU')); assert.strictEqual(run(`thBuild('khong-co')`),null);
 ok('TEST 8: đơn cũ — xem được thông tin đơn; máy cũ chỉ có mốc giờ → thời gian chạy "CHƯA CÓ DỮ LIỆU"; chỉ phân công không bị coi là đã chạy; đơn trống không phát sinh dữ liệu giả');
 
+// ── TEST 10 (v2.14.1): máy theo phân máy ở Kế hoạch SX hiện trong Hành trình công đoạn ──
+run(`DB.orders=[${J({id:'P1',customer:'KH P',po:'PO-P',qty:10,status:'done',startedAt:T0,doneAt:T0+5*HOUR,stage:'danhbong',
+  machineAssign:{rut:'m_rut50',danhbong:'m_danhbong_2'},
+  machineHistory:{dun:{machineId:'m_tj400',startAt:T0,endAt:T0+2*HOUR}}})}]`);
+const p1=run(`thBuild('P1')`);
+assert.strictEqual(p1.stages[0].plan.machineId,'m_tj400'); assert.strictEqual(p1.stages[0].plan.via,'history');
+assert.strictEqual(p1.stages[1].plan.machineId,'m_rut50'); assert.strictEqual(p1.stages[1].plan.via,'assign');
+assert.strictEqual(p1.stages[2].plan.machineId,'m_danhbong_2'); assert.strictEqual(p1.stages[3].plan,null,'công đoạn chưa phân máy → null, không đoán');
+assert.strictEqual(p1.routing.map(r=>r.machineId).join(),'m_tj400,m_rut50,m_danhbong_2,');
+run(`_thId='P1'; thRender()`); const hp=reg.thBody.innerHTML;
+['Máy theo Kế hoạch SX (phân máy)','Máy đùn TJ400','Máy rút 50','Máy đánh bóng - 2','Kế hoạch SX chưa phân máy','đã lưu vết khi đơn đi qua công đoạn','đang gán trong Kế hoạch SX','🗂 Kế hoạch: Máy rút 50']
+  .forEach(x=>assert(hp.includes(x),'UI thiếu: '+x));
+const shp=run(`thSheets(_thModel)`); assert(shp.stages[0].includes('Máy theo Kế hoạch SX (phân máy)')); assert(shp.stages.every(r=>r.length===shp.stages[0].length),'mọi dòng sheet công đoạn cùng số cột');
+// máy thực tế khác máy phân công → cảnh báo, không im lặng
+run(`DB.orders=[${J({id:'P2',customer:'KH Q',po:'PO-Q',qty:10,status:'pending',machineAssign:{dun:'m_tj300'}})}]`);
+setT(T0); run(`setStatus('P2','running')`); setT(T0+HOUR); run(`DB.orders[0].machineAssign.dun='m_tj400'`); setT(T0+2*HOUR); run(`setStatus('P2','done')`);
+const p2=run(`thBuild('P2')`); assert.strictEqual(p2.stages[0].plan.machineId,'m_tj400'); assert.strictEqual(p2.stages[0].planDiff,true); assert(p2.gaps.some(g=>/phân máy .* nhưng phiên chạy ghi/.test(g)));
+run(`DB.orders[0].machineAssign.dun='m_tj300'`); assert.strictEqual(run(`thBuild('P2')`).stages[0].planDiff,false);
+ok('TEST 10: Hành trình công đoạn đọc máy từ phân máy Kế hoạch SX (machineAssign + machineHistory), công đoạn chưa phân → trống, lệch máy thực tế → cảnh báo, Excel thêm cột khớp');
+
 // ── TEST 9: cơ chế lưu trữ / dọn đơn hoàn thành KHÔNG đổi ──
 const fnBody=(src,name)=>{ const s=src.indexOf(name); let d=0,i=src.indexOf('{',s),j=i; for(;j<src.length;j++){ if(src[j]==='{')d++; else if(src[j]==='}'){ d--; if(!d) break; } } return src.slice(s,j+1); };
 const origPath='/tmp/orig/dongphuong-main/src/modules/orders/orders-service.js';

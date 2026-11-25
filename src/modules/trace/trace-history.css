@@ -38,3 +38,17 @@
 .th-why{color:#78716C}
 @media(max-width:640px){.th-stg-time{display:none}.th-stage{margin-left:18px}.th-node{left:-21px;width:30px;height:30px}.th-big{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.th-stage.is-run .th-node{animation:none}}
+
+/* v2.14.1 — Dải "Máy theo Kế hoạch SX (phân máy)" ở đầu phần Hành trình */
+.th-route{margin:0 0 12px;padding:9px 12px;background:#F8FAFF;border:1px solid #DBE4FB;border-radius:10px}
+.th-route-t{font-weight:800;font-size:12px;color:var(--brand,#1D3FAE);margin-bottom:6px}.th-route-t small{font-weight:500;color:#78716C}
+.th-route-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px}
+.th-route-i{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;background:#fff;border:1px solid #C7D5F7;border-radius:9px;min-width:0}
+.th-route-i>i{font-style:normal;font-size:16px}
+.th-route-i>span{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.th-route-i small{font-size:10px;color:#667085;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+.th-route-i b{font-size:12.5px;word-break:break-word}
+.th-route-i.is-none{background:#F8FAFC;border-style:dashed;border-color:#CBD5E1}.th-route-i.is-none b{color:#94A3B8;font-weight:600}
+.th-route-i.is-diff{border-color:#D97706;background:#FFFBEB}
+.th-route-arrow{font-style:normal;color:#94A3B8;font-weight:700}
+@media(max-width:640px){.th-route-arrow{display:none}.th-route-i{flex:1 1 44%}}
