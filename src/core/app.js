@@ -89,23 +89,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   updateTopbarClock();
   setInterval(updateTopbarClock, 1000);
 
-  // Đồng hồ đếm thời gian chạy — cập nhật mỗi giây
-  setInterval(()=>{
-    const now=Date.now();
-    DB.orders.forEach(o=>{
-      if((o.status==='running'||o.status==='cutting')&&o.startedAt){
-        const el=document.getElementById('clk-'+o.id);
-        if(!el) return;
-        const ms=now-o.startedAt;
-        const totalSec=Math.floor(ms/1000);
-        const h=Math.floor(totalSec/3600);
-        const m=Math.floor((totalSec%3600)/60);
-        const s=totalSec%60;
-        const hh=h>0?String(h).padStart(2,'0')+':':'';
-        const mm=String(m).padStart(2,'0');
-        const ss=String(s).padStart(2,'0');
-        el.textContent='⏱ '+hh+mm+':'+ss;
-      }
-    });
-  },1000);
+  // Đồng hồ đếm thời gian chạy — cập nhật mỗi giây.
+  // v2.14: tính lại TỪ TIMESTAMP lưu trên đơn (phiên chạy + cộng dồn, giờ máy chủ) — không dùng biến đếm,
+  // nên sau F5 / đổi thiết bị / mất mạng rồi nối lại vẫn ra đúng số; đơn tạm dừng đứng yên.
+  setInterval(()=>{ try{ rcTickClocks(); }catch(e){} },1000);
 });

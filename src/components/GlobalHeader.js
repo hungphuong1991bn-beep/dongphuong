@@ -223,7 +223,7 @@ function tbGlobalSearchGo(raw, opts){
       [['dang','san','xuat'],'producing'],[['dang','cat'],'producing']],
     hoanThanh: [[['cho','nhap','kho'],'new'],[['da','nhap','kho'],'shipping'],[['cho','giao'],'shipping'],
       [['da','giao'],'delivered'],[['hoan','tra'],'returned']],
-    keHoach: [[['dang','cho'],'pending'],[['dang','chay'],'running'],[['qua','han'],'overdue'],[['uu','tien'],'priority']]
+    keHoach: [[['dang','cho'],'pending'],[['dang','chay'],'running'], [['tam','dung'],'paused'],[['qua','han'],'overdue'],[['uu','tien'],'priority']]
   };
   let status = null;
   for(const [phrase, key] of (statusMapByTab[tab]||[])){
