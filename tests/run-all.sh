@@ -32,3 +32,8 @@ node tests/static/hr-salary.test.js         # v2.9.0: lương chỉ Admin (Fireb
 node tests/static/hr-view.test.js           # v2.9.0: giao diện Quản lý nhân sự (jsdom)
 node tests/static/molds-export.test.js   # v2.10.1: xuất Excel Tổng hợp Khuôn không bỏ sót chủng loại
 node tests/static/solieu-export-sync.test.js   # v2.13.2: tab Số liệu — xuất Excel đủ dòng/cột + xoá đồng bộ mọi thiết bị (Firebase giả lập, ExcelJS thật)
+node tests/static/run-clock.test.js         # v2.14.0: TẠM DỪNG/TIẾP TỤC — đồng hồ cộng dồn, chuyển đơn cùng máy, chặn trùng máy, đổi máy (TEST 1-5)
+node tests/static/run-concurrency.test.js   # v2.14.0: nhiều thiết bị cùng thao tác (Firebase giả lập có ETag), F5/thiết bị khác, mất mạng (TEST 7)
+node tests/static/trace-history.test.js     # v2.14.0: bảng truy xuất sản xuất tab Đơn hoàn thành, đơn cũ thiếu dữ liệu, lưu trữ không đổi (TEST 6,8,9)
+# v2.14.0: E2E giao diện thật (cần Chromium; đặt PW_EXE nếu playwright không tìm thấy trình duyệt) — tạm dừng/tiếp tục 2 thiết bị, quyền nhân viên, bảng truy xuất
+node tests/e2e/runctl-ui.js "$ROOT"

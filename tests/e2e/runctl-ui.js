@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+// v2.14.0 — E2E giao diện THẬT (Chromium + Firebase giả có SSE/ETag): tạm dừng / tiếp tục / đồng bộ 2 thiết bị / bảng truy xuất.
+//   node runctl-ui.js <thư-mục-gốc-web> [thư-mục-ảnh]      (PW_EXE=đường dẫn chromium nếu cần)
+const fs=require('fs'), path=require('path'); const {chromium}=require('playwright');
+const {MockDb,startServer,stubExternal,FB_PREFIX}=require('./mock-firebase'); const {seedData,T0}=require('./seed');
+const root=path.resolve(process.argv[2]||'.'); const shots=process.argv[3]?path.resolve(process.argv[3]):null; if(shots) fs.mkdirSync(shots,{recursive:true});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)); let pass=0, fail=0;
+const check=(name,cond,extra)=>{ if(cond){ pass++; console.log('  ✓',name); } else { fail++; console.log('  ✗',name,extra!==undefined?JSON.stringify(extra):''); } };
+async function dev(browser,port,vp){ const ctx=await browser.newContext({viewport:vp,serviceWorkers:'block',locale:'vi-VN',timezoneId:'Asia/Ho_Chi_Minh'}); await stubExternal(ctx);
+  await ctx.addInitScript(({u})=>{ try{ if(!localStorage.getItem('sx_fb_url')) localStorage.setItem('sx_fb_url',u); }catch(e){} },{u:`http://127.0.0.1:${port}${FB_PREFIX}`});
+  const page=await ctx.newPage(); const errs=[]; page.on('pageerror',e=>errs.push(e.message)); page.on('dialog',d=>d.accept().catch(()=>{}));
+  await page.goto(`http://127.0.0.1:${port}/index.html`,{waitUntil:'load'}); await page.waitForTimeout(600); return {ctx,page,errs}; }
+async function login(page,u,p){ await page.fill('#lu',u); await page.fill('#lp',p); await page.click('#loginBtn'); await page.waitForTimeout(1800); }
+(async()=>{
+  const opts=process.env.PW_EXE?{executablePath:process.env.PW_EXE}:{}; const browser=await chromium.launch(opts);
+  const db=new MockDb(seedData); const {server,port}=await startServer(root,db);
+  const A=await dev(browser,port,{width:1440,height:900}); await login(A.page,'admin','admin123');
+  await A.page.evaluate(()=>goTab('keHoach')); await A.page.waitForTimeout(700);
+  console.log('[1] Kế hoạch SX — đơn đang chạy có nút Tạm dừng');
+  check('nút ⏸ Tạm dừng hiển thị trên đơn đang chạy', await A.page.locator('#kh-pause-seed2').count()===1);
+  check('thẻ KPI "Tạm dừng" có mặt', (await A.page.locator('.kh-kpi-row').innerText()).includes('Tạm dừng'));
+  const clk1=await A.page.locator('#clk-seed2').innerText(); await A.page.waitForTimeout(1300); const clk2=await A.page.locator('#clk-seed2').innerText();
+  check('đồng hồ đơn chạy tăng theo thời gian thực', clk1!==clk2 && /^⏱ /.test(clk2), [clk1,clk2]);
+  if(shots) await A.page.screenshot({path:path.join(shots,'1-ke-hoach-dang-chay.png')});
+  console.log('[2] Tạm dừng (admin): hộp thoại lý do → xác nhận');
+  await A.page.click('#kh-pause-seed2'); await A.page.waitForTimeout(300);
+  check('hộp thoại tạm dừng mở, có lý do gợi ý', await A.page.locator('#rcPauseModal.open').count()===1 && await A.page.locator('.rc-chip').count()>=5);
+  if(shots) await A.page.screenshot({path:path.join(shots,'2-hop-thoai-tam-dung.png')});
+  await A.page.click('.rc-chip >> nth=0'); await A.page.click('#rcPauseOk'); await A.page.waitForTimeout(1500);
+  let s=db.get('/data/orders/seed2'); check('server: status = paused, có pausedAt + lý do + người', s.status==='paused'&&s.pausedAt&&s.pauseHistory[0].reason==='Chuyển sang đơn gấp'&&s.pauseHistory[0].by, s&&s.status);
+  check('server: phiên chạy đã đóng, accumulatedRunMs > 0 (đơn cũ giữ đúng thời gian đang hiển thị)', s.accumulatedRunMs>=0 && s.runSessions[0].endAt && s.runSessions[0].legacy===true, s&&s.runSessions);
+  const card=A.page.locator('[data-order-id="seed2"]'); const ctext=await card.innerText();
+  check('thẻ hiển thị Tạm dừng + lý do + số lần + nút TIẾP TỤC', /Tạm dừng/.test(ctext)&&/Chuyển sang đơn gấp/.test(ctext)&&/Số lần tạm dừng/.test(ctext)&&await A.page.locator('#kh-resume-seed2').count()===1);
+  const p1=await A.page.locator('[data-order-id="seed2"] .tm-paused').innerText(); await A.page.waitForTimeout(1500); const p2=await A.page.locator('[data-order-id="seed2"] .tm-paused').innerText();
+  check('đồng hồ đơn tạm dừng đứng yên', p1===p2 && /⏸/.test(p1), [p1,p2]);
+  if(shots) await A.page.screenshot({path:path.join(shots,'3-ke-hoach-tam-dung.png')});
+  console.log('[3] Thiết bị 2 (nhân viên, điện thoại): thấy realtime, tiếp tục');
+  const B=await dev(browser,port,{width:390,height:844}); await login(B.page,'nhanvien','nv123'); await B.page.evaluate(()=>goTab('keHoach')); await B.page.waitForTimeout(800);
+  check('thiết bị 2 thấy đơn ở trạng thái Tạm dừng + nút Tiếp tục (đồng bộ Firebase)', await B.page.locator('#kh-resume-seed2').count()===1);
+  const o2=await B.page.evaluate(()=>{const o=DB.orders.find(x=>x.id==='seed2'); return {st:o.status, ms:rcRunMs(o)};}); const o1=await A.page.evaluate(()=>rcRunMs(DB.orders.find(x=>x.id==='seed2')));
+  check('2 thiết bị cùng thấy một thời gian đã chạy', Math.abs(o2.ms-o1)<5, [o2.ms,o1]);
+  if(shots) await B.page.screenshot({path:path.join(shots,'4-dien-thoai-tam-dung.png')});
+  await B.page.click('#kh-resume-seed2'); await B.page.waitForTimeout(1800);
+  s=db.get('/data/orders/seed2'); check('server: running, 2 phiên, lịch sử tạm dừng có resumeAt + người tiếp tục', s.status==='running'&&s.runSessions.length===2&&s.pauseHistory[0].resumeAt&&s.pauseHistory[0].resumeBy, s&&s.status);
+  await A.page.waitForTimeout(1200);
+  check('thiết bị 1 tự cập nhật sang Đang chạy (realtime) và đồng hồ chạy lại', await A.page.evaluate(()=>DB.orders.find(x=>x.id==='seed2').status)==='running' && await A.page.locator('#clk-seed2').count()===1);
+  console.log('[3b] Nhân viên bắt buộc nhập lý do tạm dừng');
+  await B.page.click('#kh-pause-seed2'); await B.page.waitForTimeout(300); await B.page.click('#rcPauseOk'); await B.page.waitForTimeout(500);
+  check('nhân viên bỏ trống lý do → bị nhắc, đơn vẫn đang chạy', await B.page.locator('#rcPauseErr').isVisible() && db.get('/data/orders/seed2').status==='running');
+  await B.page.fill('#rcPauseReason','Hết ca'); await B.page.click('#rcPauseOk'); await B.page.waitForTimeout(1500);
+  check('nhập lý do → tạm dừng được, ghi đúng người thao tác (nhân viên)', db.get('/data/orders/seed2').status==='paused' && db.get('/data/orders/seed2').pauseHistory[1].reason==='Hết ca' && db.get('/data/orders/seed2').pauseHistory[1].by!==db.get('/data/orders/seed2').pauseHistory[0].by);
+  await B.page.click('#kh-resume-seed2'); await B.page.waitForTimeout(1500); await A.page.waitForTimeout(800);
+  console.log('[4] Chặn tiếp tục khi máy đang bận');
+  await A.page.evaluate(()=>{ const a=DB.orders.find(x=>x.id==='seed3'); a.machineAssign={dun:'m_tj500_1'}; a.status='running'; a.stage='dun'; a.startedAt=Date.now()-1000; a.machineActiveAt={dun:'m_tj500_1'}; const b=DB.orders.find(x=>x.id==='seed1'); b.machineAssign={dun:'m_tj500_1'}; b.status='paused'; b.stage='dun'; b.accumulatedRunMs=1000; b.pauseHistory=[{id:'p',no:1,at:Date.now()-5000,resumeAt:null,reason:'x',by:'a'}]; renderTab(currentTab); });
+  const res=await A.page.evaluate(()=>rcResumeOrder('seed1')); const toast=await A.page.evaluate(()=>[...document.querySelectorAll('.toast,#toast,[class*=toast]')].map(e=>e.innerText).join('|'));
+  check('tiếp tục bị chặn, báo tên máy + đơn đang dùng', res.ok===false&&res.code==='machine-busy'&&/Máy đùn TJ550 \(1\)/.test(toast)&&/PO-3/.test(toast), toast.slice(0,200));
+  console.log('[5] Tab Đơn hoàn thành — bảng truy xuất');
+  await A.page.evaluate(async()=>{ await rcResumeOrder; setStatus('seed2','done'); }); await A.page.waitForTimeout(1200);
+  await A.page.evaluate(()=>{ document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open')); }); await A.page.waitForTimeout(200);
+  await A.page.evaluate(()=>goTab('hoanThanh')); await A.page.waitForTimeout(900);
+  const rows=await A.page.locator('tr[data-order-id], .htm-card[data-order-id]').count(); check('danh sách đơn hoàn thành vẫn hiển thị', rows>=2, rows);
+  await A.page.locator('tr[data-order-id="seed4"]').first().click(); await A.page.waitForTimeout(500);
+  check('bấm đơn cũ → mở bảng truy xuất', await A.page.locator('#thModal.open').count()===1);
+  let ht=await A.page.locator('#thBody').innerText(); check('đơn cũ: hiển thị CHƯA CÓ DỮ LIỆU, không bịa máy/người', /CHƯA CÓ DỮ LIỆU/.test(ht)&&/CÔNG ĐOẠN 1/.test(ht)&&!/Phiên chạy \(chính xác\)/.test(ht));
+  if(shots) await A.page.screenshot({path:path.join(shots,'5-truy-xuat-don-cu.png')});
+  await A.page.evaluate(()=>closeModal('thModal')); await A.page.waitForTimeout(200);
+  await A.page.locator('tr[data-order-id="seed2"]').first().click(); await A.page.waitForTimeout(500);
+  ht=await A.page.locator('#thBody').innerText(); check('đơn có phiên: bảng phiên chạy + lịch sử tạm dừng + lý do + 5 công đoạn', /Chuyển sang đơn gấp/.test(ht)&&/CÔNG ĐOẠN 5/.test(ht)&&/Lịch sử tạm dừng/.test(ht)&&/dữ liệu cũ/.test(ht), ht.slice(0,300));
+  await A.page.locator('.th-stage >> nth=0').locator('summary').click(); await A.page.waitForTimeout(200);
+  if(shots) await A.page.screenshot({path:path.join(shots,'6-truy-xuat-don-co-phien.png')});
+  console.log('[6] Lỗi JS trên trang'); check('thiết bị 1: không có lỗi JS', A.errs.length===0, A.errs); check('thiết bị 2: không có lỗi JS', B.errs.length===0, B.errs);
+  await browser.close(); server.close(); console.log(`\nrunctl-ui: ${pass} đạt, ${fail} lỗi`); process.exit(fail?1:0);
+})().catch(e=>{ console.error('✗',e); process.exit(1); });

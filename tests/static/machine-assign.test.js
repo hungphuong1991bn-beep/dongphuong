@@ -13,7 +13,7 @@ const ctx={console, Date, Object, Math, JSON, parseInt, String, Number, Array, s
   window:{dpUI:{modal:{markClean:(id)=>{ctx._clean=id;}}}}, dpUI:null};
 ctx.dpUI=ctx.window.dpUI; vm.createContext(ctx);
 const strip=s=>s; 
-['src/core/constants.js','src/modules/planning/planning-machines.js','src/modules/production/production-panels.js','src/modules/production/production-dispatch.js','src/modules/orders/orders-cards.js','src/modules/orders/orders-service.js']
+['src/core/constants.js','src/modules/planning/planning-machines.js','src/modules/planning/planning-runctl.js','src/modules/production/production-panels.js','src/modules/production/production-dispatch.js','src/modules/orders/orders-cards.js','src/modules/orders/orders-service.js']
  .forEach(f=>{ try{ vm.runInContext(rd(f).replace(/^const /gm,'var '),ctx,{filename:f}); }catch(e){ console.error('load fail',f,e.message); process.exit(1);} });
 const run=c=>vm.runInContext(c,ctx); run('saveOrders=function(){};updateBadges=function(){};goTab=function(){};pushNotif=function(){};alertUser=function(){};openQrGenForOrder=function(){};scheduleAiAutoPromoteCheck=function(){};');
 let n=0; const ok=m=>console.log('✓',m,++n);

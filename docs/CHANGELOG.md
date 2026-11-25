@@ -6,6 +6,16 @@
 
 # CHANGELOG
 
+## [2.14.0] Tạm dừng / Tiếp tục sản xuất + Bảng truy xuất lịch sử sản xuất (25/11/2026)
+Chi tiết, bảng kết quả kiểm thử và giới hạn đã biết: `docs/UPGRADE-TAMDUNG-TRUYXUAT.md`.
+- **Mới — Kế hoạch SX:** nút **⏸ Tạm dừng** (đơn đang chạy) và **▶ TIẾP TỤC SẢN XUẤT** (đơn tạm dừng); trạng thái `paused`, thẻ KPI "Tạm dừng", bộ lọc, khối thông tin (đã chạy · thời điểm dừng · số lần dừng · lý do), chip lịch sử phiên.
+- **Mới — thời gian chạy cộng dồn** (`planning-runctl.js`): `runSessions[]`, `pauseHistory[]`, `accumulatedRunMs`, `pausedAt`, `resumedAt` nằm trong bản ghi đơn (không thêm nhánh Firebase). Đồng hồ tính lại từ timestamp lưu trên đơn, giờ máy chủ (`nowSrv`); không cộng thời gian nghỉ / thời gian đơn khác chạy.
+- **Mới — kiểm soát đồng thời:** khoá theo đơn, đọc lại server trước khi quyết định, kiểm tra trùng máy trên dữ liệu mới nhất, kiểm tra lại sau khi ghi (đơn bắt đầu sau tự tạm dừng nếu 2 thiết bị cùng chiếm 1 máy).
+- **Mới — tab Đơn hoàn thành:** bấm đơn → **bảng truy xuất** (`trace-history.js`, `trace-history-view.js`): tổng quan, timeline ĐÙN→RÚT→ĐÁNH BÓNG→CẮT→KIỂM TRA→HOÀN THÀNH, bảng Lần/Công đoạn/Máy/Bắt đầu/Kết thúc/Thời gian chạy/Người, lịch sử tạm dừng & đổi máy, xuất Excel (4 trang) và PDF. Liên kết theo ID đơn; thiếu dữ liệu hiển thị "CHƯA CÓ DỮ LIỆU". Thông tin nhập kho/giao hàng cũ vẫn mở được ở nút "📦 Nhập kho / giao hàng".
+- **Sửa:** `hashOrders` thêm `version` + số phiên để thay đổi đổi-máy/tạm dừng không bị bỏ sót khi đồng bộ dự phòng; thời gian ở Báo cáo / Insights / Đơn hàng / Hoàn thành dùng **thời gian chạy thực tế** thay vì `doneAt − startedAt` (đơn cũ giữ nguyên công thức cũ).
+- **Giữ nguyên:** cơ chế lưu trữ & dọn đơn hoàn thành (`autoCleanupDoneOrders`, 30 ngày) — kiểm bằng so khớp mã nguồn.
+- Test mới: `run-clock`, `run-concurrency`, `trace-history` (static), `e2e/runctl-ui.js` (Chromium thật). `sw.js` CACHE v32.
+
 ## [2.13.1] Sửa lỗi "Đang truy cập" — 1 máy chỉ thấy mỗi tài khoản của chính nó (18/11/2026)
 - **Triệu chứng:** các máy khác đều thấy đủ người đang truy cập (vd. 5 tài khoản), riêng 1 máy chỉ hiện **1** (chính nó, nhãn "Bạn").
 - **Nguyên nhân:** mốc `ts` của mỗi heartbeat là giờ đồng hồ của từng máy, rồi so với giờ máy đang xem với ngưỡng cứng 30s. Máy nào tự tính giờ lệch (đồng hồ sai, header Date bị cache/độ phân giải 1s, timer nền chậm) sẽ coi mọi người khác là "đã hết hạn" và lọc hết, chỉ còn dòng của mình (vừa ghi nên luôn mới).
