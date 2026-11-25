@@ -14,7 +14,7 @@ function aiAnalyzeOrder(o){
   score += (9 - priNum) * 25;
 
   if(s === 'running' && o.startedAt){
-    const hrs = (now - o.startedAt) / 3600000;
+    const hrs = rcRunMs(o, now) / 3600000; // v2.14: giờ CHẠY thực tế (không gồm lúc tạm dừng)
     const pct = o.qty&&o.doneQty ? o.doneQty/o.qty*100 : 0;
     const timeStr = fmtHrs(hrs);
 
@@ -110,20 +110,20 @@ function aiGetInsights(orders){
   const pending = orders.filter(o=>o.status==='pending');
 
   // Cực nghiêm trọng: chạy hơn 24h
-  const veryLong = running.filter(o=>o.startedAt&&(now-o.startedAt)>=86400000);
+  const veryLong = running.filter(o=>o.startedAt&&rcRunMs(o,now)>=86400000);
   if(veryLong.length){
     veryLong.forEach(o=>{
-      const hrs=(now-o.startedAt)/3600000;
+      const hrs=rcRunMs(o,now)/3600000;
       insights.push({icon:'🆘',level:'critical',
         text:`<b>${o.customer}</b> chạy <b>${fmtHrs(hrs)}</b> — ${o.priority||''} · PHẢI HOÀN THIỆN NGAY!`});
     });
   }
 
   // Nghiêm trọng: chạy 8–24h
-  const longRun = running.filter(o=>o.startedAt&&(now-o.startedAt)>=28800000&&(now-o.startedAt)<86400000);
+  const longRun = running.filter(o=>o.startedAt&&rcRunMs(o,now)>=28800000&&rcRunMs(o,now)<86400000);
   if(longRun.length){
     longRun.forEach(o=>{
-      const hrs=(now-o.startedAt)/3600000;
+      const hrs=rcRunMs(o,now)/3600000;
       insights.push({icon:'🚨',level:'warning',
         text:`<b>${o.customer}</b> chạy <b>${fmtHrs(hrs)}</b> — ${o.priority||''} · cần hoàn thiện gấp`});
     });
