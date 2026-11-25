@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v31'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v32'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -142,6 +142,8 @@ const ASSETS = [
   './src/modules/inventory/inventory-export.js',
   './src/modules/trace/trace-engine.js',
   './src/modules/trace/trace-view.js',
+  './src/modules/trace/trace-history.js',
+  './src/modules/trace/trace-history-view.js',
   './src/components/shared/ModuleEnhance.js',
   './src/modules/orders/orders-insight.js',
   './src/modules/inventory/inventory-insight.js',
@@ -156,6 +158,7 @@ const ASSETS = [
   './src/modules/orders/orders-form.js',
   './src/modules/orders/orders-cards.js',
   './src/modules/planning/planning-machines.js',
+  './src/modules/planning/planning-runctl.js',
   './src/modules/production/production-dispatch.js',
   './src/modules/account/account-users.js',
   './src/services/update.js',
@@ -183,6 +186,7 @@ const ASSETS = [
   './src/modules/molds/molds.css',
   './src/modules/inventory/inventory.css',
   './src/modules/trace/trace.css',
+  './src/modules/trace/trace-history.css',
   './src/modules/molds/molds-blocks.css',
   './src/styles/components-modal.css',
   './src/modules/settings/settings.css',
@@ -212,6 +216,7 @@ const ASSETS = [
   './src/styles/redesign-2026.css',
   './src/modules/planning/planning-erp.css',
   './src/modules/planning/planning-fx.css',
+  './src/modules/planning/planning-runctl.css',
   './src/modules/orders/orders-fx.css',
   './src/modules/production/production-fx.css',
   './src/modules/planning/planning-fx.js',
