@@ -1,0 +1,21 @@
+/* Giai đoạn 3 — dải thông tin gắn thêm vào Đơn hàng / Kế hoạch / Sổ liệu / Truy xuất. Chỉ thêm class .dp-strip*, .dp-chip, .dp-day, .dp-hint (dùng token --ds-*). */
+.dp-strip{background:var(--card);border:1px solid var(--border);border-radius:var(--ds-radius);box-shadow:var(--ds-shadow);padding:var(--ds-s3) var(--ds-s4);margin:0 0 var(--ds-s3)}
+.dp-strip-t{font:800 var(--ds-fs-sm)/1.3 var(--ds-font);color:var(--text);margin-bottom:var(--ds-s2)}
+.dp-strip-t small{font-weight:500;color:var(--text3)}
+.dp-chips{display:flex;flex-wrap:wrap;gap:var(--ds-s2)}
+.dp-chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px;border-radius:var(--ds-radius-pill);border:1px solid var(--ds-muted-bd);background:var(--ds-muted-bg);color:var(--ds-muted);font:600 var(--ds-fs-sm)/1.2 var(--ds-font);cursor:pointer}
+.dp-chip b{font-size:var(--ds-fs-md);font-variant-numeric:tabular-nums}.dp-chip em{font-style:normal}
+.dp-chip.ok{background:var(--ds-ok-bg);color:var(--ds-ok);border-color:var(--ds-ok-bd)}
+.dp-chip.warn{background:var(--ds-warn-bg);color:var(--ds-warn);border-color:var(--ds-warn-bd)}
+.dp-chip.danger{background:var(--ds-danger-bg);color:var(--ds-danger);border-color:var(--ds-danger-bd)}
+.dp-chip.info{background:var(--ds-info-bg);color:var(--ds-info);border-color:var(--ds-info-bd)}
+.dp-chip.zero{opacity:.65}
+.dp-chip:focus-visible,.dp-day:focus-visible{outline:none;box-shadow:var(--ds-focus)}
+.dp-hint{font-size:var(--ds-fs-xs);color:var(--text3);margin:var(--ds-s2) 0}
+.dp-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--ds-s2)}
+.dp-day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--border);border-radius:var(--ds-radius-sm);background:#fff;cursor:pointer;font-family:var(--ds-font);min-width:0}
+.dp-day:hover{background:#F5F8FF}.dp-day.zero{opacity:.6}
+.dp-day-bar{width:100%;height:44px;display:flex;align-items:flex-end;background:#F1F4F9;border-radius:4px;overflow:hidden}
+.dp-day-bar i{display:block;width:100%;background:var(--brand);min-height:2px;border-radius:4px 4px 0 0}
+.dp-day b{font-size:var(--ds-fs-md);color:var(--text)}.dp-day span{font-size:var(--ds-fs-xs);color:var(--text2);font-variant-numeric:tabular-nums}.dp-day em{font-style:normal;font-size:10.5px;color:var(--text3);text-align:center}
+@media(max-width:640px){.dp-days{grid-template-columns:repeat(4,minmax(0,1fr))}.dp-chip{flex:1 1 calc(50% - 8px);justify-content:flex-start}}
