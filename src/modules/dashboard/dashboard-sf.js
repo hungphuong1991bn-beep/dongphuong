@@ -175,7 +175,7 @@ function sfKpis(M){
     ${card('k1','🗂','Tổng đơn hàng', V(sfNum(o.total)+' <small>đơn</small>'), `Mới <b>${o.new}</b> · Đang SX <b>${o.running}</b>${o.paused?` · Tạm dừng <b>${o.paused}</b>`:''} · Hoàn thành <b>${o.done}</b> · <span class="${o.overdue?'sf-bad':''}">Quá hạn <b>${o.overdue}</b></span>`, sfDelta(o.createdR,o.createdP,x=>sfNum(x)+' đơn mới'), o.bucketCreated, C.blue, "sfOpen('orders','all')")}
     ${card('k2','📦','Sản lượng thực tế', V(sfFmtKg(out.actualKg)), out.planCount? `Kế hoạch <b>${sfFmtKg(out.planKg)}</b> · Còn thiếu <b>${sfFmtKg(out.missingKg)}</b>` : 'Không có đơn đến hạn giao trong kỳ', sfDelta(out.actualKg,out.actualKgP), out.bucketActual, C.green, "sfOpen('output','actual')")}
     ${card('k3','✔','Hoàn thành kế hoạch', V(out.pct==null?SF_NA('Không có kế hoạch'):sfPct(out.pct)), `${out.planDoneCount}/${out.planCount} đơn đến hạn đã hoàn thành`, pctDelta(out.pct,out.pctP), out.bucketPct, C.purple, "sfOpen('output','plan')")}
-    ${card('k4','🛡','Chất lượng (đạt)', V(q.rate==null?SF_NA('Chưa có kết quả QC'):sfPct(q.rate)), `Đạt <b>${sfNum(q.pass)}</b> · NG <b class="${q.ng?'sf-bad':''}">${sfNum(q.ng)}</b> · Sửa chữa: <em>chưa ghi nhận</em>`, pctDelta(q.rate,q.prevRate), q.bucketRate, C.orange, "sfOpen('quality','')")}
+    ${card('k4','🛡','Chất lượng (đạt)', V(q.rate==null?SF_NA('Chưa có Check Sheet'):sfPct(q.rate)), `Phiếu đạt <b>${sfNum(q.pass)}</b> · NG <b class="${q.ng?'sf-bad':''}">${sfNum(q.ng)}</b>${q.pending?` · Chờ KL <b>${sfNum(q.pending)}</b>`:''} · <em>Check Sheet công đoạn</em>`, pctDelta(q.rate,q.prevRate), q.bucketRate, C.orange, "sfOpen('quality','')")}
     ${card('k5','🚚','Giao hàng đúng hạn', V(dl.rate==null?SF_NA('Chưa có đơn đã giao'):sfPct(dl.rate)), dl.n?`${dl.onTime}/${dl.n} đơn đã giao đúng hạn`:(dl.doneOnTimeRate!=null?`Hoàn thành đúng hạn: <b>${sfPct(dl.doneOnTimeRate)}</b>`:'Chưa có đơn đã giao trong kỳ'), pctDelta(dl.rate,dl.prevRate), dl.bucketRate, C.teal, "sfOpen('delivery','')")}
   </section>`;
 }
@@ -188,13 +188,16 @@ function sfPanel(w, M, body, extraHead, cls){
 function sfWOee(M){
   const o=M.oee, ms=M.machines;
   const run=ms.rows.reduce((s,r)=>s+r.runMs,0), stops=ms.rows.reduce((s,r)=>s+r.pauses,0), stopMs=ms.rows.reduce((s,r)=>s+r.pauseMs,0);
-  const ring=sfRing([],150,14,`<b class="sf-ring-v">—</b><small>Chưa đủ dữ liệu</small>`);
+  const ring = o.ready
+    ? sfRing([{v:o.value,label:'OEE',color:o.value>=0.85?'#34d399':o.value>=0.6?'#fbbf24':'#f87171'},{v:1-o.value,label:'Hao hụt',color:'rgba(148,163,184,.25)'}],150,14,`<b class="sf-ring-v">${sfPct(o.value)}</b><small>OEE · ${o.okCount} máy</small>`)
+    : sfRing([],150,14,`<b class="sf-ring-v">—</b><small>Chưa đủ dữ liệu</small>`);
+  const apq = o.ready ? `<div><small>Khả dụng × Hiệu suất × Chất lượng</small><b>${sfPct(o.A)} × ${sfPct(o.P)} × ${sfPct(o.Q)}</b></div>` : '';
   const items=o.inputs.map(i=>`<li class="${i.ok?'ok':'no'}"><i>${i.ok?'✔':'✖'}</i><span>${sfEsc(i.label)}<small>${sfEsc(i.note)}</small></span></li>`).join('');
-  return `<div class="sf-oee">${ring}<div class="sf-oee-facts">
+  return `<div class="sf-oee">${ring}<div class="sf-oee-facts">${apq}
       <div><small>Giờ chạy thực tế (cộng các máy)</small><b>${ms.anyRun?sfHrs(run):SF_NA('Chưa có phiên chạy')}</b></div>
       <div><small>Số lần tạm dừng · thời gian dừng</small><b>${ms.anyRun||stops?`${stops} lần · ${sfHrs(stopMs)}`:SF_NA('Chưa có')}</b></div></div></div>
     <ul class="sf-checks">${items}</ul>
-    <p class="sf-foot">OEE chỉ hiển thị khi đủ cả 4 đầu vào, không ước lượng.</p>
+    <p class="sf-foot">OEE chỉ tính cho máy có đủ cả 4 đầu vào, không ước lượng.</p>
     <button class="sf-link" onclick="sfOpen('oee','')">Xem chi tiết từng máy ›</button>`;
 }
 function sfWOutput(M){
@@ -226,7 +229,7 @@ function sfWStages(M){
     return `<button class="sf-stage" onclick="sfOpen('stage','${s.key}')"><span class="sf-stage-n">${sfEsc(s.label)}</span><span class="sf-stage-v">${val}</span><span class="sf-sub">${sub}</span>${ex}<span class="sf-bars ${s.noShift?'dim':''}">${bars}</span><span class="sf-sub">Đang chạy: <b>${s.running}</b> đơn</span></button>`;
   }).join('');
   const q=M.quality, w=M.warehouse.fg;
-  const tail=`<button class="sf-stage" onclick="sfOpen('quality','')"><span class="sf-stage-n">Kiểm tra</span><span class="sf-stage-v">${q.judged?`<b>${sfNum(q.judged)}</b> <small>đã kiểm (QR)</small>`:SF_NA('Chưa có kết quả QC')}</span><span class="sf-sub">Đạt ${sfNum(q.pass)} · NG ${sfNum(q.ng)}</span></button>
+  const tail=`<button class="sf-stage" onclick="sfOpen('quality','')"><span class="sf-stage-n">Kiểm tra</span><span class="sf-stage-v">${q.judged?`<b>${sfNum(q.judged)}</b> <small>phiếu đã kết luận</small>`:SF_NA('Chưa có Check Sheet')}</span><span class="sf-sub">Đạt ${sfNum(q.pass)} · NG ${sfNum(q.ng)}</span></button>
     <button class="sf-stage" onclick="sfOpen('warehouse','inR')"><span class="sf-stage-n">Nhập kho</span><span class="sf-stage-v"><b>${w.inR}</b> <small>đơn · ${sfFmtKg(w.inRKg)}</small></span><span class="sf-sub">Đơn hoàn thành đã nhập kho trong kỳ</span></button>`;
   return `<div class="sf-stages">${cards}${M.f.stage?'':tail}</div><p class="sf-foot">Mỗi công đoạn đọc sổ riêng của công đoạn đó, đơn vị khác nhau — <b>không cộng dồn giữa các công đoạn</b>. Sản lượng toàn nhà máy chỉ tính từ đơn hoàn thành.</p>`;
 }
@@ -266,10 +269,12 @@ function sfWOrders(M){
 function sfWQuality(M){
   const q=M.quality, tot=q.pass+q.ng+q.pending;
   const seg=(v,c)=>tot?`<i style="width:${v/tot*100}%;background:${c}"></i>`:'';
-  return `<div class="sf-q3"><button onclick="sfOpen('quality','pass')"><small>Đạt</small><b class="ok">${sfNum(q.pass)}</b></button><button onclick="sfOpen('quality','fail')"><small>NG</small><b class="${q.ng?'bad':''}">${sfNum(q.ng)}</b></button><div><small>Sửa chữa</small><b>${SF_NA('Chưa ghi nhận')}</b></div></div>
+  const stg=q.byStage.filter(x=>x.judged||x.pending).map(x=>`<span>${sfEsc((typeof CP_STAGE_LABEL!=='undefined'&&CP_STAGE_LABEL[x.key])||x.key)}: <b>${x.rate==null?'—':sfPct(x.rate)}</b></span>`).join(' · ');
+  return `<div class="sf-q3"><button onclick="sfOpen('quality','pass')"><small>Phiếu đạt</small><b class="ok">${sfNum(q.pass)}</b></button><button onclick="sfOpen('quality','fail')"><small>Phiếu NG</small><b class="${q.ng?'bad':''}">${sfNum(q.ng)}</b></button><div><small>Sửa chữa</small><b>${SF_NA('Chưa ghi nhận')}</b></div></div>
     <div class="sf-split">${tot?seg(q.pass,'#34d399')+seg(q.ng,'#f87171')+seg(q.pending,'#64748b'):''}</div>
-    <div class="sf-sub">${tot?`Chờ kiểm: <b>${sfNum(q.pending)}</b> · Tỷ lệ đạt: <b>${q.rate==null?'chưa có kết quả':sfPct(q.rate)}</b>`:'Chưa có mã QR / kết quả QC trong kỳ này.'}</div>
-    <p class="sf-foot">Nguồn: kết quả QC trên mã QR (số lượng). Hệ thống chưa có trường “sửa chữa/làm lại”, nên không hiển thị số.</p>`;
+    <div class="sf-sub">${tot?`Chờ kết luận: <b>${sfNum(q.pending)}</b> · Tỷ lệ đạt: <b>${q.rate==null?'chưa có kết quả':sfPct(q.rate)}</b>${q.ngQty?` · SL NG ghi nhận: <b>${sfNum(q.ngQty)}</b>`:''}`:'Chưa có phiếu Check Sheet công đoạn trong kỳ này.'}</div>
+    ${stg?`<div class="sf-sub">Theo công đoạn — ${stg}</div>`:''}
+    <p class="sf-foot">Nguồn: ControlPlan QC ▸ Kiểm tra QC – Check Sheet công đoạn (Đùn · Rút · Đánh bóng · Cắt), phiếu đã hoàn tất, không huỷ. Hệ thống chưa có trường “sửa chữa/làm lại”, nên không hiển thị số.</p>`;
 }
 function sfWInventory(M){
   const w=M.warehouse, fg=w.fg, rm=w.rm;
@@ -387,17 +392,24 @@ function sfOpen(kind, arg){
     const pl=(DB.orders||[]).filter(o=>sfOrderPass(o,M.f)&&sfIn(sfDateTs(o.deliveryDate),b.from,b.to)), ac=(DB.orders||[]).filter(o=>sfOrderPass(o,M.f)&&o.status==='done'&&sfIn(Number(o.doneAt),b.from,b.to));
     def(b.label, `<div class="dp-sec">Hoàn thành (${ac.length} đơn · ${sfFmtKg(ac.reduce((s,o)=>s+sfKg(o),0))})</div>${sfOrderList(ac)}<div class="dp-sec">Đến hạn giao (${pl.length} đơn · ${sfFmtKg(pl.reduce((s,o)=>s+sfKg(o),0))})</div>${sfOrderList(pl)}`); }
   else if(kind==='progress'){ const l=M.progress[arg]||[]; def({ontrack:'Đúng tiến độ',risk:'Nguy cơ trễ hạn (≤48 giờ)',overdue:'Quá hạn',nodue:'Chưa có hạn giao'}[arg]||'Đơn', sfOrderList(l)+sfDefNote('Chỉ tính đơn đang mở. “Chưa có hạn giao” được tách riêng, không coi là đúng tiến độ.')); }
-  else if(kind==='quality'){ const L=M.quality.lists; const row=p=>`<div class="dp-li" onclick="dpCloseDrawer();goTab('qrCode')"><b>${sfEsc(p.qrCode||p.id)}</b><span>${sfEsc(p.customer||'')} · ${sfEsc(p.productCode||'')} · SL ${sfNum(p.quantity||1)}</span><em>${p.qcResult==='pass'?'Đạt':p.qcResult==='fail'?'NG':'Chờ kiểm'}</em></div>`;
+  else if(kind==='quality'){ const L=M.quality.lists; const lbl=r=>r.result==='OK'?'Đạt':r.result==='NG'?'NG':'Chờ kết luận';
+    const row=r=>`<div class="dp-li" onclick="dpCloseDrawer();goTab('controlPlan')"><b>${sfEsc(r.code||r.id)} · ${sfEsc((typeof CP_STAGE_LABEL!=='undefined'&&CP_STAGE_LABEL[r.form])||r.form)}</b><span>${sfEsc(r.date||'')} · ${sfEsc(r.machine||'chưa chọn máy')} · ${sfEsc(r.shift||'')} · ${sfEsc(r.customer||'')} ${r.lot?'· lô '+sfEsc(r.lot):''}</span><em>${lbl(r)}</em></div>`;
     const part=(t,l)=>`<div class="dp-sec">${t} (${l.length})</div>${l.length?l.slice(0,200).map(row).join(''):'<div class="ds-empty">Không có.</div>'}`;
-    def('Chất lượng — mã QR trong kỳ', (arg==='pass'?part('Đạt',L.pass):arg==='fail'?part('NG',L.fail):part('NG',L.fail)+part('Chờ kiểm',L.pend)+part('Đạt',L.pass))+sfDefNote('Tính theo số lượng (quantity) trên mã QR có kết quả QC. “Sửa chữa” chưa có trường dữ liệu.')); }
+    const bs=M.quality.byStage.map(x=>`<div class="dp-li"><b>${sfEsc((typeof CP_STAGE_LABEL!=='undefined'&&CP_STAGE_LABEL[x.key])||x.key)}</b><span>Đạt ${x.pass} · NG ${x.ng}${x.pending?' · chờ '+x.pending:''}</span><em>${x.rate==null?'—':sfPct(x.rate)}</em></div>`).join('');
+    def('Chất lượng — Check Sheet công đoạn trong kỳ', `<div class="dp-sec">Tỷ lệ đạt theo công đoạn</div>${bs}`+(arg==='pass'?part('Đạt',L.pass):arg==='fail'?part('NG',L.fail):part('NG',L.fail)+part('Chờ kết luận',L.pend)+part('Đạt',L.pass))+sfDefNote('Tính theo SỐ PHIẾU Check Sheet công đoạn (ControlPlan QC) đã hoàn tất, không huỷ. Tỷ lệ đạt = phiếu OK ÷ (OK + NG); phiếu chưa kết luận không tính vào tỷ lệ. “Sửa chữa” chưa có trường dữ liệu.')); }
   else if(kind==='delivery') def('Đơn đã giao trong kỳ', `<div class="dp-sec">Giao trễ (${M.delivery.late.length})</div>${sfOrderList(M.delivery.late)}<div class="dp-sec">Tất cả đã giao (${M.delivery.n})</div>${sfOrderList(M.delivery.list)}`+sfDefNote('Đúng hạn = ngày giao thực tế ≤ hạn giao. Chỉ tính đơn đã đánh dấu “đã giao”.'));
   else if(kind==='warehouse') def({wait:'Chờ nhập kho',stock:'Tồn kho thành phẩm (chưa giao)',inR:'Nhập kho trong kỳ',outR:'Đã giao trong kỳ'}[arg]||'Kho', sfOrderList(M.warehouse.fg.lists[arg]||[]));
   else if(kind==='stage'){ const s=M.stages.rows.find(x=>x.key===arg); if(!s) return;
     const rows=s.list.slice(0,150).map(r=>`<div class="dp-li"><b>${sfEsc(r.ngay)} · ${sfEsc(r.quyCach||r.nguyenLieu||'—')}</b><span>${sfEsc(r.may||'—')}${r.ca?' · Ca '+sfEsc(r.ca):''} · ${r.donHangId?'đã gắn đơn':'chưa gắn đơn'}</span><em>${sfNum(r.soThanh!=null?r.soThanh:r.soLuong,1)} ${r.soThanh!=null?'thanh':'kg'}</em></div>`).join('');
     def(s.label+' — sổ trong kỳ', `<button class="ds-btn sm" onclick="dpOpenStageList('${s.key}')">Xem đơn đang chạy / chờ vào</button>${rows||'<div class="ds-empty">Không có dòng sổ nào trong kỳ.</div>'}`); }
   else if(kind==='machine'){ const r=M.machines.rows.find(x=>x.m.id===arg); if(!r) return;
-    def(r.m.name, `<div class="sf-sub">Chạy: <b>${sfHrs(r.runMs)}</b> · ${r.pauses} lần dừng (${sfHrs(r.pauseMs)}) · OEE: ${SF_NA('Chưa đủ dữ liệu')}</div>`+(r.rows.length?r.rows.map(x=>`<div class="dp-li" onclick="dpCloseDrawer();goToOrderInPlan('${sfEsc(x.o.id)}')"><b>${sfEsc(x.o.customer||'—')}</b><span>${sfEsc((STAGE_LABEL||{})[x.stage]||x.stage||'')}</span><em>${sfHrs(x.ms)}</em></div>`).join(''):'<div class="ds-empty">Chưa có phiên chạy trong kỳ.</div>')); }
-  else if(kind==='oee') def('Từng máy — giờ chạy thực tế', `<table class="sf-t"><thead><tr><th>Máy</th><th>Giờ chạy</th><th>Dừng</th><th>OEE</th></tr></thead><tbody>${M.machines.rows.map(r=>`<tr><td>${sfEsc(r.m.name)}</td><td>${sfHrs(r.runMs)}</td><td>${r.pauses} lần · ${sfHrs(r.pauseMs)}</td><td><small class="sf-na">Chưa đủ dữ liệu</small></td></tr>`).join('')}</tbody></table>`+`<div class="dp-sec">Đầu vào OEE</div>`+M.oee.inputs.map(i=>`<div class="dp-li"><b>${i.ok?'✔':'✖'} ${sfEsc(i.label)}</b><span>${sfEsc(i.note)}</span></div>`).join('')+sfDefNote('OEE = Khả dụng × Hiệu suất × Chất lượng. Cần thời gian kế hoạch và tốc độ chuẩn của từng máy; hiện hệ thống chưa lưu nên không hiển thị số.'));
+    def(r.m.name, `<div class="sf-sub">Chạy: <b>${sfHrs(r.runMs)}</b> · ${r.pauses} lần dừng (${sfHrs(r.pauseMs)}) · OEE: ${(()=>{ const x=(M.oee.rows||[]).find(y=>y.m.id===r.m.id); return x&&x.ok ? '<b>'+sfPct(x.value)+'</b>' : SF_NA(x&&x.why?x.why:'Chưa đủ dữ liệu'); })()}</div>`+(r.rows.length?r.rows.map(x=>`<div class="dp-li" onclick="dpCloseDrawer();goToOrderInPlan('${sfEsc(x.o.id)}')"><b>${sfEsc(x.o.customer||'—')}</b><span>${sfEsc((STAGE_LABEL||{})[x.stage]||x.stage||'')}</span><em>${sfHrs(x.ms)}</em></div>`).join(''):'<div class="ds-empty">Chưa có phiên chạy trong kỳ.</div>')); }
+  else if(kind==='oee'){ const O=M.oee, c=x=>x==null?'<small class="sf-na">—</small>':sfPct(x);
+    const trs=O.rows.map(x=>`<tr><td>${sfEsc(x.m.name)}${x.rate?`<br><small>${x.rate.kgh} kg/h · ${sfEsc(x.rate.model)}</small>`:''}</td><td>${sfHrs(x.runMs)}</td><td>${x.hasPlan?sfHrs(x.planMs):'<small class="sf-na">—</small>'}</td><td>${c(x.A)}</td><td>${c(x.P)}</td><td>${c(x.Q)}</td><td>${x.ok?'<b>'+sfPct(x.value)+'</b>':`<small class="sf-na" title="${sfEsc(x.why)}">Chưa đủ</small>`}</td></tr>`).join('');
+    def('Từng máy — OEE', `<table class="sf-t"><thead><tr><th>Máy</th><th>Giờ chạy</th><th>Giờ kế hoạch</th><th>Khả dụng</th><th>Hiệu suất</th><th>Chất lượng</th><th>OEE</th></tr></thead><tbody>${trs}</tbody></table>`+
+      O.rows.filter(x=>!x.ok&&x.why).map(x=>`<div class="dp-li"><b>${sfEsc(x.m.name)}</b><span>Thiếu: ${sfEsc(x.why)}</span></div>`).join('')+
+      `<div class="dp-sec">Đầu vào OEE</div>`+O.inputs.map(i=>`<div class="dp-li"><b>${i.ok?'✔':'✖'} ${sfEsc(i.label)}</b><span>${sfEsc(i.note)}</span></div>`).join('')+
+      sfDefNote('OEE = Khả dụng × Hiệu suất × Chất lượng. • Khả dụng = giờ chạy thực tế ÷ giờ kế hoạch (đơn gán máy ở tab Kế hoạch SX, từ lúc bắt đầu chạy đến khi xong/hiện tại, nhân ca có người trong Lịch làm việc, trừ nghỉ giữa ca). • Hiệu suất = kg đùn thực tế (sổ Đùn của máy) ÷ (giờ chạy × công suất kg/giờ trong file Thông số máy), tối đa 100%. • Chất lượng = phiếu Check Sheet công đoạn đạt ÷ đã kết luận của đúng máy đó. Chỉ Máy đùn có công suất; Rút/Đánh bóng/Cắt chưa có nên chưa tính OEE.')); }
   else if(kind==='alerts'){ let h=''; try{ h=buildDpAlerts(DB.orders); }catch(e){} def('Cảnh báo quan trọng', h); }
   dpDrawer(sfEsc(title), body);
 }

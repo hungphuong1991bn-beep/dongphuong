@@ -6,6 +6,9 @@
 //   - Sản lượng toàn nhà máy = đơn HOÀN THÀNH (1 lần, không cộng dồn các công đoạn).
 //     Từng công đoạn đọc sổ riêng của công đoạn đó, hiển thị riêng, KHÔNG cộng với nhau.
 //   - OEE chỉ hiện khi ĐỦ đầu vào (thời gian kế hoạch + tốc độ chuẩn + thời gian chạy + chất lượng).
+//   - NGUỒN CHẤT LƯỢNG: phiếu Check Sheet công đoạn (Đùn/Rút/Đánh bóng/Cắt) ở ControlPlan QC → DB.cpRecords (type 'chk').
+//   - NGUỒN THỜI GIAN KẾ HOẠCH MÁY: phân công máy ở tab Kế hoạch SX (o.machineAssign + phiên chạy) × ca trong Lịch làm việc.
+//   - NGUỒN CÔNG SUẤT MÁY: file "Thông số máy" (kg/giờ) — bảng SF_MACHINE_RATE bên dưới; có thể ghi đè bằng DB.machineRates[id].
 // ────────────────────────────────────────────────────────────────────
 const SF_DAY = 86400000;
 const SF_STAGE_KEYS = ['dun','rut','danhbong','cat'];
@@ -21,6 +24,14 @@ function sfIn(ts, a, b){ return typeof ts==='number' && isFinite(ts) && ts>=a &&
 function sfKg(o){ const v = parseFloat(o && o.kg); return v>0 ? v : 0; }
 function sfArr(v){ return Array.isArray(v) ? v : (v && typeof v==='object' ? Object.keys(v).map(k=>v[k]) : []); }
 function sfSessions(o){ return (typeof rcSessions==='function') ? sfArr(rcSessions(o)) : sfArr(o && o.runSessions); }
+// ── Check Sheet công đoạn (ControlPlan QC): chỉ phiếu đã hoàn tất, không huỷ ──
+const SF_CP_STAGES = ['dun','rut','danhbong','cat'];
+function sfCpChecks(){
+  const src = (typeof cpRecs==='function') ? cpRecs() : sfArr(DB.cpRecords);
+  return src.filter(r=>r && r.type==='chk' && !r.void && r.status!=='draft' && SF_CP_STAGES.indexOf(r.form)>=0);
+}
+function sfCpTs(r){ const d=sfDateTs(r.date); return d!==null ? d : (Number(r.createdAt)||null); }
+function sfCpShiftNo(r){ return String(r.shift||'').replace(/\D/g,''); }
 function sfPauses(o){ return (typeof rcPauses==='function') ? sfArr(rcPauses(o)) : sfArr(o && o.pauseHistory); }
 
 // ── Khoảng thời gian ───────────────────────────────────────────────
@@ -178,25 +189,26 @@ function sfBuild(fIn, nowIn){
   const withDue = prog.ontrack.length+prog.risk.length+prog.overdue.length;
   M.progress = {...prog, openTotal:open.length, withDue, pct: withDue ? prog.ontrack.length/withDue : null};
 
-  // 4) Chất lượng — theo mã QR (DB.qrProducts); "sửa chữa" chưa có trường dữ liệu
-  const qrAll = (DB.qrProducts||[]);
-  const qrTs = p => { const d = sfDateTs(p.prodDate); return d!==null ? d : Number(p.createdAt); };
-  const qrIn = (r)=>qrAll.filter(p=>{
-    if(!sfIn(qrTs(p), r.from, r.to)) return false;
-    if(f.stage && p.currentStage && p.currentStage!==f.stage && f.stage!=='' && SF_STAGE_KEYS.indexOf(p.currentStage)>=0) return false;
-    if(f.machine && sfMachineName(f.machine)!==p.machine && f.machine!==p.machine) return false;
-    if(f.shift && String(p.shift||'').replace(/\D/g,'')!==f.shift) return false;
+  // 4) Chất lượng — theo phiếu Check Sheet công đoạn (ControlPlan QC); "sửa chữa" chưa có trường dữ liệu
+  const cpAll = sfCpChecks();
+  const cpIn = (r)=>cpAll.filter(p=>{
+    if(!sfIn(sfCpTs(p), r.from, r.to)) return false;
+    if(f.stage && p.form!==f.stage) return false;
+    if(f.machine && sfMachineName(f.machine)!==p.machine) return false;
+    if(f.shift && sfCpShiftNo(p)!==f.shift) return false;
     return true;
   });
-  const qty = p => Number(p.quantity)>0 ? Number(p.quantity) : 1;
   const qc = list => {
-    const pass=list.filter(p=>p.qcResult==='pass'), fail=list.filter(p=>p.qcResult==='fail'), pend=list.filter(p=>p.qcResult!=='pass'&&p.qcResult!=='fail');
-    const q=l=>l.reduce((s,p)=>s+qty(p),0);
-    const judged=q(pass)+q(fail);
-    return {pass:q(pass), ng:q(fail), pending:q(pend), judged, rate: judged ? q(pass)/judged : null, lists:{pass,fail,pend}};
+    const pass=list.filter(p=>p.result==='OK'), fail=list.filter(p=>p.result==='NG'), pend=list.filter(p=>p.result!=='OK'&&p.result!=='NG');
+    const judged=pass.length+fail.length;
+    const ngQty=fail.reduce((s,p)=>s+sfArr(p.lines).reduce((t,l)=>t+(l && l.result==='NG' && Number(l.qtyNG)>0 ? Number(l.qtyNG) : 0),0),0);
+    return {pass:pass.length, ng:fail.length, pending:pend.length, judged, rate: judged ? pass.length/judged : null, ngQty, lists:{pass,fail,pend}};
   };
-  M.quality = {...qc(qrIn(R)), prevRate: qc(qrIn(P)).rate, repair:null,
-    bucketRate: B.map(b=>qc(qrIn(b)).rate), totalQr:qrAll.length};
+  const qR = qc(cpIn(R));
+  M.quality = {...qR, prevRate: qc(cpIn(P)).rate, repair:null,
+    bucketRate: B.map(b=>qc(cpIn(b)).rate), totalCp:cpAll.length,
+    byStage: SF_CP_STAGES.map(k=>{ const l=cpIn(R).filter(p=>p.form===k), x=qc(l); return {key:k, pass:x.pass, ng:x.ng, pending:x.pending, judged:x.judged, rate:x.rate}; }),
+    source:'cp-check-sheet'};
 
   // 5) Giao hàng đúng hạn — đơn ĐÃ GIAO (delivered/deliveredAt)
   const delivIn = r => orders.filter(o=>o.delivered && sfIn(Number(o.deliveredAt), r.from, r.to));
@@ -212,7 +224,7 @@ function sfBuild(fIn, nowIn){
   M.machines = sfMachineStats(all, f, R, now);
 
   // 7) OEE: chỉ khi đủ đầu vào
-  M.oee = sfOee(M);
+  M.oee = sfOee(M, all, f, R, now);
 
   // 8) Công đoạn (sổ riêng từng công đoạn — KHÔNG cộng chéo)
   M.stages = sfStageStats(f, R, B, orders);
@@ -257,15 +269,120 @@ function sfMachineStats(allOrders, f, R, now){
     anyRun: withRun.length>0, legacy, unattributed};
 }
 
-function sfOee(M){
+// ── OEE theo máy ────────────────────────────────────────────────────
+// Công suất định mức (kg/giờ) theo file "Thông số máy" (Conform machine for magnet wire).
+// Chỉ nhóm MÁY ĐÙN có trong file; Rút / Đánh bóng / Cắt chưa có công suất → chưa tính được Hiệu suất (không bịa số).
+// Lưu ý đối chiếu tên: máy "TJ300" = TLJ300 (480 kg/h) · "TJ400" = TLJ400U (1200 kg/h) · "TJ550 (1)/(2)" ≈ TLJ500U (1200 kg/h, file không có model 550).
+const SF_MACHINE_RATE = {
+  m_tj300:   {kgh:480,  model:'TLJ300'},
+  m_tj400:   {kgh:1200, model:'TLJ400U'},
+  m_tj500_1: {kgh:1200, model:'TLJ500U'},
+  m_tj550_2: {kgh:1200, model:'TLJ500U'}
+};
+function sfMachineRate(id){
+  const ov = DB && DB.machineRates && Number(DB.machineRates[id]);   // ghi đè nếu doanh nghiệp khai báo riêng
+  if(ov>0) return {kgh:ov, model:'khai báo riêng'};
+  return SF_MACHINE_RATE[id] || null;
+}
+function sfYmd(ts){ const d=new Date(ts); return d.getFullYear()+'-'+sfPad(d.getMonth()+1)+'-'+sfPad(d.getDate()); }
+
+// Khoảng thời gian máy được KẾ HOẠCH sử dụng (tab Kế hoạch SX): đơn được gán máy ở công đoạn tương ứng
+// (o.machineAssign) từ lúc bắt đầu chạy đến lúc xong công đoạn / hiện tại. Đơn chưa chạy (chỉ xếp hàng) chưa có mốc giờ nên không tính.
+function sfPlanWindows(m, stageKey, allOrders, now){
+  const out=[];
+  allOrders.forEach(o=>{
+    if(!o) return;
+    const ss = sfSessions(o).filter(s=>s && !s.legacy && s.machineId===m.id && isFinite(Number(s.startAt)));
+    const assigned = o.machineAssign && o.machineAssign[stageKey]===m.id;
+    if(!ss.length && !assigned) return;
+    const atStage = (o.stage||'dun')===stageKey && o.status!=='done';
+    let a=null, b=null;
+    if(ss.length){
+      a=Math.min.apply(null, ss.map(s=>Number(s.startAt)));
+      b = atStage ? now : Math.max.apply(null, ss.map(s=>s.endAt ? Number(s.endAt) : now));
+    }else if(atStage && (o.status==='running'||o.status==='cutting'||o.status==='paused') && isFinite(Number(o.startedAt))){
+      a=Number(o.startedAt); b=now;
+    }
+    if(a!==null && isFinite(b) && b>a) out.push([a, Math.min(b, now)]);
+  });
+  out.sort((x,y)=>x[0]-y[0]);
+  const merged=[];
+  out.forEach(w=>{ const l=merged[merged.length-1]; if(l && w[0]<=l[1]) l[1]=Math.max(l[1],w[1]); else merged.push([w[0],w[1]]); });
+  return merged;
+}
+// Ca làm việc có người được phân trong ngày (Lịch làm việc) — loại Hành chính / Tăng ca. null = chưa có lịch.
+function sfShiftsOfDay(ds, cache){
+  if(ds in cache) return cache[ds];
+  let list=null;
+  try{
+    if(typeof schDayRoster==='function' && typeof schShiftHours==='function' && (DB.workers||[]).length){
+      list = schDayRoster(ds).shifts.filter(x=>x.actual>0 && x.shift && x.shift.kind==='work' && x.shift.id!=='hc' && x.shift.start && x.shift.end).map(x=>x.shift);
+    }
+  }catch(e){ list=null; }
+  return cache[ds]=list;
+}
+// Giờ kế hoạch của máy trong kỳ = phần giao giữa (cửa sổ kế hoạch) × (ca có người làm) × (kỳ báo cáo, đến hiện tại)
+function sfPlanMs(windows, R, now, cache){
+  let ms=0, anyShift=false;
+  if(!windows.length) return {ms:0, anyShift:false};
+  const lo=sfDay0(Math.max(R.from, windows[0][0]))-SF_DAY, hi=Math.min(R.to, now, windows[windows.length-1][1]);
+  for(let d=lo; d<=hi; d=sfAddDays(d,1)){
+    const shifts = sfShiftsOfDay(sfYmd(d), cache); if(!shifts) continue;
+    shifts.forEach(sh=>{
+      const a0=sfShiftMin(sh.start), b0=sfShiftMin(sh.end); if(a0===null||b0===null) return;
+      let gross=(b0-a0+1440)%1440; if(gross===0) gross=1440;
+      const net = schShiftHours(sh)*60, ratio = gross ? net/gross : 0;
+      const sa=d+a0*60000, sb=sa+gross*60000;
+      anyShift=true;
+      windows.forEach(w=>{ const ov=Math.min(sb,w[1],R.to,now)-Math.max(sa,w[0],R.from); if(ov>0) ms+=ov*ratio; });
+    });
+  }
+  return {ms, anyShift};
+}
+function sfShiftMin(t){ const m=/^(\d{1,2}):(\d{2})$/.exec(t||''); return m ? (+m[1])*60+(+m[2]) : null; }
+
+function sfOee(M, allOrders, f, R, now){
+  allOrders = allOrders || [];
+  const cache={}, cpR = sfCpChecks().filter(p=>sfIn(sfCpTs(p), R.from, R.to));
+  const ledger = sfArr(DB.nguyenLieuLog).filter(r=>sfIn(sfDateTs(r.ngay), R.from, R.to));
+  const rows = M.machines.rows.map(r=>{
+    const m=r.m, st=(typeof ASSIGN_STAGES!=='undefined') ? ASSIGN_STAGES.find(s=>s.group===m.group) : null, stageKey=st?st.key:'';
+    const rate = sfMachineRate(m.id);
+    const win = stageKey ? sfPlanWindows(m, stageKey, allOrders, now) : [];
+    const plan = sfPlanMs(win, R, now, cache);
+    // Chất lượng của máy: Check Sheet công đoạn ghi đúng tên máy
+    const chk = cpR.filter(p=>p.form===stageKey && p.machine===m.name);
+    const pass = chk.filter(p=>p.result==='OK').length, ng = chk.filter(p=>p.result==='NG').length, judged = pass+ng;
+    // Sản lượng của máy đùn: sổ nguyên liệu/đùn (kg) ghi theo tên máy
+    const led = stageKey==='dun' ? ledger.filter(l=>l.may===m.name || l.may===m.id) : [];
+    const kg = led.reduce((s,l)=>s+(parseFloat(l.soLuong)||0),0);
+    const runH = r.runMs/3600000;
+    const A = plan.ms>0 && r.runMs>0 ? Math.min(1, r.runMs/plan.ms) : null;
+    const P = rate && runH>0 && led.length ? Math.min(1, kg/(runH*rate.kgh)) : null;
+    const Q = judged ? pass/judged : null;
+    const ok = A!==null && P!==null && Q!==null;
+    let why='';
+    if(!ok){ const miss=[]; if(r.runMs<=0) miss.push('chưa có phiên chạy'); if(plan.ms<=0) miss.push(win.length ? 'chưa phân ca trong Lịch làm việc' : 'chưa có đơn gán máy chạy ở Kế hoạch SX'); if(!rate) miss.push('chưa có công suất'); else if(!led.length) miss.push('chưa có sổ đùn của máy'); if(!judged) miss.push('chưa có Check Sheet đã kết luận'); why=miss.join(' · '); }
+    return {m, stageKey, runMs:r.runMs, planMs:plan.ms, hasPlan:plan.ms>0, rate, kg, ledRows:led.length, pass, ng, judged, A, P, Q, ok, value: ok ? A*P*Q : null, why, clamped: (r.runMs>plan.ms && plan.ms>0)};
+  });
+  const okRows = rows.filter(x=>x.ok);
+  let A=null,P=null,Q=null,value=null;
+  if(okRows.length){
+    const sRun=okRows.reduce((s,x)=>s+x.runMs,0), sPlan=okRows.reduce((s,x)=>s+x.planMs,0);
+    const sKg=okRows.reduce((s,x)=>s+x.kg,0), sCap=okRows.reduce((s,x)=>s+x.runMs/3600000*x.rate.kgh,0);
+    const sPass=okRows.reduce((s,x)=>s+x.pass,0), sJud=okRows.reduce((s,x)=>s+x.judged,0);
+    A=Math.min(1,sRun/sPlan); P=Math.min(1,sKg/sCap); Q=sPass/sJud; value=A*P*Q;
+  }
+  const nRate = rows.filter(x=>x.rate).length, nPlan = rows.filter(x=>x.hasPlan).length;
   const inputs = [
     {key:'run',  label:'Thời gian chạy thực tế của máy', ok: M.machines.anyRun, note: M.machines.anyRun ? 'Có (từ phiên chạy đã ghi)' : 'Chưa có phiên chạy trong kỳ'},
-    {key:'plan', label:'Thời gian kế hoạch sản xuất của máy (lịch/ca máy)', ok:false, note:'Hệ thống chưa lưu lịch chạy theo máy'},
-    {key:'std',  label:'Tốc độ chuẩn / công suất thiết kế của máy', ok:false, note:'Chưa khai báo'},
-    {key:'qual', label:'Chất lượng (đạt / NG)', ok: M.quality.judged>0, note: M.quality.judged>0 ? 'Có (kết quả QC mã QR)' : 'Chưa có kết quả QC trong kỳ'}
+    {key:'plan', label:'Thời gian kế hoạch sản xuất của máy (lịch/ca máy)', ok: nPlan>0,
+      note: nPlan>0 ? `Có cho ${nPlan}/${rows.length} máy (đơn gán máy ở Kế hoạch SX × ca trong Lịch làm việc)` : 'Chưa có đơn gán máy đang chạy ở Kế hoạch SX, hoặc chưa phân ca trong Lịch làm việc'},
+    {key:'std',  label:'Tốc độ chuẩn / công suất thiết kế của máy', ok: nRate>0,
+      note: nRate>0 ? `Có cho ${nRate}/${rows.length} máy (theo file Thông số máy — chỉ nhóm Máy đùn)` : 'Nhóm máy đang xem chưa có công suất trong file Thông số máy'},
+    {key:'qual', label:'Chất lượng (đạt / NG)', ok: M.quality.judged>0, note: M.quality.judged>0 ? 'Có (Check Sheet công đoạn – ControlPlan QC)' : 'Chưa có Check Sheet công đoạn đã kết luận trong kỳ'}
   ];
-  const ready = inputs.every(i=>i.ok);
-  return {ready, inputs, value:null};    // chỉ tính khi ready; hiện chưa có nguồn nên value luôn null → không bịa số
+  return {ready: okRows.length>0, inputs, value, A, P, Q, rows, okCount: okRows.length};
 }
 
 function sfStageStats(f, R, B, orders){
