@@ -29,6 +29,15 @@ function khTimeInfo(o, s){
   return {cls:'tm-wait', id:'', val:'—', lbl:'Thời gian'};
 }
 
+// NL / Loại / KL đã chuyển lên hàng 2 của đầu thẻ → bỏ đúng 3 thẻ nhỏ đó khỏi khối thông số, GIỮ NGUYÊN mọi thông tin còn lại (các ô kích thước, Tổng m...)
+function khSpecGridNoDup(o){
+  return orderSpecGridHTML(o)
+    .replace(/<span class="spec-tag mat">[\s\S]*?<\/span>/,'')
+    .replace(/<span class="spec-tag">[\s\S]*?<\/span>/,'')
+    .replace(/<span class="spec-tag kg">[\s\S]*?<\/span>/,'')
+    .replace(/<div class="spec-row">\s*<\/div>/,'');
+}
+
 function khPlanCard(o, seq){
   const s=o.status==='cutting'?'running':o.status;
   const pc=PRI_COLOR[o.priority]||'#64748b';
@@ -44,20 +53,27 @@ function khPlanCard(o, seq){
   const machChip = khMachineChip(o);
 
   return `<div class="card kh-plan-card st-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}" data-order-id="${o.id}" style="--i:${Math.min(seq||0,12)}" onclick="khViewDetail('${o.id}')">
-    <div class="card-header kh-hd status-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}">
-      <div class="kh2-hd-top">
-        ${seq!=null?`<div class="kh-seq-badge ${seqCls}" title="STT ${seq}">${seq}</div>`:''}
-        <span class="kh2-badge status-${s}">${si.label}</span>
-        ${o.priority?`<span class="kh2-badge pri${priHigh?'':' pri-low'}" style="${priHigh?`background:${pc}1f;color:${pc};border-color:${pc}55`:''}">🚩 ${o.priority}</span>`:''}
-        ${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:dueSoon?`<span class="kh-overdue is-duesoon">🟡 SẮP ĐẾN HẠN</span>`:''}
+    <!-- v2.8.51 — Thẻ kế hoạch dạng "hồ sơ đơn" gọn: hàng 1 = STT | Trạng thái | Ưu tiên | Người phụ trách;
+         hàng 2 = Khách hàng (+PO); hàng 3 = NL | Loại / quy cách | KL. Phần còn lại của thẻ giữ nguyên. -->
+    <div class="kp-head status-${s}${overdue?' is-overdue':''}${dueSoon?' is-duesoon':''}">
+      <div class="kp-row1">
+        <div class="kp-row1-l">
+          ${seq!=null?`<div class="kh-seq-badge ${seqCls}" title="STT ${seq}">${seq}</div>`:''}
+          <span class="kh2-badge status-${s}">${si.label}</span>
+          ${o.priority?`<span class="kh2-badge pri${priHigh?'':' pri-low'}" style="${priHigh?`background:${pc}1f;color:${pc};border-color:${pc}55`:''}">🚩 ${dhEsc(o.priority)}</span>`:''}
+        </div>
+        <div class="kp-owner" title="Người phụ trách: ${dhEsc(ddOwner(o))}"><span class="kp-owner-av">${dhEsc((ddOwner(o)||'?').trim().split(/\s+/).pop().charAt(0).toUpperCase())}</span><span class="kp-owner-name">${dhEsc(ddOwner(o))}</span></div>
       </div>
-      <div class="kh2-cust">${o.customer||'—'}</div>
-      <div class="card-customer-row">
-        ${o.po?`<span class="kh2-po">📄 PO: <b>${o.po}</b></span>`:''}
-        <div class="kh-owner-chip" title="Người phụ trách">👤 ${ddOwner(o)}</div>
+      <div class="kp-row2">
+        <div class="kp-cust">${dhEsc(o.customer||'—')}</div>
+        <span class="kp-chip kp-nl" title="Nguyên liệu"><i>NL</i><b>${dhEsc(o.material||'—')}</b></span>
+        <span class="kp-chip kp-spec" title="Loại"><i>Loại</i><b>${o.type?dhEsc(o.type):'—'}</b></span>
+        <span class="kp-chip kp-kg" title="Khối lượng"><i>KL</i><b>${(Number(o.kg)||0).toLocaleString('vi-VN')} kg</b></span>
       </div>
+      ${(overdue||dueSoon)?`<div class="kp-flag-row">${overdue?`<span class="kh-overdue">⚠️ QUÁ HẠN</span>`:`<span class="kh-overdue is-duesoon">🟡 SẮP ĐẾN HẠN</span>`}</div>`:''}
+      ${o.po?`<div class="kp-po">📄 PO <b>${dhEsc(o.po)}</b></div>`:''}
     </div>
-    ${orderSpecGridHTML(o)}
+    ${khSpecGridNoDup(o)}
     <div class="kh2-time">
       <div class="kh2-time-col"><b>${o.startedAt?fmtDate(o.startedAt):(o.createdAt?fmtDate(o.createdAt):'—')}</b><span>${o.startedAt?'Bắt đầu':'Ngày tạo'}</span></div>
       <div class="kh2-time-col right"><b class="${overdue?'late':dueSoon?'soon':''}">${o.deliveryDate?fmtDate(o.deliveryDate):'—'}</b><span>Giao hàng</span></div>
