@@ -342,7 +342,7 @@ function buildOvGreeting(){
     </div>
   </div>`;
 }
-function renderDashboard(){
+function renderDashboardClassic(){  // giao diện Tổng quan cũ — giữ nguyên làm dự phòng; renderDashboard() mới ở dashboard-sf.js
   const orders = DB.orders;
   const total   = orders.length;
   const waiting = orders.filter(o=>o.status==='pending').length;

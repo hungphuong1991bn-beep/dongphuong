@@ -37,3 +37,5 @@ node tests/static/run-concurrency.test.js   # v2.14.0: nhiều thiết bị cùn
 node tests/static/trace-history.test.js     # v2.14.0: bảng truy xuất sản xuất tab Đơn hoàn thành, đơn cũ thiếu dữ liệu, lưu trữ không đổi (TEST 6,8,9)
 # v2.14.0: E2E giao diện thật (cần Chromium; đặt PW_EXE nếu playwright không tìm thấy trình duyệt) — tạm dừng/tiếp tục 2 thiết bị, quyền nhân viên, bảng truy xuất
 node tests/e2e/runctl-ui.js "$ROOT"
+node tests/static/dashboard-sf.test.js   # v2.8.51: Tổng quan Smart Factory — quy tắc dữ liệu
+node tests/e2e/dashboard-sf.js "$ROOT" /tmp/sf-shots   # Tổng quan Smart Factory: 6 kích thước màn hình, lọc, drawer, TV, offline

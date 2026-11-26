@@ -351,3 +351,9 @@ Không xoá tính năng nào. Các khối `<style>/<script>` inline gốc đư�
 
 ## Nâng cấp UI/UX – Bước 2
 Thêm `dp-ui.js`/`dp-ui.css` (thông báo 4 loại + chống trùng + lịch sử, trạng thái Loading/Empty/Error/Offline, chặn đóng nhầm modal), trạng thái đồng bộ "Ngoại tuyến" ở Header. Chi tiết: `UPGRADE-BUOC-2.md`.
+
+## Tổng quan Smart Factory (đợt nâng cấp tab Tổng quan)
+- Mới: `dashboard-data.js` (tính số liệu, CHỈ ĐỌC), `dashboard-sf.js` (giao diện), `dashboard-sf.css`. `renderDashboard()` mới; bản cũ giữ nguyên tên `renderDashboardClassic()` (tự dự phòng khi lỗi, hoặc chọn ở Tùy chỉnh).
+- Quy tắc: không bịa số; "chưa có dữ liệu" ≠ 0 ≠ "chưa đồng bộ"; sản lượng nhà máy = đơn hoàn thành (không cộng các công đoạn); OEE chỉ hiện khi đủ thời gian kế hoạch + tốc độ chuẩn + thời gian chạy + chất lượng (hiện thiếu 2 đầu vào đầu).
+- Bố cục widget (Admin) lưu localStorage + nhánh riêng `/dashCfg/layout` (không đụng `/data`). TV Mode riêng cho Tổng quan (không dùng `sx_tv_locked`).
+- Sửa nhỏ: `router.js` ghi `body[data-tab]`; `index.html`, `sw.js` (CACHE v33).

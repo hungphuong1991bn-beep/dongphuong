@@ -14,7 +14,7 @@
 
 // Đổi số này mỗi khi deploy bản mới (hoặc để build pipeline tự thay) —
 // tên cache đổi theo giúp bước 'activate' dọn sạch mọi cache cũ.
-const CACHE = 'sx-thanh-cai-v32'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
+const CACHE = 'sx-thanh-cai-v33'; // v3: refactor module hoá — thêm toàn bộ src/**.js|css vào bộ cache app-shell
 // Danh sách này PHẢI khớp các <script src>/<link href> trong index.html (kiểm tra bởi tests/static/verify-sw.js).
 const ASSETS = [
   './index.html',
@@ -95,6 +95,8 @@ const ASSETS = [
   './src/modules/dashboard/dashboard-factory.js',
   './src/modules/dashboard/dashboard-widgets.js',
   './src/modules/dashboard/dashboard-view.js',
+  './src/modules/dashboard/dashboard-data.js',
+  './src/modules/dashboard/dashboard-sf.js',
   './src/modules/orders/orders-filter.js',
   './src/modules/orders/orders-view.js',
   './src/components/shared/ActionMenu.js',
@@ -223,6 +225,7 @@ const ASSETS = [
   './src/styles/responsive-mobile.css',
   './src/styles/design-system.css',
   './src/modules/dashboard/dashboard-factory.css',
+  './src/modules/dashboard/dashboard-sf.css',
   './src/styles/modules-insight.css',
   './src/styles/header-erp.css',
   './src/styles/responsive-b2.css',

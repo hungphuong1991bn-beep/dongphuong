@@ -59,6 +59,7 @@ function goTab(tab){
   }
   if(tab!=='truyXuat' && typeof trStopScan==='function') trStopScan(); // tắt camera quét QR khi rời tab
   currentTab=tab;
+  try{ document.body.dataset.tab=tab; }catch(e){} // dùng cho CSS riêng của từng tab (vd. nền navy Tổng quan)
   // Sidebar
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const si=$('sbi-'+tab); if(si){ si.classList.add('active'); try{ si.scrollIntoView({block:'nearest'}); }catch(e){} } // menu dài: tự cuộn tới mục đang chọn
