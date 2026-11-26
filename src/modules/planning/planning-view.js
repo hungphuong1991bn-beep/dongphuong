@@ -59,7 +59,7 @@ function khPlanCard(o, seq){
       <div class="kp-row1">
         <div class="kp-row1-l">
           ${seq!=null?`<div class="kh-seq-badge ${seqCls}" title="STT ${seq}">${seq}</div>`:''}
-          <span class="kh2-badge status-${s}">${si.label}</span>
+          <span class="kh2-badge status-${s}">${s==='running'?'⚙️ Đang chạy':si.label}</span>
           ${o.priority?`<span class="kh2-badge pri${priHigh?'':' pri-low'}" style="${priHigh?`background:${pc}1f;color:${pc};border-color:${pc}55`:''}">🚩 ${dhEsc(o.priority)}</span>`:''}
         </div>
         <div class="kp-owner" title="Người phụ trách: ${dhEsc(ddOwner(o))}"><span class="kp-owner-av">${dhEsc((ddOwner(o)||'?').trim().split(/\s+/).pop().charAt(0).toUpperCase())}</span><span class="kp-owner-name">${dhEsc(ddOwner(o))}</span></div>
